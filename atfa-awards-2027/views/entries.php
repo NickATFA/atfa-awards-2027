@@ -32,6 +32,8 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .tl.now{border-top-color:#F8931F}
 .aw .sponsor{display:flex;align-items:center;justify-content:center;height:84px;border:1px dashed #3A332D;border-radius:4px;color:#7D7368;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
 .aw .hero-h1{font-size:172px;font-weight:700;margin:16px 0 0;color:#F4EFE7}
+/* The atfa wordmark stands in for the word Flooring on the first line of the headline. */
+.aw .wm{display:block;height:.9em;width:auto;margin:0 0 .1em}
 /* Hero backdrop: past winners sit behind the header and hero on the right, masked so they fade to black on the left. They rotate with a slow crossfade and a different winner leads each visit. */
 .aw .bgwrap{position:absolute;inset:0;overflow:hidden;--o:.88;opacity:var(--o);animation:aw-fadein 1.8s ease-out both}
 .aw .bg{position:absolute;top:0;right:0;width:70%;height:100%;object-fit:cover;object-position:50% 50%;opacity:0;transform-origin:60% 50%;margin:0;border:0;max-width:none;
@@ -88,7 +90,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 <div class="hero" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:end;padding:88px 0 64px">
   <div style="grid-column:span 7;min-width:0;display:flex;flex-direction:column">
     <div class="eyebrow ld d2">ATFA Flooring Awards · Sydney · Saturday 22 May 2027</div>
-    <h1 class="disp hero-h1 ld d3">Flooring<br>Awards <span style="color:#F8931F">2027</span></h1>
+    <h1 class="disp hero-h1 ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.png' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
     <p class="ld d4" style="font-size:22px;max-width:34ch;line-height:1.4;color:#B4A99A;margin:28px 0 0">Celebrating outstanding floors and the people behind them. Twenty awards, three ways to win.</p>
     <div class="ld d5" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:32px">
       <a class="btn btn-primary" href="#how-it-works">Enter now</a>

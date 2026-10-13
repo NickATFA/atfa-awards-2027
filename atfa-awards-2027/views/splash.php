@@ -24,6 +24,8 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
 .aw .in::placeholder{color:#7D7368}
 .aw .in:focus{outline:2px solid #F8931F;outline-offset:1px;border-color:#3A332D}
 .aw .big{font-size:200px;font-weight:700;margin:14px 0 0;color:#F4EFE7}
+/* The atfa wordmark stands in for the word Flooring on the first line of the headline. */
+.aw .wm{display:block;height:.9em;width:auto;margin:0 0 .1em}
 .aw .new{display:flex;flex-direction:column;gap:6px;padding:18px 20px;border-top:2px solid #2B2622;min-width:0;background:rgba(12,11,10,.55);backdrop-filter:blur(6px)}
 .aw .new.lead{border-top-color:#F8931F;background:rgba(248,147,31,.12)}
 .aw .new .t{font-family:'Barlow Condensed','Arial Narrow',sans-serif;text-transform:uppercase;font-size:26px;font-weight:700;line-height:.95;color:#F4EFE7}
@@ -78,7 +80,7 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="display:flex;flex-direction:column;padding:56px 0 40px;max-width:760px;flex:1 1 560px;min-width:0">
         <span class="eyebrow ld d2" style="color:#F8931F">Coming soon · Sydney · 22 May 2027</span>
-        <h1 class="disp big ld d3">Flooring<br>Awards <span style="color:#F8931F">2027</span></h1>
+        <h1 class="disp big ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.png' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
         <p class="ld d4" style="font-size:20px;line-height:1.45;color:#B4A99A;margin:26px 0 0;max-width:40ch">The biggest change to the awards in years. Entries open Monday 1 February.</p>
         <div class="ld d5" style="display:flex;align-items:baseline;gap:12px;margin-top:24px">
           <span class="disp" id="aw-days" style="font-size:64px;font-weight:700;color:#F8931F;font-variant-numeric:tabular-nums">111</span>

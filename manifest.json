@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
   "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
   "last_updated": "2026-10-14",
-  "changelog": "<p><strong>1.2.1</strong> (2026-10-14): Stops a leftover plugin stylesheet (JetSmartFilters) loading on the awards pages. Also the first update delivered from GitHub.</p>"
+  "changelog": "<p><strong>1.3.0</strong> (2026-10-14): The atfa wordmark replaces the word Flooring in the headline on the splash and the entries page.</p>"
 }
