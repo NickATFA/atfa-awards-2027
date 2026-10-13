@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
   "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
   "last_updated": "2026-10-14",
-  "changelog": "<p><strong>1.2.0</strong> (2026-10-14): Six New for 2027 cards on a slow ticker on the splash. One-click updates from this repo.</p>"
+  "changelog": "<p><strong>1.2.1</strong> (2026-10-14): Stops a leftover plugin stylesheet (JetSmartFilters) loading on the awards pages. Also the first update delivered from GitHub.</p>"
 }

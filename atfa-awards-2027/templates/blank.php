@@ -13,6 +13,8 @@ if ( ! defined( 'DONOTROCKETOPTIMIZE' ) ) {
 
 add_action( 'wp_enqueue_scripts', 'atfa_awards_strip_styles', 9999 );
 add_action( 'wp_print_styles', 'atfa_awards_strip_styles', 9999 );
+// Some plugins (JetSmartFilters, for one) enqueue their stylesheet late, in the footer.
+add_action( 'wp_print_footer_scripts', 'atfa_awards_strip_styles', 1 );
 
 // The page content is just a shortcode; wpautop would wrap it in a stray paragraph.
 remove_filter( 'the_content', 'wpautop' );
