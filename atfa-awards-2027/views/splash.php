@@ -80,7 +80,7 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
     <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="display:flex;flex-direction:column;padding:56px 0 40px;max-width:760px;flex:1 1 560px;min-width:0">
         <span class="eyebrow ld d2" style="color:#F8931F">Coming soon · Sydney · 22 May 2027</span>
-        <h1 class="disp big ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.png' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
+        <h1 class="disp big ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.svg' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
         <p class="ld d4" style="font-size:20px;line-height:1.45;color:#B4A99A;margin:26px 0 0;max-width:40ch">The biggest change to the awards in years. Entries open Monday 1 February.</p>
         <div class="ld d5" style="display:flex;align-items:baseline;gap:12px;margin-top:24px">
           <span class="disp" id="aw-days" style="font-size:64px;font-weight:700;color:#F8931F;font-variant-numeric:tabular-nums">111</span>

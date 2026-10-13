@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.3.0' );
+define( 'ATFA_AWARDS_VERSION', '1.4.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -349,6 +349,118 @@ add_action( 'template_redirect', function () {
 		exit;
 	}
 } );
+
+/* ---------------------------------------------------------------------------
+ * Link previews (LinkedIn, Facebook, WhatsApp, Teams, Slack)
+ *
+ * The share card becomes each page's featured image and the description its
+ * excerpt, which is what SEO plugins read for og:image and og:description.
+ * When no SEO plugin is active, the blank template prints the tags itself.
+ * ------------------------------------------------------------------------ */
+
+function atfa_awards_share_texts() {
+	return array(
+		'splash'  => array(
+			'title'       => 'ATFA Flooring Awards 2027',
+			'description' => 'Entries open Monday 1 February 2027. Overseas and school projects, expert panel judging, 3-2-1 member voting, and new Parquetry and Newcomers awards. Awards dinner Saturday 22 May 2027, Sydney.',
+		),
+		'entries' => array(
+			'title'       => 'ATFA Flooring Awards 2027: entries open',
+			'description' => 'Twenty awards, three ways to win. Enter from your phone in about ten minutes with photos straight from your camera roll. Entries close Wednesday 31 March 2027.',
+		),
+	);
+}
+
+function atfa_awards_seo_plugin_active() {
+	return defined( 'WPSEO_VERSION' ) || class_exists( 'RankMath' ) || defined( 'SEOPRESS_VERSION' ) || defined( 'AIOSEO_VERSION' ) || defined( 'SLIM_SEO_VER' ) || class_exists( 'The_SEO_Framework\Load' );
+}
+
+/**
+ * Puts the bundled share card in the Media Library (once per card version) and sets it as the featured image
+ * of both awards pages, with the description as the excerpt. Runs after activation and after each update.
+ */
+function atfa_awards_sync_share_card() {
+	if ( get_option( 'atfa_awards_share_synced' ) === ATFA_AWARDS_VERSION ) {
+		return;
+	}
+	$pages = get_option( 'atfa_awards_pages' );
+	if ( empty( $pages ) || ! is_array( $pages ) ) {
+		return;
+	}
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+
+	$src      = ATFA_AWARDS_DIR . 'assets/img/share-card.jpg';
+	$hash     = file_exists( $src ) ? md5_file( $src ) : '';
+	$existing = get_option( 'atfa_awards_share_attachment' );
+	if ( $hash && ( empty( $existing['hash'] ) || $existing['hash'] !== $hash || ! get_post( $existing['id'] ) ) ) {
+		$bits = wp_upload_bits( 'atfa-awards-2027-share-card.jpg', null, file_get_contents( $src ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		if ( empty( $bits['error'] ) ) {
+			$id = wp_insert_attachment( array(
+				'post_mime_type' => 'image/jpeg',
+				'post_title'     => 'ATFA Flooring Awards 2027 share card',
+				'post_status'    => 'inherit',
+			), $bits['file'] );
+			if ( $id && ! is_wp_error( $id ) ) {
+				wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $bits['file'] ) );
+				$existing = array( 'id' => (int) $id, 'hash' => $hash );
+				update_option( 'atfa_awards_share_attachment', $existing );
+			}
+		}
+	}
+
+	$texts = atfa_awards_share_texts();
+	foreach ( $pages as $key => $page_id ) {
+		if ( ! $page_id || ! get_post( $page_id ) ) {
+			continue;
+		}
+		if ( ! empty( $existing['id'] ) ) {
+			set_post_thumbnail( $page_id, $existing['id'] );
+		}
+		if ( isset( $texts[ $key ] ) ) {
+			wp_update_post( array( 'ID' => $page_id, 'post_excerpt' => $texts[ $key ]['description'] ) );
+		}
+	}
+	update_option( 'atfa_awards_share_synced', ATFA_AWARDS_VERSION );
+}
+add_action( 'admin_init', 'atfa_awards_sync_share_card' );
+
+/**
+ * The preview tags, printed by the blank template when no SEO plugin is doing it.
+ */
+function atfa_awards_print_share_meta() {
+	if ( atfa_awards_seo_plugin_active() ) {
+		return;
+	}
+	$id    = get_queried_object_id();
+	$key   = (string) get_post_meta( $id, '_atfa_awards_page', true );
+	$texts = atfa_awards_share_texts();
+	$text  = isset( $texts[ $key ] ) ? $texts[ $key ] : array( 'title' => get_the_title( $id ), 'description' => get_the_excerpt( $id ) );
+	$image = get_the_post_thumbnail_url( $id, 'full' );
+	if ( ! $image ) {
+		$image = ATFA_AWARDS_URL . 'assets/img/share-card.jpg';
+	}
+	$tags = array(
+		array( 'name', 'description', $text['description'] ),
+		array( 'property', 'og:type', 'website' ),
+		array( 'property', 'og:site_name', 'ATFA' ),
+		array( 'property', 'og:locale', 'en_AU' ),
+		array( 'property', 'og:title', $text['title'] ),
+		array( 'property', 'og:description', $text['description'] ),
+		array( 'property', 'og:url', get_permalink( $id ) ),
+		array( 'property', 'og:image', $image ),
+		array( 'property', 'og:image:width', '1200' ),
+		array( 'property', 'og:image:height', '630' ),
+		array( 'name', 'twitter:card', 'summary_large_image' ),
+		array( 'name', 'twitter:title', $text['title'] ),
+		array( 'name', 'twitter:description', $text['description'] ),
+		array( 'name', 'twitter:image', $image ),
+	);
+	foreach ( $tags as $tag ) {
+		echo '<meta ' . $tag[0] . '="' . esc_attr( $tag[1] ) . '" content="' . esc_attr( $tag[2] ) . '">' . "\n";
+	}
+}
 
 /* ---------------------------------------------------------------------------
  * Updates from GitHub

@@ -90,7 +90,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 <div class="hero" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:end;padding:88px 0 64px">
   <div style="grid-column:span 7;min-width:0;display:flex;flex-direction:column">
     <div class="eyebrow ld d2">ATFA Flooring Awards · Sydney · Saturday 22 May 2027</div>
-    <h1 class="disp hero-h1 ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.png' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
+    <h1 class="disp hero-h1 ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.svg' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
     <p class="ld d4" style="font-size:22px;max-width:34ch;line-height:1.4;color:#B4A99A;margin:28px 0 0">Celebrating outstanding floors and the people behind them. Twenty awards, three ways to win.</p>
     <div class="ld d5" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:32px">
       <a class="btn btn-primary" href="#how-it-works">Enter now</a>

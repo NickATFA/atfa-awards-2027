@@ -16,6 +16,9 @@ add_action( 'wp_print_styles', 'atfa_awards_strip_styles', 9999 );
 // Some plugins (JetSmartFilters, for one) enqueue their stylesheet late, in the footer.
 add_action( 'wp_print_footer_scripts', 'atfa_awards_strip_styles', 1 );
 
+// Link preview tags, unless an SEO plugin already prints them.
+add_action( 'wp_head', 'atfa_awards_print_share_meta', 1 );
+
 // The page content is just a shortcode; wpautop would wrap it in a stray paragraph.
 remove_filter( 'the_content', 'wpautop' );
 ?>
