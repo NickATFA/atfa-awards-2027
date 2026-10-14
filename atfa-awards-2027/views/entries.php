@@ -48,7 +48,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .cat-row:focus-visible{outline:2px solid #F8931F;outline-offset:2px}
 .aw .btn-dark{background:#1A1208;color:#F8931F;border-color:#1A1208}.aw .btn-dark:hover{background:#000;color:#FFA640}
 /* Category info panels: one dialog per award. Full-screen sheet on phones. */
-.aw dialog.catd{position:fixed;inset:0;margin:auto;width:min(1060px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid #2B2622;border-radius:8px;background:#121010;color:#F4EFE7;overflow:auto;overscroll-behavior:contain;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.aw dialog.catd{position:fixed;inset:0;margin:auto;width:min(1060px,calc(100% - 32px));max-width:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);padding:0;border:1px solid #2B2622;border-radius:8px;background:#121010;color:#F4EFE7;overflow:auto;overscroll-behavior:contain;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .aw dialog.catd::backdrop{background:rgba(0,0,0,.74);backdrop-filter:blur(2px)}
 .aw .catd-in{display:flex;flex-direction:column;min-height:100%}
 .aw .catd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:26px 36px 20px;border-bottom:1px solid #2B2622;position:sticky;top:0;background:#121010;z-index:2}
@@ -58,6 +58,8 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .catd-sp .eyebrow{font-size:10px;letter-spacing:.14em;color:#7D7368}
 .aw .catd-sp .sponsor{width:100%;height:64px;font-size:11px}
 .aw .catd-sp .sponsor.has-logo{padding:10px 16px}
+.aw .catd-bar{display:none}
+.aw .catd-close-foot{display:none}
 .aw .catd-x{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;margin:-6px -8px 0 0;padding:0;background:none;border:1px solid #2B2622;border-radius:50%;color:#B4A99A;cursor:pointer;box-shadow:none}
 .aw .catd-x:hover{color:#FFFFFF;border-color:#F4EFE7}
 .aw .catd-grid{display:grid;grid-template-columns:1.05fr 1fr;grid-template-rows:auto 1fr;gap:28px 40px;padding:26px 36px 30px}
@@ -78,19 +80,20 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .exgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .aw .ex{margin:0;min-width:0}
 .aw .ex-open{display:block;width:100%;padding:0;margin:0;background:none;border:0;border-radius:4px;cursor:zoom-in;box-shadow:none;overflow:hidden}
-.aw .ex img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;background:#211D19;margin:0;border:0;max-width:none;transition:transform .5s cubic-bezier(.2,.6,.2,1)}
+.aw .ex img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:4px;background:#211D19;margin:0;border:0;max-width:none;transition:transform .5s cubic-bezier(.2,.6,.2,1)}
 .aw .ex-open:hover img{transform:scale(1.04)}
 .aw .ex figcaption{font-size:11.5px;color:#B4A99A;line-height:1.35;margin-top:7px}
 .aw .ex figcaption strong{display:block;color:#F4EFE7;font-weight:600}
 .aw .catd-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:20px 36px 28px;border-top:1px solid #2B2622;margin-top:auto}
 .aw .catd-nav{display:flex;gap:10px}
 .aw .catd-nav .btn{min-height:44px;padding:0 16px;font-size:13px}
-.aw dialog.lb{position:fixed;inset:0;margin:auto;padding:0;border:0;background:transparent;max-width:calc(100% - 32px);max-height:calc(100dvh - 32px);cursor:zoom-out;overflow:visible}
+.aw dialog.lb{position:fixed;inset:0;margin:auto;padding:0;border:0;background:transparent;width:auto;max-width:calc(100% - 32px);max-height:calc(100dvh - 32px);cursor:zoom-out;overflow:visible}
 .aw dialog.lb::backdrop{background:rgba(0,0,0,.86)}
 .aw dialog.lb img{display:block;max-width:100%;max-height:calc(100dvh - 32px);width:auto;height:auto;border-radius:6px;margin:0;border:0}
 html.aw-lock{overflow:hidden}
 @media (max-width:1000px){.aw .catd-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}.aw .catd-grid > .rules{grid-row:1}.aw .catd-grid > .exs{grid-column:1 / -1;grid-row:2}.aw .exgrid{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:700px){.aw dialog.catd{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0;margin:0}.aw .catd-head{padding:22px 20px 18px;position:static;flex-wrap:wrap}.aw .catd-head > div:first-child{padding-right:44px}.aw .catd-sp{width:100%;flex-direction:row;align-items:center;gap:14px;margin:4px 0 0}.aw .catd-sp .sponsor{width:160px}.aw .catd-x{position:fixed;top:12px;right:12px;margin:0;background:#121010;z-index:3}.aw .catd-grid > .rules{order:1}.aw .catd-head h3{font-size:36px}.aw .catd-grid{grid-template-columns:1fr;grid-template-rows:auto;gap:28px;padding:22px 20px 28px}.aw .catd-grid > .rules{grid-column:1;grid-row:auto}.aw .catd-grid > .exs{grid-column:1;grid-row:auto}.aw .exgrid{grid-template-columns:1fr 1fr}.aw .catd-foot{padding:18px 20px 24px}.aw .catd-foot .btn-primary{width:100%}.aw .catd-nav{width:100%}.aw .catd-nav .btn{flex:1}}
+@media (max-height:640px){.aw .catd-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;background:#121010;border-bottom:1px solid #2B2622;padding:8px 12px 8px 20px;min-height:52px}.aw .catd-bar .t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#B4A99A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.aw .catd-bar .catd-x{margin:0}.aw .catd-head{position:static}.aw .catd-head > .catd-x{display:none}.aw .catd-head h3{font-size:34px}.aw .catd-close-foot{display:inline-flex}}
+@media (max-width:700px){.aw dialog.catd{width:100%;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;border-radius:0;border:0;margin:0}.aw .catd-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;background:#121010;border-bottom:1px solid #2B2622;padding:8px 12px 8px 20px;min-height:58px}.aw .catd-bar .t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#B4A99A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.aw .catd-bar .catd-x{margin:0}.aw .catd-head{position:static;padding:18px 20px 16px;flex-wrap:wrap;gap:14px}.aw .catd-head > .catd-x{display:none}.aw .catd-head .eyebrow{font-size:11px;letter-spacing:.1em}.aw .catd-head h3{font-size:30px}.aw .catd-head h3 .ofy{display:none}.aw .catd-lead{font-size:14px;margin-top:8px}.aw .catd-sp{width:100%;flex-direction:row;align-items:center;gap:12px;margin:0}.aw .catd-sp .sponsor{width:auto;flex:1 1 120px;max-width:170px;height:52px}.aw .catd-grid{grid-template-columns:1fr;grid-template-rows:auto;gap:26px;padding:20px 20px 24px}.aw .catd-grid > .rules{grid-column:1;grid-row:auto;order:1}.aw .catd-grid > .exs{grid-column:1;grid-row:auto}.aw .catd-grid h4{font-size:20px}.aw .catd-grid p{font-size:14.5px}.aw .catd-grid .not{font-size:13px}.aw .catd-grid ul li{font-size:13.5px}.aw .exgrid{grid-template-columns:1fr 1fr;gap:10px}.aw .catd-foot{padding:16px 20px calc(20px + env(safe-area-inset-bottom));gap:12px}.aw .catd-foot .btn-primary{width:100%}.aw .catd-nav{width:100%}.aw .catd-nav .btn{flex:1}.aw .catd-close-foot{display:inline-flex;width:100%}}
 .aw .step{display:flex;flex-direction:column;gap:12px;padding:24px;border-top:2px solid #2B2622;min-width:0}
 .aw .step .n{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-size:40px;font-weight:700;color:#F8931F;line-height:1}
 .aw .tl{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-top:2px solid #2B2622;min-width:0}
@@ -359,17 +362,18 @@ html.aw-lock{overflow:hidden}
 <?php foreach ( $cats as $c ) : ?>
 <dialog class="catd<?php echo $c['examples'] ? '' : ' noex'; ?>" id="cat-<?php echo esc_attr( $c['key'] ); ?>" aria-labelledby="cat-<?php echo esc_attr( $c['key'] ); ?>-t">
   <div class="catd-in">
+    <div class="catd-bar"><span class="t"><?php echo esc_html( $c['name'] ); ?></span><button type="button" class="catd-x" data-close aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
     <div class="catd-head">
       <div style="min-width:0">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span class="eyebrow" style="color:#F8931F"><?php echo esc_html( $stream_labels[ $c['stream'] ] ); ?></span><?php if ( ! empty( $c['new'] ) ) : ?><span class="tag tag-new">New for 2027</span><?php endif; ?></div>
-        <h3 class="disp" id="cat-<?php echo esc_attr( $c['key'] ); ?>-t"><?php echo esc_html( $c['full'] ); ?></h3>
+        <h3 class="disp" id="cat-<?php echo esc_attr( $c['key'] ); ?>-t"><?php echo atfa_awards_title_html( $c['full'] ); ?></h3>
         <p class="catd-lead"><?php echo esc_html( $c['lead'] ); ?></p>
       </div>
       <div class="catd-sp">
         <span class="eyebrow">Proudly sponsored by</span>
         <?php echo atfa_awards_sponsor_tile( $c['sponsor'] ); ?>
       </div>
-      <button type="button" class="catd-x" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      <button type="button" class="catd-x" data-close aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     </div>
     <div class="catd-grid">
       <section>
@@ -410,6 +414,7 @@ html.aw-lock{overflow:hidden}
         <button type="button" class="btn btn-ghost" data-nav="prev"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>Previous</button>
         <button type="button" class="btn btn-ghost" data-nav="next">Next<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></button>
       </div>
+      <button type="button" class="btn btn-ghost catd-close-foot" data-close>Close</button>
     </div>
   </div>
 </dialog>
@@ -437,7 +442,7 @@ html.aw-lock{overflow:hidden}
   }
   root.addEventListener('click',function(e){
     var t=e.target.closest('[data-cat]'); if(t){ e.preventDefault(); openCat('cat-'+t.getAttribute('data-cat')); return; }
-    var x=e.target.closest('.catd-x'); if(x){ x.closest('dialog').close(); return; }
+    var x=e.target.closest('[data-close]'); if(x){ x.closest('dialog').close(); return; }
     var nv=e.target.closest('[data-nav]'); if(nv){ var i=order.indexOf(nv.closest('dialog').id), n=order.length; openCat(order[(i+(nv.getAttribute('data-nav')==='next'?1:n-1))%n]); return; }
     var ex=e.target.closest('.ex-open'); if(ex&&canModal){ lb.querySelector('img').src=ex.getAttribute('data-src'); lb.showModal(); lock(); return; }
     var a=e.target.closest('dialog a[href^="#"]'); if(a){ a.closest('dialog').close(); }

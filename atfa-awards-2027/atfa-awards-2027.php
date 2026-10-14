@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.6.0' );
+define( 'ATFA_AWARDS_VERSION', '1.6.1' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -164,9 +164,20 @@ function atfa_awards_example( $ex ) {
 	$code = $ex[0];
 	$who  = isset( $ex[1] ) ? $ex[1] : '';
 	$note = isset( $ex[2] ) ? $ex[2] : '';
-	$src  = atfa_awards_img( 'examples/' . $code . '.jpg' );
+	$src  = atfa_awards_img( 'examples/' . $code . '.jpg' );          // 1200px, for the lightbox
+	$thumb = atfa_awards_img( 'examples/thumbs/' . $code . '.jpg' );  // 640px, for the grid (about a quarter of the weight on phones)
 	$cap  = $who ? '<strong>' . esc_html( $who ) . '</strong>' . esc_html( $note ) : '<strong>2025 entry</strong>';
-	return '<figure class="ex"><button type="button" class="ex-open" data-src="' . esc_url( $src ) . '" aria-label="Enlarge photo"><img src="' . esc_url( $src ) . '" alt="" loading="lazy"></button><figcaption>' . $cap . '</figcaption></figure>';
+	return '<figure class="ex"><button type="button" class="ex-open" data-src="' . esc_url( $src ) . '" aria-label="Enlarge photo"><img src="' . esc_url( $thumb ) . '" alt="" loading="lazy" width="640" height="480"></button><figcaption>' . $cap . '</figcaption></figure>';
+}
+
+/**
+ * An award's full name for the panel title, with " of the Year" in a span the phone layout hides to save a line.
+ */
+function atfa_awards_title_html( $full ) {
+	if ( ' of the Year' === substr( $full, -12 ) ) {
+		return esc_html( substr( $full, 0, -12 ) ) . '<span class="ofy"> of the Year</span>';
+	}
+	return esc_html( $full );
 }
 
 /* ---------------------------------------------------------------------------
