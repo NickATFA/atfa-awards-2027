@@ -92,6 +92,7 @@ html.aw-lock{overflow:hidden}
 .aw .tl{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-top:2px solid #2B2622;min-width:0}
 .aw .tl.now{border-top-color:#F8931F}
 .aw .sponsor{display:flex;align-items:center;justify-content:center;height:84px;border:1px dashed #3A332D;border-radius:4px;color:#7D7368;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.aw .sponsor.has-logo{border:1px solid #2B2622;background:#171412;padding:14px 18px}.aw .sponsor img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;margin:0;border:0}
 .aw .hero-h1{font-size:172px;font-weight:700;margin:16px 0 0;color:#F4EFE7}
 /* The atfa wordmark stands in for the word Flooring on the first line of the headline. */
 .aw .wm{display:block;height:.9em;width:auto;margin:0 0 .1em}
@@ -247,7 +248,9 @@ html.aw-lock{overflow:hidden}
 <div class="wrap sr" style="margin-top:72px">
 <div class="eyebrow" style="margin-bottom:16px">Category sponsors</div>
 <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
-  <div class="sponsor">Sponsor logo</div><div class="sponsor">Sponsor logo</div><div class="sponsor">Sponsor logo</div><div class="sponsor">Sponsor logo</div><div class="sponsor">Sponsor logo</div><div class="sponsor">Sponsor logo</div>
+<?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
+  <?php echo atfa_awards_sponsor_tile( $sp ); ?>
+<?php endforeach; ?>
 </div>
 </div>
 

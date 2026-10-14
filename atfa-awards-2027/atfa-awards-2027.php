@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.5.0' );
+define( 'ATFA_AWARDS_VERSION', '1.5.1' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -111,6 +111,35 @@ function atfa_awards_categories() {
 	}
 	unset( $c );
 	return $cats;
+}
+
+/**
+ * Category sponsors, in the order they appear. Fill in name, logo file (assets/img/sponsors/) and url as they are
+ * confirmed; an empty entry shows a placeholder box.
+ */
+function atfa_awards_sponsors() {
+	return array(
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+		array( 'name' => '', 'img' => '', 'url' => '' ),
+	);
+}
+
+/**
+ * One sponsor tile: the logo linked to the sponsor's site, or a dashed placeholder until it is confirmed.
+ */
+function atfa_awards_sponsor_tile( $sp ) {
+	if ( empty( $sp['img'] ) ) {
+		return '<div class="sponsor">Sponsor logo</div>';
+	}
+	$img = '<img src="' . esc_url( atfa_awards_img( 'sponsors/' . $sp['img'] ) ) . '" alt="' . esc_attr( $sp['name'] ) . '" loading="lazy">';
+	if ( ! empty( $sp['url'] ) ) {
+		return '<a class="sponsor has-logo" href="' . esc_url( $sp['url'] ) . '" target="_blank" rel="noopener">' . $img . '</a>';
+	}
+	return '<div class="sponsor has-logo">' . $img . '</div>';
 }
 
 /**
