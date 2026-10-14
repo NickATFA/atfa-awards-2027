@@ -54,6 +54,10 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .catd-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:26px 36px 20px;border-bottom:1px solid #2B2622;position:sticky;top:0;background:#121010;z-index:2}
 .aw .catd-head h3{font-size:42px;font-weight:700;margin:0;color:#F4EFE7;line-height:.95}
 .aw .catd-lead{font-size:15px;color:#B4A99A;line-height:1.5;margin:12px 0 0;max-width:62ch}
+.aw .catd-sp{display:flex;flex-direction:column;gap:8px;align-items:flex-start;flex-shrink:0;width:200px;margin-left:auto}
+.aw .catd-sp .eyebrow{font-size:10px;letter-spacing:.14em;color:#7D7368}
+.aw .catd-sp .sponsor{width:100%;height:64px;font-size:11px}
+.aw .catd-sp .sponsor.has-logo{padding:10px 16px}
 .aw .catd-x{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;margin:-6px -8px 0 0;padding:0;background:none;border:1px solid #2B2622;border-radius:50%;color:#B4A99A;cursor:pointer;box-shadow:none}
 .aw .catd-x:hover{color:#FFFFFF;border-color:#F4EFE7}
 .aw .catd-grid{display:grid;grid-template-columns:1.05fr 1fr;grid-template-rows:auto 1fr;gap:28px 40px;padding:26px 36px 30px}
@@ -86,7 +90,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw dialog.lb img{display:block;max-width:100%;max-height:calc(100dvh - 32px);width:auto;height:auto;border-radius:6px;margin:0;border:0}
 html.aw-lock{overflow:hidden}
 @media (max-width:1000px){.aw .catd-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}.aw .catd-grid > .rules{grid-row:1}.aw .catd-grid > .exs{grid-column:1 / -1;grid-row:2}.aw .exgrid{grid-template-columns:repeat(4,1fr)}}
-@media (max-width:700px){.aw dialog.catd{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0;margin:0}.aw .catd-head{padding:22px 64px 18px 20px;position:static}.aw .catd-x{position:fixed;top:12px;right:12px;margin:0;background:#121010;z-index:3}.aw .catd-grid > .rules{order:1}.aw .catd-head h3{font-size:36px}.aw .catd-grid{grid-template-columns:1fr;grid-template-rows:auto;gap:28px;padding:22px 20px 28px}.aw .catd-grid > .rules{grid-column:1;grid-row:auto}.aw .catd-grid > .exs{grid-column:1;grid-row:auto}.aw .exgrid{grid-template-columns:1fr 1fr}.aw .catd-foot{padding:18px 20px 24px}.aw .catd-foot .btn-primary{width:100%}.aw .catd-nav{width:100%}.aw .catd-nav .btn{flex:1}}
+@media (max-width:700px){.aw dialog.catd{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0;margin:0}.aw .catd-head{padding:22px 20px 18px;position:static;flex-wrap:wrap}.aw .catd-head > div:first-child{padding-right:44px}.aw .catd-sp{width:100%;flex-direction:row;align-items:center;gap:14px;margin:4px 0 0}.aw .catd-sp .sponsor{width:160px}.aw .catd-x{position:fixed;top:12px;right:12px;margin:0;background:#121010;z-index:3}.aw .catd-grid > .rules{order:1}.aw .catd-head h3{font-size:36px}.aw .catd-grid{grid-template-columns:1fr;grid-template-rows:auto;gap:28px;padding:22px 20px 28px}.aw .catd-grid > .rules{grid-column:1;grid-row:auto}.aw .catd-grid > .exs{grid-column:1;grid-row:auto}.aw .exgrid{grid-template-columns:1fr 1fr}.aw .catd-foot{padding:18px 20px 24px}.aw .catd-foot .btn-primary{width:100%}.aw .catd-nav{width:100%}.aw .catd-nav .btn{flex:1}}
 .aw .step{display:flex;flex-direction:column;gap:12px;padding:24px;border-top:2px solid #2B2622;min-width:0}
 .aw .step .n{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-size:40px;font-weight:700;color:#F8931F;line-height:1}
 .aw .tl{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-top:2px solid #2B2622;min-width:0}
@@ -360,6 +364,10 @@ html.aw-lock{overflow:hidden}
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><span class="eyebrow" style="color:#F8931F"><?php echo esc_html( $stream_labels[ $c['stream'] ] ); ?></span><?php if ( ! empty( $c['new'] ) ) : ?><span class="tag tag-new">New for 2027</span><?php endif; ?></div>
         <h3 class="disp" id="cat-<?php echo esc_attr( $c['key'] ); ?>-t"><?php echo esc_html( $c['full'] ); ?></h3>
         <p class="catd-lead"><?php echo esc_html( $c['lead'] ); ?></p>
+      </div>
+      <div class="catd-sp">
+        <span class="eyebrow">Proudly sponsored by</span>
+        <?php echo atfa_awards_sponsor_tile( $c['sponsor'] ); ?>
       </div>
       <button type="button" class="catd-x" aria-label="Close"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
     </div>

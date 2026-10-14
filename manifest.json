@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
   "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
   "last_updated": "2026-10-14",
-  "changelog": "<p><strong>1.5.1</strong> (2026-10-14): Category sponsor placeholders on the splash page (same strip as the concept), with sponsors now set in one place for both pages. Ticker copy: nine member-voted categories.</p>"
+  "changelog": "<p><strong>1.6.0</strong> (2026-10-14): Every award panel now has a Proudly sponsored by slot (placeholder until confirmed; Floor of the Year shows ATFA). Sponsors are set per award in data/categories.php and feed the sponsors strip on both pages.</p>"
 }

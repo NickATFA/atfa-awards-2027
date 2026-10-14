@@ -8,6 +8,11 @@
  * Streams: member (member voted project award), panel (expert panel project award), excellence, newcomers, major.
  * Example photos live in assets/img/examples/ and are 2025 entries. Winners and runners-up are named; other entries
  * stay anonymous, as they were for voting.
+ *
+ * Sponsors: every award carries a "Proudly sponsored by" slot. Add 'sponsor' => array( 'name' => 'König', 'img' =>
+ * 'sponsors/konig.png', 'url' => 'https://...' ) to a category once its sponsor is confirmed (logo files go in
+ * assets/img/sponsors/); without it the slot shows a placeholder. Confirmed sponsors also appear in the category
+ * sponsors strip on both pages. Floor of the Year is sponsored by ATFA itself.
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -283,6 +288,7 @@ return array(
 		'name'   => 'Floor of the Year',
 		'full'   => 'ATFA Floor of the Year',
 		'stream' => 'major',
+		'sponsor' => array( 'name' => 'ATFA', 'img' => 'atfa-logo-white.png', 'url' => 'https://www.atfa.com.au/', 'atfa' => true ),
 		'lead'   => 'Overall recognition selected from eligible project award category winners and runners-up.',
 		'what'   => 'The top floor of the year, chosen from the winners and runners-up across the twelve project categories. Nothing extra to enter: every project entry is in the running.',
 		'rules'  => array(
