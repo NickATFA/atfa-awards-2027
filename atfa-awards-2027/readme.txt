@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -20,6 +20,7 @@ Notify-me signups are stored under Awards signups in the WordPress menu (export 
 * Who gets the signup emails: define ATFA_AWARDS_NOTIFY_TO in wp-config.php (default nick@atfa.com.au).
 * Redirect the old /training-events/annual-awards/ page to /awards/: define ATFA_AWARDS_REDIRECT_OLD_PAGE as true in wp-config.php.
 * Page copy and layout: views/splash.php and views/entries.php. Winner photos and captions: atfa_awards_winners() in the main plugin file.
+* The award categories (what goes in, rules, example photos) and which stream each one sits in: data/categories.php. Example photos live in assets/img/examples/.
 
 == Updating ==
 

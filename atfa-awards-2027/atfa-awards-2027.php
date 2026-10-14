@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.4.0' );
+define( 'ATFA_AWARDS_VERSION', '1.5.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -54,6 +54,83 @@ function atfa_awards_winners() {
 
 function atfa_awards_img( $file ) {
 	return ATFA_AWARDS_URL . 'assets/img/' . $file . '?v=' . ATFA_AWARDS_VERSION;
+}
+
+/**
+ * The twenty awards with their guidance, rules and example photos (data/categories.php), with the rules that are
+ * common to a stream filled in so each category carries its own complete list.
+ */
+function atfa_awards_categories() {
+	static $cats = null;
+	if ( null !== $cats ) {
+		return $cats;
+	}
+	$cats = include ATFA_AWARDS_DIR . 'data/categories.php';
+
+	$member_before = array(
+		'Open to current financial ATFA members primarily responsible for the work.',
+		'The project must be in Australia or New Zealand, completed within the eligibility period, and not installed as part of a school or learning environment.',
+		'Submit 5 to 10 high-resolution photos, a short project summary, and the product type, installation method and scope of work.',
+	);
+	$member_after  = array(
+		'Up to three entries per entrant in this category. Enter each project once, in one category, and disclose everyone who contributed.',
+		'Get the owner or client\'s permission to use the photos and project details. No branding, logos or watermarks on photos.',
+		'Member voted, with a winner and runner-up. Chasing votes on social media or elsewhere is assessed by ATFA and can get the entry removed.',
+		'Newcomers Award: tick the box on the entry form if you are in your first five years of membership and have never won an ATFA award or been a runner-up.',
+	);
+	$panel_before  = array(
+		'Open to current financial ATFA members primarily responsible for the work.',
+		'The project must be completed within the eligibility period. Work in a school or learning environment, and projects outside Australia and New Zealand, are allowed if clearly disclosed in the entry.',
+		'Submit 8 to 15 high-resolution photos, a project summary, a technical statement, and a list of the main products, finishes and systems used.',
+	);
+	$panel_after   = array(
+		'Up to three entries per entrant in this category. Enter each project once, in one category, and disclose everyone who contributed.',
+		'Get the owner or client\'s permission to use the photos and project details. No branding, logos or watermarks on judging photos.',
+		'Judged by the expert panel, with a winner and runner-up. No member voting, and the scoring criteria are not published. ATFA may ask for further evidence.',
+	);
+
+	foreach ( $cats as $key => &$c ) {
+		$c['key'] = $key;
+		$extra    = isset( $c['extra'] ) ? $c['extra'] : array();
+		if ( 'member' === $c['stream'] ) {
+			$c['rules'] = array_merge( $member_before, $extra, $member_after );
+		} elseif ( 'panel' === $c['stream'] ) {
+			$c['rules'] = array_merge( $panel_before, $extra, $panel_after );
+		} elseif ( 'excellence' === $c['stream'] ) {
+			$c['rules'] = array(
+				'Open to current financial ATFA members. Board directors and their businesses are eligible under the same rules.',
+				'Complete the official entry form and any published category questions.',
+				'Provide a nomination statement addressing the category criteria, supported by ' . $c['evidence'] . '.',
+				'Include images or logos where relevant. Everything you supply must be accurate, and you must have permission to supply it and for ATFA to use it.',
+				'Judged by ATFA or its appointed judging process. ATFA may ask for evidence to verify claims. One winner, no runner-up.',
+			);
+		}
+		if ( empty( $c['examples'] ) ) {
+			$c['examples'] = array();
+		}
+	}
+	unset( $c );
+	return $cats;
+}
+
+/**
+ * A category row in the lists: the name, with the whole row a button that opens the category's info panel.
+ */
+function atfa_awards_cat_row( $c ) {
+	$tag = ! empty( $c['new'] ) ? ' <span class="tag tag-new">New</span>' : '';
+	return '<button type="button" class="cat-row" data-cat="' . esc_attr( $c['key'] ) . '" aria-haspopup="dialog"><span class="cat-n">' . esc_html( $c['name'] ) . $tag . '</span><span class="cat-more">More info<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span></button>';
+}
+
+/**
+ * Example photo markup for a category: the 2025 entries bundled with the plugin.
+ */
+function atfa_awards_example( $ex ) {
+	$code = $ex[0];
+	$who  = isset( $ex[1] ) ? $ex[1] : '';
+	$note = isset( $ex[2] ) ? $ex[2] : '';
+	$src  = atfa_awards_img( 'examples/' . $code . '.jpg' );
+	$cap  = $who ? '<strong>' . esc_html( $who ) . '</strong>' . esc_html( $note ) : '<strong>2025 entry</strong>';
+	return '<figure class="ex"><button type="button" class="ex-open" data-src="' . esc_url( $src ) . '" aria-label="Enlarge photo"><img src="' . esc_url( $src ) . '" alt="" loading="lazy"></button><figcaption>' . $cap . '</figcaption></figure>';
 }
 
 /* ---------------------------------------------------------------------------

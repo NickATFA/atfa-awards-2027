@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
   "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
   "last_updated": "2026-10-14",
-  "changelog": "<p><strong>1.4.0</strong> (2026-10-14): Vector atfa wordmark from the EPS logo. Link preview card: the share image becomes the pages' featured image and excerpt, with Open Graph tags printed when no SEO plugin is active.</p>"
+  "changelog": "<p><strong>1.5.0</strong> (2026-10-14): Category info panels: every award now opens a panel with what goes in, the rules and example photos from the 2025 entries. Design Feature Floor moves to member voted (9 member-voted, 3 expert panel categories), with the splash and page copy updated to match.</p>"
 }
