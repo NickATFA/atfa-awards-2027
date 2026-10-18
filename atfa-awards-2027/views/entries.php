@@ -34,7 +34,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .aw .btn-primary{background:#F8931F;color:#1A1208;border-color:#F8931F}.aw .btn-primary:hover{background:#FFA640;color:#1A1208}
 .aw .btn-ghost{background:transparent;color:#F4EFE7;border-color:#3A332D}.aw .btn-ghost:hover{color:#FFFFFF;border-color:#F4EFE7}
 .aw .wrap{max-width:1280px;margin:0 auto;padding:0 40px}
-.aw .card{background:#171412;border:1px solid #2B2622;border-radius:6px}
+.aw .card{background:#1A1613;border:1px solid #332C26;border-radius:6px}
 .aw .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:3px;line-height:1.2}
 .aw .tag-new{background:#F8931F;color:#1A1208}
 .aw .tag-dim{background:#2B2622;color:#B4A99A}
@@ -43,7 +43,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 /* Category rows: the whole row is a button that opens the category's info panel. */
 .aw .cat-row{display:flex;width:100%;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;margin:0;background:none;border:0;border-radius:0;color:#F4EFE7;font:inherit;text-align:left;cursor:pointer;box-shadow:none;text-transform:none;letter-spacing:0;line-height:1.35}
 .aw .cat-row .cat-n{min-width:0}
-.aw .cat-row .cat-more{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-size:12px;font-weight:600;color:#7D7368;white-space:nowrap;transition:color .2s}
+.aw .cat-row .cat-more{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;font-size:12px;font-weight:600;color:#8F857A;white-space:nowrap;transition:color .2s}
 .aw .cat-row:hover{color:#FFFFFF}.aw .cat-row:hover .cat-more{color:#F8931F}
 .aw .cat-row:focus-visible{outline:2px solid #F8931F;outline-offset:2px}
 .aw .btn-dark{background:#1A1208;color:#F8931F;border-color:#1A1208}.aw .btn-dark:hover{background:#000;color:#FFA640}
@@ -94,9 +94,9 @@ html.aw-lock{overflow:hidden}
 @media (max-width:1000px){.aw .catd-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}.aw .catd-grid > .rules{grid-row:1}.aw .catd-grid > .exs{grid-column:1 / -1;grid-row:2}.aw .exgrid{grid-template-columns:repeat(4,1fr)}}
 @media (max-height:640px){.aw .catd-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;background:#121010;border-bottom:1px solid #2B2622;padding:8px 12px 8px 20px;min-height:52px}.aw .catd-bar .t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#B4A99A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.aw .catd-bar .catd-x{margin:0}.aw .catd-head{position:static}.aw .catd-head > .catd-x{display:none}.aw .catd-head h3{font-size:34px}.aw .catd-close-foot{display:inline-flex}}
 @media (max-width:700px){.aw dialog.catd{width:100%;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;border-radius:0;border:0;margin:0}.aw .catd-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;background:#121010;border-bottom:1px solid #2B2622;padding:8px 12px 8px 20px;min-height:58px}.aw .catd-bar .t{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#B4A99A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.aw .catd-bar .catd-x{margin:0}.aw .catd-head{position:static;padding:18px 20px 16px;flex-wrap:wrap;gap:14px}.aw .catd-head > .catd-x{display:none}.aw .catd-head .eyebrow{font-size:11px;letter-spacing:.1em}.aw .catd-head h3{font-size:30px}.aw .catd-head h3 .ofy{display:none}.aw .catd-lead{font-size:14px;margin-top:8px}.aw .catd-sp{width:100%;flex-direction:row;align-items:center;gap:12px;margin:0}.aw .catd-sp .sponsor{width:auto;flex:1 1 120px;max-width:170px;height:52px}.aw .catd-grid{grid-template-columns:1fr;grid-template-rows:auto;gap:26px;padding:20px 20px 24px}.aw .catd-grid > .rules{grid-column:1;grid-row:auto;order:1}.aw .catd-grid > .exs{grid-column:1;grid-row:auto}.aw .catd-grid h4{font-size:20px}.aw .catd-grid p{font-size:14.5px}.aw .catd-grid .not{font-size:13px}.aw .catd-grid ul li{font-size:13.5px}.aw .exgrid{grid-template-columns:1fr 1fr;gap:10px}.aw .catd-foot{padding:16px 20px calc(20px + env(safe-area-inset-bottom));gap:12px}.aw .catd-foot .btn-primary{width:100%}.aw .catd-nav{width:100%}.aw .catd-nav .btn{flex:1}.aw .catd-close-foot{display:inline-flex;width:100%}}
-.aw .step{display:flex;flex-direction:column;gap:12px;padding:24px;border-top:2px solid #2B2622;min-width:0}
+.aw .step{display:flex;flex-direction:column;gap:12px;padding:24px;border-top:2px solid #3A332D;min-width:0}
 .aw .step .n{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-size:40px;font-weight:700;color:#F8931F;line-height:1}
-.aw .tl{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-top:2px solid #2B2622;min-width:0}
+.aw .tl{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-top:2px solid #3A332D;min-width:0}
 .aw .tl.now{border-top-color:#F8931F}
 .aw .sponsor{display:flex;align-items:center;justify-content:center;height:84px;border:1px dashed #3A332D;border-radius:4px;color:#7D7368;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
 .aw .sponsor.has-logo{border:1px solid #2B2622;background:#171412;padding:14px 18px}.aw .sponsor img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;margin:0;border:0}
@@ -128,6 +128,33 @@ html.aw-lock{overflow:hidden}
 .aw .win .c{font-size:12px;color:#B4A99A;line-height:1.4}
 .aw .win .c strong{color:#F4EFE7;display:block;font-weight:600}
 @media (prefers-reduced-motion:reduce){.aw .ld,.aw .sr,.aw .bgwrap{animation:none}.aw .bg,.aw .cap{animation-play-state:paused}}
+/* Section bands: full-width tonal bands break the page into chapters (the season dates, the sponsors and categories,
+   the awards dinner) and alternate with the black. On a band, cards, rules and dividers step up one tone. */
+.aw .band{position:relative;margin-top:96px;padding:88px 0;background:#1A1613;border-top:1px solid rgba(244,239,231,.08);border-bottom:1px solid rgba(244,239,231,.08)}
+.aw .band-tight{padding:64px 0}
+.aw .band-dinner{padding:76px 0}
+.aw .band .card{background:#221D19;border-color:#3B332C}
+.aw .band ul.cats li{border-top-color:#3B332C}
+.aw .band .tag-dim{background:#352E28;color:#C3B8A9}
+.aw .band .tl{border-top-color:#463D35}
+.aw .band .tl.now{border-top-color:#F8931F}
+.aw .band .sponsor{border-color:#4A4038;color:#8F857A;background:rgba(12,11,10,.28)}
+/* The rest of the awards weekend, under the dinner: the Expo and the ladies breakfast (atfa_awards_weekend()). */
+.aw .weekend{margin-top:44px;padding-top:32px;border-top:1px solid #3B332C}
+.aw .weekend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.aw .wk{display:flex;flex-direction:column;gap:8px;min-width:0;padding:24px 26px;border-radius:6px;background:#221D19;border:1px solid #3B332C;color:#F4EFE7;text-decoration:none;transition:border-color .2s}
+.aw a.wk,.aw a.wk:hover{color:#F4EFE7}
+.aw a.wk:hover{border-color:#F8931F}
+.aw a.wk:focus-visible{outline:2px solid #F8931F;outline-offset:2px}
+.aw .wk-when{font-size:13px;font-weight:600;color:#C3B8A9}
+.aw .wk-t{font-size:32px;font-weight:700}
+.aw .wk-d{font-size:14px;line-height:1.5;color:#B4A99A;max-width:54ch}
+.aw .wk-go{display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:#F8931F}
+.aw a.wk:hover .wk-go{color:#FFA640}
+.aw .wk-soon{margin-top:auto;padding-top:8px;font-size:13px;color:#8F857A}
+@media (max-width:900px){.aw .band{margin-top:80px;padding:64px 0}.aw .band-tight{padding:52px 0}}
+@media (max-width:700px){.aw .weekend-grid{grid-template-columns:1fr}}
+@media (max-width:560px){.aw .band{margin-top:64px;padding:56px 0}.aw .band-tight{padding:48px 0 56px}.aw .wk{padding:20px}.aw .wk-t{font-size:28px}}
 @media (max-width:900px){.aw .hero-h1{font-size:104px}.aw .bg{width:100%}.aw .bgwrap{--o:.5}.aw .winners{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .whatsnew > div{grid-column:span 12 !important}.aw .grid3{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .hero{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .hero > div{grid-column:span 1 !important}.aw .two{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .steps{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .timeline{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .sponsors{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .dinner{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .dinner > div{grid-column:span 1 !important}.aw .dinner .disp{font-size:56px !important}}
 @media (max-width:560px){.aw .wrap{padding:0 20px}.aw .hero-h1{font-size:84px}.aw .two .disp{font-size:44px !important}.aw .steps{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .timeline{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .caps{height:auto}.aw .cap{position:static;display:none}.aw .cap.lead{display:block}}
 </style>
@@ -193,7 +220,7 @@ html.aw-lock{overflow:hidden}
 <div class="wrap sr" style="margin-top:72px">
 <div style="display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:18px">
   <h2 class="disp" style="font-size:56px;font-weight:700">Floors that have won</h2>
-  <span style="color:#7D7368;font-size:13px">The 2025 winners. Yours could be next.</span>
+  <span style="color:#8F857A;font-size:13px">The 2025 winners. Yours could be next.</span>
 </div>
 <div class="winners" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px">
 <?php foreach ( $winners as $w ) : ?>
@@ -202,7 +229,8 @@ html.aw-lock{overflow:hidden}
 </div>
 </div>
 
-<div class="wrap sr" style="margin-top:72px">
+<section class="band band-tight">
+<div class="wrap sr">
 <div class="eyebrow" style="margin-bottom:18px">The 2027 awards season · proposed dates</div>
 <div class="timeline" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px">
   <div class="tl now"><span class="eyebrow" style="color:#F8931F">Now</span><span class="disp" style="font-size:30px;font-weight:600">Entries open</span><span style="color:#B4A99A;font-size:14px">Mon 1 Feb to Wed 31 Mar</span></div>
@@ -212,11 +240,12 @@ html.aw-lock{overflow:hidden}
   <div class="tl"><span class="eyebrow">Step 5</span><span class="disp" style="font-size:30px;font-weight:600">Awards dinner</span><span style="color:#B4A99A;font-size:14px">Sat 22 May · Novotel Sydney Olympic Park</span></div>
 </div>
 </div>
+</section>
 
-<div class="wrap sr" style="margin-top:72px">
+<div class="wrap sr" style="margin-top:96px">
 <div style="display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:18px">
   <h2 class="disp" style="font-size:56px;font-weight:700">New in 2027</h2>
-  <span style="color:#7D7368;font-size:13px">The biggest changes to the awards in years</span>
+  <span style="color:#8F857A;font-size:13px">The biggest changes to the awards in years</span>
 </div>
 <div class="whatsnew" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px">
   <div style="grid-column:span 6;min-width:0;background:#F8931F;color:#1A1208;border-radius:6px;padding:28px;display:flex;flex-direction:column;gap:10px">
@@ -252,7 +281,8 @@ html.aw-lock{overflow:hidden}
 </div>
 </div>
 
-<div class="wrap sr" style="margin-top:72px">
+<section class="band">
+<div class="wrap sr">
 <div class="eyebrow" style="margin-bottom:16px">Category sponsors</div>
 <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
 <?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
@@ -261,7 +291,7 @@ html.aw-lock{overflow:hidden}
 </div>
 </div>
 
-<div class="wrap sr" id="categories" style="margin-top:96px">
+<div class="wrap sr" id="categories" style="margin-top:80px">
 <div style="display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin-bottom:28px">
   <h2 class="disp" style="font-size:72px;font-weight:700;max-width:14ch">Twenty awards. Three ways to win.</h2>
   <p style="max-width:44ch;color:#B4A99A;font-size:15px;line-height:1.5">Project awards are decided by members or by the new expert panel. Excellence awards recognise people, businesses and products. Tap any award for what goes in it, the rules, and examples from 2025.</p>
@@ -292,7 +322,7 @@ html.aw-lock{overflow:hidden}
       <span class="tag tag-new" style="align-self:flex-start">New</span>
       <span style="font-size:14px;font-weight:700;line-height:1.4">School or learning-environment work and overseas projects are permitted if clearly disclosed and all other rules are met.</span>
     </div>
-    <p style="margin-top:auto;color:#7D7368;font-size:13px;line-height:1.5">Judging images are anonymous: no logos, watermarks or branding.</p>
+    <p style="margin-top:auto;color:#8F857A;font-size:13px;line-height:1.5">Judging images are anonymous: no logos, watermarks or branding.</p>
   </div>
 
   <div class="card" style="padding:28px;display:flex;flex-direction:column;gap:18px;min-width:0">
@@ -322,6 +352,7 @@ html.aw-lock{overflow:hidden}
   </div>
 </div>
 </div>
+</section>
 
 <div class="wrap sr" id="how-it-works" style="margin-top:96px">
 <h2 class="disp" style="font-size:72px;font-weight:700;margin:0 0 28px">How it works</h2>
@@ -333,8 +364,9 @@ html.aw-lock{overflow:hidden}
 </div>
 </div>
 
-<div class="wrap sr" style="margin-top:96px">
-<div class="card dinner" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;padding:40px;align-items:center">
+<section class="band band-dinner">
+<div class="wrap sr">
+<div class="dinner" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;align-items:center">
   <div style="grid-column:span 8;min-width:0;display:flex;flex-direction:column;gap:10px">
     <span class="eyebrow" style="color:#F8931F">Awards dinner</span>
     <div class="disp" style="font-size:80px;font-weight:700">Saturday 22 May 2027</div>
@@ -342,16 +374,30 @@ html.aw-lock{overflow:hidden}
   </div>
   <div style="grid-column:span 4;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
     <a class="btn btn-ghost" href="https://www.atfa.com.au/events/">Tickets on sale soon</a>
-    <span style="font-size:13px;color:#7D7368">Finalists are told first so they can book travel.</span>
+    <span style="font-size:13px;color:#8F857A">Finalists are told first so they can book travel.</span>
+  </div>
+</div>
+<div class="weekend">
+  <div class="eyebrow">Also on the awards weekend</div>
+  <div class="weekend-grid">
+<?php foreach ( atfa_awards_weekend() as $ev ) : ?>
+    <?php echo atfa_awards_weekend_card( $ev ); ?>
+<?php endforeach; ?>
   </div>
 </div>
 </div>
+</section>
 
-<div class="wrap sr" style="margin-top:72px;padding-bottom:48px">
-<div style="border-top:1px solid #2B2622;padding-top:24px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:#7D7368">
+<div class="wrap" style="padding-top:28px;padding-bottom:48px">
+<div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:#8F857A">
   <div style="display:flex;gap:20px;flex-wrap:wrap">
     <a href="https://www.atfa.com.au/" style="color:#B4A99A">atfa.com.au</a>
     <a href="https://www.atfa.com.au/terms-conditions/" style="color:#B4A99A">Awards entry terms &amp; conditions</a>
+<?php foreach ( atfa_awards_weekend() as $ev ) : ?>
+<?php if ( ! empty( $ev['url'] ) ) : ?>
+    <a href="<?php echo esc_url( $ev['url'] ); ?>" style="color:#B4A99A"><?php echo esc_html( $ev['footer'] ); ?></a>
+<?php endif; ?>
+<?php endforeach; ?>
     <a href="https://www.atfa.com.au/contact/" style="color:#B4A99A">Contact ATFA</a>
   </div>
   <div>AU 1300 361 693 · NZ 0800 453 715 · © Australasian Timber Flooring Association</div>

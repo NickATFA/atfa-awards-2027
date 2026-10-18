@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.6.1
+ * Version: 1.7.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.6.1' );
+define( 'ATFA_AWARDS_VERSION', '1.7.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -178,6 +178,46 @@ function atfa_awards_title_html( $full ) {
 		return esc_html( substr( $full, 0, -12 ) ) . '<span class="ofy"> of the Year</span>';
 	}
 	return esc_html( $full );
+}
+
+/**
+ * The rest of the awards weekend in Sydney, shown under the dinner on the entries page and linked in its footer.
+ * Leave a url empty until the event's page is up: the card then shows its "soon" line and no link.
+ */
+function atfa_awards_weekend() {
+	return array(
+		array(
+			'title'  => 'Expo & Conference 2027',
+			'when'   => 'Sydney Showground, Hall 5 · May 2027',
+			'text'   => 'See the floor plan, who is exhibiting and which stands are still available.',
+			'cta'    => 'View the floor plan',
+			'footer' => 'Expo 2027 floor plan',
+			'url'    => 'https://www.atfa.com.au/expo-2027-hall-5-interactive-floor-plan/',
+		),
+		array(
+			'title'  => 'Ladies Breakfast',
+			'when'   => 'Sydney · awards weekend',
+			'text'   => 'A morning for the ladies of ATFA to get together and network over breakfast.',
+			'soon'   => 'Date, venue and tickets coming soon',
+			'cta'    => 'Details and tickets',
+			'footer' => 'Ladies Breakfast',
+			'url'    => '',
+		),
+	);
+}
+
+/**
+ * One card in the "Also on the awards weekend" row: the whole card is a link when the event has a page,
+ * otherwise the same card with its "soon" line.
+ */
+function atfa_awards_weekend_card( $ev ) {
+	$inner = '<span class="wk-when">' . esc_html( $ev['when'] ) . '</span>'
+		. '<span class="disp wk-t">' . esc_html( $ev['title'] ) . '</span>'
+		. '<span class="wk-d">' . esc_html( $ev['text'] ) . '</span>';
+	if ( empty( $ev['url'] ) ) {
+		return '<div class="wk">' . $inner . '<span class="wk-soon">' . esc_html( $ev['soon'] ) . '</span></div>';
+	}
+	return '<a class="wk" href="' . esc_url( $ev['url'] ) . '">' . $inner . '<span class="wk-go">' . esc_html( $ev['cta'] ) . '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></span></a>';
 }
 
 /* ---------------------------------------------------------------------------
