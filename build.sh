@@ -23,7 +23,7 @@ cat > manifest.json <<JSON
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/$REPO",
-  "package": "https://raw.githubusercontent.com/$REPO/main/dist/atfa-awards-2027.zip",
+  "package": "https://raw.githubusercontent.com/$REPO/main/dist/atfa-awards-2027.zip?v=$VERSION",
   "last_updated": "$TODAY",
   "changelog": "$CHANGELOG"
 }

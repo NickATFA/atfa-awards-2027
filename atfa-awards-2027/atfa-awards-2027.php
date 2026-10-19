@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, and the list of notify-me signups under Awards signups.
- * Version: 1.7.1
+ * Version: 1.7.2
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.7.1' );
+define( 'ATFA_AWARDS_VERSION', '1.7.2' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -648,7 +648,8 @@ function atfa_awards_manifest( $force = false ) {
 			return $cached;
 		}
 	}
-	$response = wp_remote_get( ATFA_AWARDS_MANIFEST_URL, array( 'timeout' => 10, 'headers' => array( 'Accept' => 'application/json' ) ) );
+	// The query string gets past GitHub's five-minute cache of raw files, so a push is seen as soon as we look.
+	$response = wp_remote_get( add_query_arg( 'nocache', time(), ATFA_AWARDS_MANIFEST_URL ), array( 'timeout' => 10, 'headers' => array( 'Accept' => 'application/json' ) ) );
 	if ( is_wp_error( $response ) || 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
 		return null;
 	}
@@ -711,16 +712,30 @@ add_filter( 'plugins_api', function ( $result, $action, $args ) {
 	);
 }, 10, 3 );
 
-// "Check again" on Dashboard > Updates, and the Plugins page, look at GitHub afresh.
+// "Check again" on Dashboard > Updates looks at GitHub afresh. Priority 0, so the cached manifest is gone before
+// WordPress runs its own update check on that page (hooked to the same action at priority 10).
 add_action( 'load-update-core.php', function () {
 	delete_transient( 'atfa_awards_manifest' );
-} );
+}, 0 );
+
+// The "Check for updates" link under the plugin: forget the cached manifest and WordPress's cached list of updates,
+// check now, then go back to the plain Plugins page so "Update now" shows on the first click. Priority 0 runs this
+// before WordPress's own check; the redirect stops a refresh from clearing the list again.
 add_action( 'load-plugins.php', function () {
-	if ( isset( $_GET['atfa-check-updates'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		delete_transient( 'atfa_awards_manifest' );
-		delete_site_transient( 'update_plugins' );
+	if ( ! isset( $_GET['atfa-check-updates'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return;
 	}
-} );
+	if ( ! current_user_can( 'update_plugins' ) ) {
+		return;
+	}
+	delete_transient( 'atfa_awards_manifest' );
+	delete_site_transient( 'update_plugins' );
+	if ( function_exists( 'wp_update_plugins' ) ) {
+		wp_update_plugins();
+	}
+	wp_safe_redirect( admin_url( 'plugins.php' ) );
+	exit;
+}, 0 );
 
 // A "Check for updates" link under the plugin on the Plugins page.
 add_filter( 'plugin_action_links_' . plugin_basename( ATFA_AWARDS_FILE ), function ( $links ) {

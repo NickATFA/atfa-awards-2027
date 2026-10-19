@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.7.2",
   "last_updated": "2026-10-19",
-  "changelog": "<p><strong>1.7.1</strong> (2026-10-19): Weekend cards under the awards dinner restyled to match the One weekend, three events band on the Expo page: date-led (Fri 21, Sat 22) with a top rule, the Expo card linking to the new Expo page at atfa.com.au/expo-2027, and the Ladies Breakfast showing Saturday 22 May with venue and tickets coming soon. Footer link now goes to the Expo page too.</p>"
+  "changelog": "<p><strong>1.7.2</strong> (2026-10-19): Check for updates now works in one click: it clears the cached update list before WordPress checks (it used to clear it straight after, so the update never showed), checks GitHub, and returns to the Plugins page with Update now showing. The update check also reads GitHub past its five-minute cache, and each version's zip has its own address. Includes the 1.7.1 weekend cards.</p>"
 }
