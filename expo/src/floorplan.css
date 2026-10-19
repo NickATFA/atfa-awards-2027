@@ -1,0 +1,448 @@
+/* ATFA Expo 2027 Hall 5 floor plan, v__VERSION__.
+   Every rule is scoped to #atfa-expo27 (the plan) or #atfa-expo27-modal (the popup),
+   so the theme and Elementor can't restyle the buttons, headings or links inside. */
+
+#atfa-expo27,
+#atfa-expo27-modal {
+  --brand: #A8600C;
+  --brand-dk: #8A4E09;
+  --brand-lt: #FDF2E4;
+  --timber: #F79320;
+  --ink: #16211C;
+  --muted: #5F6B66;
+  --line: #DDE3E0;
+  --paper: #fff;
+  --bg: #F7F9F8;
+  --avail: #2E7D4F;
+  --hold: #D99A21;
+  --sold: #96A29C;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: left;
+  letter-spacing: normal;
+  word-spacing: normal;
+  -webkit-text-size-adjust: 100%;
+}
+
+#atfa-expo27 *, #atfa-expo27 *::before, #atfa-expo27 *::after,
+#atfa-expo27-modal *, #atfa-expo27-modal *::before, #atfa-expo27-modal *::after {
+  box-sizing: border-box;
+}
+
+/* Neutralise theme styles on the elements we use */
+#atfa-expo27 h1, #atfa-expo27 h2, #atfa-expo27 h3,
+#atfa-expo27-modal h2 {
+  margin: 0; padding: 0; border: 0; background: none;
+  font-family: inherit; text-transform: none; letter-spacing: normal; line-height: 1.2;
+}
+#atfa-expo27 p, #atfa-expo27-modal p, #atfa-expo27 dl, #atfa-expo27 dt, #atfa-expo27 dd { margin: 0; padding: 0; }
+#atfa-expo27 ul, #atfa-expo27 li { margin: 0; padding: 0; list-style: none; }
+#atfa-expo27 li::before, #atfa-expo27 li::marker { content: none; }
+#atfa-expo27 button, #atfa-expo27 input,
+#atfa-expo27-modal button {
+  font-family: inherit; text-transform: none; letter-spacing: normal; text-shadow: none;
+  box-shadow: none; margin: 0; min-height: 0; min-width: 0; width: auto; height: auto;
+  -webkit-appearance: none; appearance: none;
+}
+#atfa-expo27 a, #atfa-expo27-modal a { text-decoration: none; box-shadow: none; text-transform: none; }
+#atfa-expo27 svg { overflow: hidden; }
+
+/* Layout */
+#atfa-expo27 .afpx-wrap {
+  container-type: inline-size;
+  container-name: afpx;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Staff bar: only printed for logged-in staff, never for visitors */
+#atfa-expo27 .afpx-staff {
+  max-width: 1400px; margin: 0 auto 10px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  padding: 10px 12px 10px 14px;
+  border: 1px dashed var(--hold); border-radius: 12px;
+  background: #FFF8EC; color: #4A3D24;
+  font-size: 13px; line-height: 1.45;
+}
+#atfa-expo27 .afpx-staff-tag {
+  flex: none; padding: 3px 9px; border-radius: 999px;
+  background: #F6DFAE; color: #6B4B12;
+  font-size: 10.5px; font-weight: 700; line-height: 1.4; letter-spacing: .7px; text-transform: uppercase;
+}
+#atfa-expo27 .afpx-staff-text { flex: 1 1 280px; min-width: 0; font-size: 13px; }
+#atfa-expo27 .afpx-staff-status { font-weight: 600; color: #3A3020; }
+#atfa-expo27 .afpx-staff-status.is-warn { color: #9A3412; }
+#atfa-expo27 .afpx-staff-note { color: #6F6250; }
+#atfa-expo27 .afpx-staff-btns { flex: none; display: flex; flex-wrap: wrap; gap: 8px; }
+#atfa-expo27 .afpx-staff .afpx-btn.is-small { min-height: 34px; white-space: nowrap; }
+
+#atfa-expo27 .afpx-top {
+  background: #141618;
+  color: #fff;
+  padding: 18px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--timber);
+}
+#atfa-expo27 .afpx-top h1 { color: #fff; font-size: 21px; font-weight: 700; }
+#atfa-expo27 .afpx-top p { color: #F3D9BB; font-size: 13px; margin-top: 4px; max-width: 760px; }
+
+#atfa-expo27 .afpx-stats { display: flex; gap: 22px; }
+#atfa-expo27 .afpx-stats div { display: flex; flex-direction: column-reverse; align-items: flex-end; }
+#atfa-expo27 .afpx-stats dd { color: #fff; font-size: 22px; font-weight: 700; line-height: 1.1; }
+#atfa-expo27 .afpx-stats dt { color: #F3D9BB; font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px; }
+
+#atfa-expo27 .afpx-body { display: grid; grid-template-columns: minmax(0, 1fr) 330px; }
+#atfa-expo27 .afpx-mapcol { background: var(--paper); min-width: 0; display: flex; flex-direction: column; }
+
+/* Toolbar */
+#atfa-expo27 .afpx-toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--paper);
+}
+#atfa-expo27 .afpx-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+#atfa-expo27 .afpx-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 13px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: #fff; color: var(--ink);
+  font-size: 13px; font-weight: 500; line-height: 1;
+  cursor: pointer; white-space: nowrap;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+@media (hover: hover) {
+  #atfa-expo27 .afpx-chip:hover { border-color: var(--brand); color: var(--brand); background: #fff; }
+}
+#atfa-expo27 .afpx-chip[aria-pressed="true"],
+#atfa-expo27 .afpx-chip[aria-pressed="true"]:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+#atfa-expo27 .afpx-sw { width: 10px; height: 10px; border-radius: 2px; border: 1px solid; flex: none; }
+
+#atfa-expo27 .afpx-zoom { display: flex; gap: 4px; margin-left: auto; }
+#atfa-expo27 .afpx-zbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 32px; padding: 0;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--ink);
+  font-size: 19px; font-weight: 500; line-height: 1; cursor: pointer;
+}
+@media (hover: hover) {
+  #atfa-expo27 .afpx-zbtn:hover { border-color: var(--brand); color: var(--brand); background: #fff; }
+}
+#atfa-expo27 .afpx-zbtn.afpx-zreset { width: auto; padding: 0 12px; font-size: 13px; }
+
+#atfa-expo27 .afpx-chip:focus-visible,
+#atfa-expo27 .afpx-zbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Plan */
+#atfa-expo27 .afpx-stage {
+  position: relative;
+  width: 100%;
+  max-height: min(78vh, 860px);
+  min-height: 260px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.024) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(rgba(0,0,0,.024) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--paper);
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#atfa-expo27 .afpx-stage.is-drag { cursor: grabbing; }
+#atfa-expo27 .afpx-svg { display: block; width: 100%; height: 100%; }
+
+#atfa-expo27 .afpx-stand { cursor: pointer; outline: none; }
+#atfa-expo27 .afpx-stand text { pointer-events: none; }
+#atfa-expo27 .afpx-lbl { fill: var(--ink); }
+#atfa-expo27 .afpx-sub { fill: #4F5D57; }
+#atfa-expo27 .afpx-stand.is-sold .afpx-lbl,
+#atfa-expo27 .afpx-stand.is-sold .afpx-sub { fill: #fff; }
+#atfa-expo27 .afpx-stand.is-hold .afpx-sub { fill: #7A5310; }
+#atfa-expo27 .afpx-stand.is-loading rect,
+#atfa-expo27 .afpx-stand.is-unknown rect { stroke-dasharray: .5 .35; }
+@media (hover: hover) {
+  #atfa-expo27 .afpx-stand:hover rect { filter: brightness(.94); }
+}
+#atfa-expo27 .afpx-stand.is-sel rect { stroke: #111; stroke-width: .42; }
+#atfa-expo27 .afpx-stand:focus-visible rect { stroke: #111; stroke-width: .55; }
+#atfa-expo27 .afpx-stand.is-dim { opacity: .18; }
+
+#atfa-expo27 .afpx-north {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  width: 38px; height: 46px; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center;
+  font-size: 11px; font-weight: 700; color: var(--ink);
+}
+#atfa-expo27 .afpx-north svg { display: block; width: 30px; height: 30px; overflow: visible; }
+
+#atfa-expo27 .afpx-tip {
+  position: absolute; z-index: 5; pointer-events: none;
+  max-width: 240px; padding: 8px 11px; border-radius: 8px;
+  background: #16211C; color: #fff; font-size: 12px; line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  opacity: 0; transition: opacity .12s;
+}
+#atfa-expo27 .afpx-tip.is-on { opacity: 1; }
+#atfa-expo27 .afpx-tip strong { display: block; font-size: 13px; margin-bottom: 1px; }
+#atfa-expo27 .afpx-tip span { display: block; }
+#atfa-expo27 .afpx-tip .afpx-tip-st { color: #FFC178; font-weight: 700; }
+
+#atfa-expo27 .afpx-hint {
+  position: absolute; left: 50%; bottom: 14px; z-index: 6;
+  transform: translateX(-50%);
+  max-width: calc(100% - 24px);
+  padding: 8px 14px; border-radius: 999px;
+  background: rgba(22,33,28,.9); color: #fff;
+  font-size: 13px; line-height: 1.3; text-align: center;
+  pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+#atfa-expo27 .afpx-hint.is-on { opacity: 1; }
+
+#atfa-expo27 .afpx-noscript { padding: 24px; font-size: 14px; }
+#atfa-expo27 .afpx-noscript a { color: var(--brand); text-decoration: underline; }
+
+/* Legend */
+#atfa-expo27 .afpx-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+  padding: 10px 16px; border-top: 1px solid var(--line); background: var(--paper);
+  font-size: 12px; color: var(--muted);
+}
+#atfa-expo27 .afpx-legend ul { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+#atfa-expo27 .afpx-legend li { display: inline-flex; align-items: center; gap: 6px; }
+#atfa-expo27 .afpx-legend i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; display: inline-block; }
+#atfa-expo27 .afpx-legend i.is-wall { width: 16px; height: 0; border: 0; border-top: 3px solid #16211C; border-radius: 0; }
+#atfa-expo27 .afpx-legend i.is-route { width: 16px; background: #E7ECEA; border-color: #C9D1CD; border-style: dashed; }
+#atfa-expo27 .afpx-help { margin-left: auto; }
+
+/* Side panel */
+#atfa-expo27 .afpx-side { position: relative; min-width: 0; background: var(--paper); border-left: 1px solid var(--line); }
+#atfa-expo27 .afpx-side-in { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; }
+#atfa-expo27 .afpx-notice {
+  margin: 12px 14px 0; padding: 9px 11px; border-radius: 9px;
+  background: #FFF7E6; border: 1px solid #F2D49A; color: #6B4B12; font-size: 12.5px;
+}
+#atfa-expo27 .afpx-notice[hidden] { display: none; }
+#atfa-expo27 .afpx-search { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+#atfa-expo27 .afpx-search input {
+  display: block; width: 100%; height: 40px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 9px;
+  background: #fff; color: var(--ink); font-size: 14px; line-height: 1.2; outline: none;
+}
+#atfa-expo27 .afpx-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-lt); }
+#atfa-expo27 .afpx-count { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+#atfa-expo27 .afpx-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+#atfa-expo27 .afpx-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 14px; border: 0; border-bottom: 1px solid #EEF1F0; border-radius: 0;
+  background: transparent; color: var(--ink); text-align: left;
+  font-size: 13px; font-weight: 400; line-height: 1.3; cursor: pointer;
+}
+@media (hover: hover) {
+  #atfa-expo27 .afpx-item:hover { background: var(--brand-lt); color: var(--ink); }
+}
+#atfa-expo27 .afpx-item.is-sel { background: var(--brand-lt); box-shadow: inset 3px 0 0 var(--brand); }
+#atfa-expo27 .afpx-item:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+#atfa-expo27 .afpx-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+#atfa-expo27 .afpx-no { font-weight: 700; min-width: 32px; }
+#atfa-expo27 .afpx-mid { flex: 1 1 auto; min-width: 0; }
+#atfa-expo27 .afpx-nm { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#atfa-expo27 .afpx-mt { display: block; font-size: 11.5px; color: var(--muted); }
+#atfa-expo27 .afpx-pr { font-weight: 700; color: var(--brand); white-space: nowrap; }
+#atfa-expo27 .afpx-pr.is-hold { color: #9A6A12; }
+#atfa-expo27 .afpx-pr.is-sold { color: var(--muted); }
+#atfa-expo27 .afpx-empty { padding: 26px 14px; text-align: center; color: var(--muted); }
+
+#atfa-expo27 .afpx-sr {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Buttons (shared with the popup) */
+#atfa-expo27 .afpx-btn,
+#atfa-expo27-modal .afpx-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 42px; padding: 0 18px; border: 1px solid var(--brand); border-radius: 10px;
+  background: var(--brand); color: #fff;
+  font-size: 14px; font-weight: 600; line-height: 1.2; text-decoration: none; cursor: pointer;
+}
+#atfa-expo27 .afpx-btn.is-ghost, #atfa-expo27-modal .afpx-btn.is-ghost { background: #fff; color: var(--brand); }
+@media (hover: hover) {
+  #atfa-expo27 .afpx-btn:hover, #atfa-expo27-modal .afpx-btn:hover { background: var(--brand-dk); border-color: var(--brand-dk); color: #fff; }
+  #atfa-expo27 .afpx-btn.is-ghost:hover, #atfa-expo27-modal .afpx-btn.is-ghost:hover { background: var(--brand-lt); color: var(--brand-dk); }
+}
+#atfa-expo27 .afpx-btn:active, #atfa-expo27-modal .afpx-btn:active { background: var(--brand-dk); border-color: var(--brand-dk); color: #fff; }
+#atfa-expo27 .afpx-btn.is-ghost:active, #atfa-expo27-modal .afpx-btn.is-ghost:active { background: var(--brand-lt); color: var(--brand-dk); }
+#atfa-expo27 .afpx-btn.is-small { min-height: 30px; padding: 0 12px; font-size: 12.5px; border-radius: 8px; }
+#atfa-expo27 .afpx-btn:focus-visible, #atfa-expo27-modal .afpx-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Popup */
+#atfa-expo27-modal {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2147483000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+#atfa-expo27-modal[hidden] { display: none !important; }
+#atfa-expo27-modal .afpx-modal-bd {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(12,14,16,.55);
+  touch-action: none;
+}
+#atfa-expo27-modal .afpx-modal-card {
+  position: relative; width: 100%; max-width: 520px;
+  max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px);
+  overflow: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  background: #fff; color: var(--ink); border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.35); outline: none;
+  animation: afpxPop .16s ease-out;
+}
+@keyframes afpxPop { from { opacity: 0; transform: translateY(8px) scale(.985); } to { opacity: 1; transform: none; } }
+#atfa-expo27-modal .afpx-x {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;
+  background: #EFF1F0; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer;
+}
+@media (hover: hover) {
+  #atfa-expo27-modal .afpx-x:hover { background: #E2E6E4; color: var(--ink); }
+}
+#atfa-expo27-modal .afpx-x:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+#atfa-expo27-modal .afpx-mhead { padding: 22px 60px 14px 22px; border-bottom: 1px solid var(--line); }
+#atfa-expo27-modal .afpx-badge {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  background: #8A958F; color: #fff;
+  font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+}
+#atfa-expo27-modal .afpx-badge.is-available { background: var(--avail); }
+#atfa-expo27-modal .afpx-badge.is-hold { background: var(--hold); }
+#atfa-expo27-modal .afpx-badge.is-sold { background: #6E7B75; }
+#atfa-expo27-modal h2 { margin: 10px 0 3px; font-size: 22px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+#atfa-expo27-modal .afpx-meta { font-size: 13px; color: var(--muted); }
+#atfa-expo27-modal .afpx-open { margin-top: 2px; font-size: 13px; font-weight: 600; color: #3F4C46; }
+#atfa-expo27-modal .afpx-mbody { padding: 16px 22px 4px; }
+#atfa-expo27-modal .afpx-mbody p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.55; }
+#atfa-expo27-modal .afpx-bio { white-space: pre-line; overflow-wrap: anywhere; }
+#atfa-expo27-modal .afpx-muted { color: var(--muted); }
+#atfa-expo27-modal .afpx-mbody .afpx-price { margin: 0 0 4px; font-size: 30px; font-weight: 800; line-height: 1.1; color: var(--brand); }
+#atfa-expo27-modal .afpx-mbody .afpx-price-note { font-size: 12.5px; color: var(--muted); }
+#atfa-expo27-modal .afpx-mbody .afpx-warn {
+  padding: 9px 11px; border-radius: 9px; background: #FFF7E6; border: 1px solid #F2D49A; color: #6B4B12; font-size: 13px;
+}
+#atfa-expo27-modal .afpx-mfoot { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 8px 22px 22px; }
+#atfa-expo27-modal .afpx-alt { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); }
+#atfa-expo27-modal .afpx-alt a { color: var(--brand); text-decoration: underline; }
+#atfa-expo27-modal .afpx-site { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+#atfa-expo27-modal .afpx-mfoot .afpx-btn.is-ghost { margin-left: auto; }
+
+/* Phones: popup slides up from the bottom and can be dragged down to close */
+@media (max-width: 600px) {
+  #atfa-expo27-modal { align-items: flex-end; padding: 0; }
+  #atfa-expo27-modal .afpx-modal-card {
+    max-width: none; max-height: 88vh; max-height: 88dvh; border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: afpxUp .2s ease-out;
+  }
+  #atfa-expo27-modal .afpx-modal-card::before {
+    content: ""; position: absolute; top: 7px; left: 50%; width: 38px; height: 4px;
+    margin-left: -19px; border-radius: 4px; background: #D3D9D6;
+  }
+  #atfa-expo27-modal .afpx-mhead { padding-top: 24px; }
+  #atfa-expo27-modal .afpx-mfoot .afpx-btn { flex: 1 1 100%; min-height: 46px; }
+  #atfa-expo27-modal .afpx-mfoot .afpx-btn.is-ghost { margin-left: 0; }
+  #atfa-expo27-modal .afpx-x { width: 40px; height: 40px; top: 14px; right: 12px; }
+}
+@keyframes afpxUp { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+
+/* Touch screens: bigger targets, and 16px text in the search box so iPhones
+   don't zoom the page when it's tapped. */
+@media (pointer: coarse) {
+  #atfa-expo27 .afpx-chip { height: 38px; }
+  #atfa-expo27 .afpx-zbtn { width: 40px; height: 38px; }
+  #atfa-expo27 .afpx-search input { height: 44px; font-size: 16px; }
+  #atfa-expo27 .afpx-item { padding-top: 11px; padding-bottom: 11px; }
+  #atfa-expo27-modal .afpx-x { width: 40px; height: 40px; }
+  #atfa-expo27 .afpx-staff .afpx-btn.is-small { min-height: 42px; font-size: 13.5px; }
+}
+
+/* Phones: staff buttons share a full-width row under the text */
+@media (max-width: 600px) {
+  #atfa-expo27 .afpx-staff-btns { flex: 1 1 100%; }
+  #atfa-expo27 .afpx-staff-btns .afpx-btn { flex: 1 1 auto; }
+}
+
+/* Narrower containers: list below the plan, no scrolling box inside the page */
+@container afpx (max-width: 900px) {
+  #atfa-expo27 .afpx-body { grid-template-columns: minmax(0, 1fr); }
+  #atfa-expo27 .afpx-side { border-left: 0; border-top: 1px solid var(--line); }
+  #atfa-expo27 .afpx-side-in { position: static; }
+  #atfa-expo27 .afpx-list {
+    max-height: none; overflow: visible;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+  #atfa-expo27 .afpx-list .afpx-empty { grid-column: 1 / -1; }
+  #atfa-expo27 .afpx-stage { max-height: 72vh; }
+}
+@container afpx (max-width: 600px) {
+  #atfa-expo27 .afpx-top { padding: 14px; gap: 10px; }
+  #atfa-expo27 .afpx-top h1 { font-size: 17px; }
+  #atfa-expo27 .afpx-top p { font-size: 12px; }
+  #atfa-expo27 .afpx-stats { gap: 16px; }
+  #atfa-expo27 .afpx-stats dd { font-size: 18px; }
+  #atfa-expo27 .afpx-stats div { align-items: flex-start; }
+  /* One row: the filter chips scroll sideways, zoom buttons stay put */
+  #atfa-expo27 .afpx-toolbar { padding: 8px 10px; flex-wrap: nowrap; }
+  #atfa-expo27 .afpx-chips {
+    gap: 5px; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap;
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding-right: 18px;
+  }
+  #atfa-expo27 .afpx-chips::-webkit-scrollbar { display: none; }
+  #atfa-expo27 .afpx-chip { flex: none; padding: 0 11px; font-size: 12.5px; }
+  #atfa-expo27 .afpx-zoom { margin-left: 0; flex: none; }
+  #atfa-expo27 .afpx-zbtn.afpx-zreset { padding: 0 9px; font-size: 12px; }
+  #atfa-expo27 .afpx-legend { padding: 10px 12px; font-size: 11.5px; }
+  #atfa-expo27 .afpx-help { margin-left: 0; flex-basis: 100%; }
+  #atfa-expo27 .afpx-list { grid-template-columns: minmax(0, 1fr); }
+  /* The plan is cropped closer on phones, so the north arrow moves to the empty
+     bottom-left corner instead of covering the main entrance. */
+  #atfa-expo27 .afpx-north { top: auto; bottom: 8px; left: 8px; width: 28px; height: 36px; font-size: 10px; }
+  #atfa-expo27 .afpx-north svg { width: 22px; height: 22px; }
+}
+
+/* Browsers without container queries (older iPhones): same layout by screen width */
+@supports not (container-type: inline-size) {
+  @media (max-width: 960px) {
+    #atfa-expo27 .afpx-body { grid-template-columns: minmax(0, 1fr); }
+    #atfa-expo27 .afpx-side { border-left: 0; border-top: 1px solid var(--line); }
+    #atfa-expo27 .afpx-side-in { position: static; }
+    #atfa-expo27 .afpx-list { max-height: none; overflow: visible; }
+    #atfa-expo27 .afpx-stage { max-height: 72vh; }
+  }
+  @media (max-width: 640px) {
+    #atfa-expo27 .afpx-top { padding: 14px; gap: 10px; }
+    #atfa-expo27 .afpx-top h1 { font-size: 17px; }
+    #atfa-expo27 .afpx-toolbar { padding: 8px 10px; }
+    #atfa-expo27 .afpx-zoom { margin-left: 0; }
+    #atfa-expo27 .afpx-help { margin-left: 0; flex-basis: 100%; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #atfa-expo27 *, #atfa-expo27-modal * { transition: none !important; animation: none !important; }
+}
+
+/* Phones held sideways: let the plan use most of the screen height */
+@media (max-height: 500px) and (pointer: coarse) {
+  #atfa-expo27 .afpx-stage { max-height: 86vh; }
+}

@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.7.2
+Stable tag: 1.8.0
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -14,6 +14,12 @@ On activation it creates two pages and sends a test email:
 * /awards-preview/ (private): the full entries-open page. Only staff logged in to WordPress can see it.
 
 Notify-me signups are stored under Awards signups in the WordPress menu (export to CSV from there). Every signup emails nick@atfa.com.au and sends the person a confirmation.
+
+== The Expo page ==
+
+Since 1.8.0 the plugin also runs the ATFA Expo & Conference 2027 page at /expo-2027/ (the [atfa_expo27_page] shortcode on that page) and the older floor plan shortcode [atfa_expo27_floorplan]. Stand availability comes from the published Website tab of the 2027 Exhibitor List Google Sheet, through /wp-json/atfa/v1/expo27/stands. Logged-in staff see a bar with the stand sheet link and Refresh. While the page is private, visitors who go to it are sent to the old floor plan page and menu links to it only show for staff.
+
+This code used to be the Code Snippet "ATFA Expo 2027 page and Hall 5 floor plan". After updating to 1.8.0, switch that snippet off in Snippets (it does nothing while the plugin has the page, so it's safe either way). The source, build and tests are in expo/ in the GitHub repo.
 
 == Changing things ==
 

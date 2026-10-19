@@ -1,0 +1,18 @@
+Stand,"For Sale, Hold, Sold",Company,Company Website,Company bio for event page
+S01,For Sale,,,
+S02,Sold,"Smith, Jones & Co",www.smithjones.com.au,"Line one of the bio.
+
+Second paragraph with ""quotes"" and a pipe | here."
+O01,On Hold,Secret Prospect Pty Ltd,https://secret.example,Should not appear
+O02,Sold,<b>Bold</b> Co,javascript:alert(1),Boards < 5mm and > 2mm thick
+S03,sold,Lowercase Sold Co,https://lower.example/path?x=1&y=2,
+G01,Unsold,Should Be Available,,
+G02,  On Hold  ,,,
+B01,For Sale,Leftover Name,,
+Z99,Sold,Unknown stand,,
+
+"",,,,
+S05,Sold,Émile Flooring Co,https://émile.example,Bio with emoji 🙂 and a tab	here
+S06,Sold,A Very Long Company Name That Goes On And On Pty Ltd,bona.com.au/au,
+s7,Sold,Lower Case Id Co,,
+Stand B12,On Hold,Hidden Hold Name,,

@@ -16,3 +16,23 @@ git add -A && git commit -m "v1.2.3: what changed" && git push
 The site picks it up within about ten minutes. On the Plugins page, "Check for updates" under the plugin forces a look straight away.
 
 Anyone who can push to this repo can change the live awards page, so keep it under ATFA's control.
+
+## The Expo page (since 1.8.0)
+
+The plugin also runs the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan
+(it used to be a Code Snippet). Its readable source, build and tests are in `expo/`:
+
+- `expo/src/` the page (page.html, page.css, page.js), the older floor plan (floorplan.*), the hall
+  geometry (geometry.json) and the WordPress code (snippet.php).
+- `expo/settings.json` the sheet link, enquiry page, PDF, page slug and photo IDs.
+- `python3 expo/build.py` writes `atfa-awards-2027/includes/expo-2027.php`, which the plugin loads.
+  Never edit that file by hand.
+
+Releasing an Expo change is the same as any other: edit `expo/src`, run `python3 expo/build.py`, then
+`./build.sh x.y.z "What changed"`, commit and push, and click Update now.
+
+Tests (optional): `bash expo/tests/run_all.sh` for the PHP checks and the older plan, then
+`php expo/tests/page_harness.php expo/tests/fixtures/real.csv expo/tests/out VISITOR` (also VISITOR_COLD and STAFF),
+copy `expo/tests/out/page-visitor.html` to `page-visitor-real.html`, and `python3 expo/tests/e2e_page.py`
+(Playwright; set FONT_PKG to an npm folder with @fontsource/barlow-condensed and @fontsource/montserrat for
+true-to-life screenshots).

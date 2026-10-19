@@ -1,0 +1,256 @@
+<div class="xp" id="xp-main" data-version="{{VERSION}}">
+
+<div class="xp-head-bar">
+<div class="wrap">
+<header class="xp-head ld d1">
+  <a class="back" href="https://www.atfa.com.au/"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg>atfa.com.au</a>
+  <a class="logo" href="https://www.atfa.com.au/">{{LOGO}}</a>
+  <div class="btns">
+    <a class="btn btn-ghost" href="https://www.atfa.com.au/my-membership/">Member login</a>
+    <a class="btn btn-primary" href="#floor-plan" data-plan="open">Book a stand</a>
+  </div>
+</header>
+</div>
+</div>
+
+<div class="xp-top">
+  <div class="xp-media" aria-hidden="true">
+    <div class="xp-bg">{{HERO_IMGS}}</div>
+    <div class="xp-veil"></div>
+    <div class="xp-caps">{{HERO_CAPS}}</div>
+  </div>
+  <div class="wrap xp-wk-w">
+    <nav class="xp-wk ld d2" aria-label="The ATFA weekend">
+      <span class="xp-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>
+      <div class="xp-wk-links">
+        <a class="xp-wk-a on" href="#floor-plan" aria-current="page" data-plan="open"><span class="d">Fri 21 May</span>Expo &amp; Conference</a>
+        <a class="xp-wk-a" href="#weekend"><span class="d">Sat 22 May</span>Ladies Breakfast</a>
+        <a class="xp-wk-a" href="{{AWARDS_URL}}"><span class="d">Sat 22 May</span>Awards Dinner</a>
+      </div>
+    </nav>
+  </div>
+  <div class="wrap xp-hero-w">
+    <div class="xp-hero">
+      <div class="xp-hero-t">
+        <span class="eyebrow ld d2">ATFA Expo &amp; Conference · Sydney Showground · Friday 21 May 2027</span>
+        <h1 class="disp xp-h1 ld d3">{{WORDMARK}}Expo <span class="or">2027</span></h1>
+        <p class="xp-lead ld d4">The timber flooring industry in one hall for a day. Twenty-eight stands, a live demonstration stage, and the awards dinner the next night.</p>
+        <div class="xp-ctas ld d5">
+          <a class="btn btn-primary" href="#floor-plan" data-plan="open">Pick your stand</a>
+          <a class="btn btn-ghost" href="#weekend">The weekend</a>
+        </div>
+        <p class="xp-note ld d6">Stands from __FROM_PRICE__ excl. GST. Live availability on the floor plan below, and your enquiry goes straight to the ATFA team.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap sr xp-status-w">
+  <div class="card xp-status">
+    <div class="l">
+      <span class="xp-dot" data-role="dot"></span>
+      <span class="disp t" data-role="statustitle">Stands on sale</span>
+      <span class="w">Sydney Showground, Hall 5 · Friday 21 May 2027</span>
+    </div>
+    <div class="r">
+      <span class="disp n" data-role="days" hidden></span>
+      <span class="nt" data-role="daysnote">__TOTAL__ stands from __FROM_PRICE__ excl. GST</span>
+    </div>
+  </div>
+</div>
+
+<section class="wrap sec" id="floor-plan" style="margin-top:96px" aria-labelledby="xp-plan-h">
+  <div class="sec-head">
+    <h2 class="disp" id="xp-plan-h" style="font-size:72px;max-width:12ch">Pick your stand</h2>
+    <p>Twenty-eight stands in Hall 5, drawn to scale. Select any stand for its size, price and open sides, then send an enquiry with the stand number already filled in.</p>
+  </div>
+  {{STAFF}}
+  <div class="card xp-plan">
+    <div class="xp-tools">
+      <div class="xp-chips" role="group" aria-label="Show stands" data-role="chips"></div>
+      <div class="links">
+        <button type="button" class="xp-fs" data-plan="full"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"></path><path d="M20 4l-7 7"></path><path d="M10 20H4v-6"></path><path d="M4 20l7-7"></path></svg>Full screen</button>
+        <a href="{{PDF_URL}}" target="_blank" rel="noopener">Download the PDF floor plan<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="M6 11l6 6 6-6"></path><path d="M5 20h14"></path></svg></a>
+      </div>
+    </div>
+    <div class="xp-pbody">
+      <div class="xp-mapcol">
+        <div class="xp-map" data-role="map">
+          <div class="xp-ptop" aria-hidden="true"><span class="xp-badge"><i></i><span data-role="availbadge">__TOTAL__ stands</span></span><span class="xp-from">From __FROM_PRICE__</span></div>
+          <div class="xp-north" aria-hidden="true"><svg width="26" height="26" viewBox="-10 -10 20 20"><circle r="9" fill="none" stroke="#E9E1D5" stroke-width="1"></circle><path d="M0 -6.6 L -2.9 3.7 L 0 1.6 L 2.9 3.7 Z" fill="#E9E1D5"></path></svg><span>N</span></div>
+          <div class="xp-tip" data-role="tip" aria-hidden="true"></div>
+          <noscript><p class="xp-noscript">The interactive floor plan needs JavaScript. To ask about a stand, email <a href="{{MAILTO}}">{{EMAIL}}</a> or download the PDF floor plan.</p></noscript>
+        </div>
+        <button type="button" class="xp-open" data-plan="full">Open the floor plan<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"></path><path d="M20 4l-7 7"></path><path d="M10 20H4v-6"></path><path d="M4 20l7-7"></path></svg></button>
+        <div class="xp-legend">__LEGEND__</div>
+      </div>
+      <aside class="xp-side" aria-label="Stand details">
+        <p class="xp-notice" data-role="notice" role="status" hidden></p>
+        <dl class="xp-stats">
+          <div><dd data-stat="available">–</dd><dt>Available</dt></div>
+          <div><dd data-stat="hold">–</dd><dt>On hold</dt></div>
+          <div><dd data-stat="sold">–</dd><dt>Sold</dt></div>
+        </dl>
+        <div data-role="details" aria-live="polite"></div>
+        <div class="xp-sd" data-role="sidedefault">
+          <span class="eyebrow or">Select a stand</span>
+          <span class="disp" style="font-size:34px">Every stand, its size and price</span>
+          <p class="xp-sd-text">Available stands are coloured by size. Stands on hold are marked, and sold stands show the exhibitor's name.</p>
+          <ul class="xp-rate">__RATE_LIST__</ul>
+          <span class="small" style="font-size:12px">Prices in AUD, excl. GST.</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div class="xp-pkey" aria-hidden="true">__PHONE_KEY__</div>
+  <p class="xp-pdf-n"><a href="{{PDF_URL}}" target="_blank" rel="noopener">Download the PDF floor plan<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"></path><path d="M6 11l6 6 6-6"></path><path d="M5 20h14"></path></svg></a></p>
+</section>
+
+<section class="band" aria-labelledby="xp-prices-h">
+<div class="wrap sr">
+  <div class="sec-head">
+    <h2 class="disp" id="xp-prices-h" style="font-size:56px">Stand sizes and prices</h2>
+    <span class="small" style="font-size:13px">Larger stands save against the same area in 3 × 3 m stands. Prices in AUD, excl. GST.</span>
+  </div>
+  <div class="xp-prices">__PRICE_CARDS__</div>
+</div>
+</section>
+
+<section class="wrap sr" style="margin-top:96px" aria-labelledby="xp-gal-h">
+  <div class="sec-head" style="margin-bottom:18px">
+    <h2 class="disp" id="xp-gal-h" style="font-size:56px">Last time in Melbourne</h2>
+    <span class="small" style="font-size:13px">ATFA Expo 2025. Sydney is next.</span>
+  </div>
+  <div class="xp-gal">{{GALLERY}}</div>
+</section>
+
+<section class="band band-tight sec" id="weekend" aria-labelledby="xp-wk-h">
+<div class="wrap sr">
+  <div class="sec-head" style="margin-bottom:22px">
+    <h2 class="disp" id="xp-wk-h" style="font-size:56px">One weekend, three events</h2>
+    <span class="small" style="font-size:13px">Sydney Olympic Park · 21 and 22 May 2027 · times to be confirmed</span>
+  </div>
+  <div class="xp-weekend">
+    <div class="xp-wkc now">
+      <div class="xp-wkc-top"><span class="disp xp-wkc-day"><span class="dw">Fri</span> <span class="dn">21</span><span class="dm">May</span></span><span class="tag tag-new">This page</span></div>
+      <div class="xp-wkc-b">
+        <span class="eyebrow or">Friday 21 May</span>
+        <span class="disp t">Expo &amp; Conference</span>
+        <span class="x">Sydney Showground, Hall 5. Twenty-eight stands, demonstrations on the stage, and breakout and seminar space.</span>
+        <a class="xp-wkc-a" href="#floor-plan" data-plan="open">See the floor plan<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>
+      </div>
+    </div>
+    <div class="xp-wkc">
+      <div class="xp-wkc-top"><span class="disp xp-wkc-day"><span class="dw">Sat</span> <span class="dn">22</span><span class="dm">May</span></span></div>
+      <div class="xp-wkc-b">
+        <span class="eyebrow">Saturday 22 May · morning</span>
+        <span class="disp t">Ladies Breakfast</span>
+        <span class="x">A morning for the ladies of ATFA to get together and network over breakfast.</span>
+        <span class="xp-wkc-soon">Venue and tickets coming soon</span>
+      </div>
+    </div>
+    <div class="xp-wkc">
+      <div class="xp-wkc-top"><span class="disp xp-wkc-day"><span class="dw">Sat</span> <span class="dn">22</span><span class="dm">May</span></span></div>
+      <div class="xp-wkc-b">
+        <span class="eyebrow">Saturday 22 May · evening</span>
+        <span class="disp t">Awards Dinner</span>
+        <span class="x">Novotel Sydney Olympic Park. The 2027 ATFA Flooring Awards are presented on the night.</span>
+        <a class="xp-wkc-a" href="{{AWARDS_URL}}">See the awards<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="wrap sr" style="margin-top:96px" aria-labelledby="xp-hall-h">
+  <div class="sec-head">
+    <h2 class="disp" id="xp-hall-h" style="font-size:72px">In the hall</h2>
+    <p>Hall 5 is 4,136 m². The stands sit inside a clear 3 m fire lane, with the stage in one corner and the breakout rooms behind the operable wall.</p>
+  </div>
+  <div class="xp-hall">
+    <div class="card xp-hc or-card" style="grid-column:span 6">
+      <span class="eyebrow">South-east corner</span>
+      <span class="disp t">Demonstration &amp; stage zone</span>
+      <p>A 5 × 5 m quadrant stage with 30 seats around the curved edge, main and delay speakers, and an AV and mix position.</p>
+    </div>
+    <div class="card xp-hc half" style="grid-column:span 3">
+      <span class="eyebrow or">680 m²</span>
+      <span class="disp t">Breakout &amp; seminar</span>
+      <p>Behind the operable wall, next to the hall.</p>
+    </div>
+    <div class="card xp-hc half" style="grid-column:span 3">
+      <span class="eyebrow or">680 m²</span>
+      <span class="disp t">Catering &amp; networking</span>
+      <p>Also behind the operable wall.</p>
+    </div>
+    <div class="card xp-hc" style="grid-column:span 6">
+      <span class="eyebrow or">Main entrance</span>
+      <span class="disp t">A clear way in</span>
+      <p>The main entrance opens onto a clear arrival area, and a pedestrian route runs straight across the hall to the stage. Both are kept free of stands.</p>
+    </div>
+    <div class="card xp-hc" style="grid-column:span 6">
+      <span class="eyebrow or">Open sides</span>
+      <span class="disp t">Know what faces the aisle</span>
+      <p>Every stand lists how many of its sides are open to an aisle, from one up to an island stand open on all four.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap sr" style="margin-top:96px" aria-labelledby="xp-steps-h">
+  <h2 class="disp" id="xp-steps-h" style="font-size:72px;margin:0 0 28px">How booking works</h2>
+  <ol class="xp-steps">
+    <li><span class="disp n">1</span><div><span class="disp t">Pick a stand</span><p>Select any stand on the plan for its size, price and how many sides are open to the aisle.</p></div></li>
+    <li><span class="disp n">2</span><div><span class="disp t">Send an enquiry</span><p>The enquiry form fills in the stand number for you and goes straight to {{ENQUIRY_NAME}} at ATFA.</p></div></li>
+    <li><span class="disp n">3</span><div><span class="disp t">We hold it for you</span><p>While the booking is finalised the stand shows as on hold, with no name on it.</p></div></li>
+    <li><span class="disp n">4</span><div><span class="disp t">Your name on the plan</span><p>Once it is sold, your business name, website and a short bio appear when people select your stand.</p></div></li>
+  </ol>
+</section>
+
+<section class="band xp-dn" aria-labelledby="xp-dn-h">
+  <div class="xp-dn-ph" aria-hidden="true">{{DINNER_IMG}}</div>
+  <div class="wrap sr">
+    <div class="xp-dn-grid">
+      <div class="a">
+        <span class="eyebrow or">The night after the Expo</span>
+        <h2 class="disp t" id="xp-dn-h">ATFA Awards dinner</h2>
+        <p class="w">Saturday 22 May 2027 · Novotel Sydney Olympic Park · twenty awards, three ways to win</p>
+      </div>
+      <div class="b">
+        <a class="btn btn-primary" href="{{AWARDS_URL}}">See the awards</a>
+        <span class="small" style="font-size:13px">Entries open Monday 1 February. Dinner tickets on sale soon.</span>
+      </div>
+    </div>
+  </div>
+  {{DINNER_CAP}}
+</section>
+
+<footer class="wrap xp-foot">
+  <nav aria-label="More from ATFA">
+    <a href="https://www.atfa.com.au/">atfa.com.au</a>
+    <a href="{{PDF_URL}}" target="_blank" rel="noopener">Floor plan and rate card (PDF)</a>
+    <a href="{{AWARDS_URL}}">Flooring Awards 2027</a>
+    <a href="https://www.atfa.com.au/contact/">Contact ATFA</a>
+  </nav>
+  <div>AU 1300 361 693 · NZ 0800 453 715 · © Australasian Timber Flooring Association</div>
+</footer>
+
+<div class="xp-ex" data-role="ex" data-mode="peek" role="dialog" aria-modal="true" aria-labelledby="xp-ex-title" hidden>
+  <div class="xp-ex-map" data-role="exmap"><div class="xp-cam" data-role="cam"></div></div>
+  <div class="xp-ex-top" data-role="extop">
+    <div class="xp-ex-bar">
+      <button type="button" class="xp-ibtn" data-role="exclose" aria-label="Close the floor plan"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+      <div class="xp-ex-ttl"><h2 id="xp-ex-title">Hall 5 floor plan</h2><span data-role="exsub"></span></div>
+      <button type="button" class="xp-pill" data-role="exlist" aria-pressed="false"></button>
+    </div>
+    <div class="xp-chips" role="group" aria-label="Show stands" data-role="exchips"></div>
+  </div>
+  <div class="xp-zoom" data-role="exzoom">
+    <button type="button" class="xp-ibtn" data-role="exin" aria-label="Zoom in"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+    <button type="button" class="xp-ibtn" data-role="exout" aria-label="Zoom out"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+    <button type="button" class="xp-ibtn" data-role="exwhole" aria-label="Show the whole hall"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+  </div>
+  <div class="xp-hint" data-role="exhint" aria-hidden="true"><i></i><span data-role="exhinttext">Tap a stand for its price and open sides</span></div>
+  <div class="xp-sheet" data-role="exsheet" hidden><div class="xp-grab" data-role="exgrab"><span></span></div><div class="xp-sin" data-role="exsin"></div></div>
+</div>
+
+</div>
