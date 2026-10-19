@@ -2,13 +2,14 @@
 
 Source for the floor plan at https://www.atfa.com.au/expo-2027-hall-5-interactive-floor-plan/
 
-Version 2.2.0 (Revised Concept 5 layout, staff bar), October 2026.
+Version 3.2.0, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
+ATFA Flooring Awards 2027 plugin; the repo's README.md says how to release a change.
 
 ## What's where on the website
 
 | Piece | Where |
 |---|---|
-| The plan | Code Snippets, snippet "ATFA Expo 2027 Hall 5 floor plan (v2.2.0)". Prints `[atfa_expo27_floorplan]`. |
+| The plan | The ATFA Flooring Awards 2027 plugin (`includes/expo-2027.php`, built from this folder). Prints `[atfa_expo27_floorplan]`, and `[atfa_expo27_page]` for the Expo page. The old Code Snippet "ATFA Expo 2027 page and Hall 5 floor plan" is switched off; leave it off. |
 | Staff bar | Above the plan, for logged-in Editors and Administrators only: "Open the stand sheet" (Master tab) and "Refresh from the sheet". Visitors never see it, and the sheet link isn't anywhere else on the page. |
 | The page | "Expo 2027: Hall 5 Interactive Floor Plan" (page 19308). Its only content is the shortcode. |
 | Stand data | `/wp-json/atfa/v1/expo27/stands` (live, cached 2 minutes) and `/wp-content/uploads/atfa-expo27/stands-v3.json` (fast copy). |
@@ -52,8 +53,8 @@ Changes in the sheet show on the site within about 5 to 7 minutes.
 - **Release a stand:** set Status to For Sale.
 - **Open the sheet:** log in to WordPress, open the floor plan page and use "Open the stand sheet" in the staff bar.
   (Staff need edit access to the sheet in Google, or they'll be asked to request it.)
-- **Change the enquiry email, form page, PDF or sheet link:** Code Snippets, edit the snippet, change
-  `atfa_expo27_settings()` at the top, save.
+- **Change the enquiry form page, PDF or sheet links:** edit `settings.json`. The enquiry email is in
+  `atfa_expo27_settings()` near the top of `src/snippet.php`. Then build and release as below.
 - **See a sheet change straight away:** "Refresh from the sheet" in the staff bar (the same as adding `?refresh=1`
   to the page address). Google can take up to 5 minutes to publish an edit; visitors' copies catch up within a
   couple of minutes after that.
@@ -70,10 +71,10 @@ Changes in the sheet show on the site within about 5 to 7 minutes.
 2. `python3 build.py`. It refuses to build if the layout breaks the hall rules (`tools/check_layout.py`):
    stands inside the 3 m perimeter lane and clear of the curved wall, aisles of 3 m or more, 3.5 m around the
    demo zone, the pedestrian route and arrival area clear, 4 m in front of Entry 2, prices matching sizes.
-3. `tests/run_all.sh` (PHP checks plus browser tests at desktop, laptop, tablet and phone sizes; needs PHP 8 and
+3. `bash tests/run_all.sh` (PHP checks plus browser tests at desktop, laptop, tablet and phone sizes; needs PHP 8 and
    Python Playwright).
-4. Paste `dist/code-snippet.txt` over the snippet's code in Code Snippets and save. Then re-save the floor plan
-   page (or clear WP Rocket's cache), otherwise logged-out visitors keep getting the cached old version.
+4. From the repo root: `./build.sh x.y.z "What changed"`, commit and push, then click Update now on the site's
+   Plugins page. If logged-out visitors still get the old version afterwards, clear WP Rocket's cache.
 5. `python3 tools/make_pdf.py` to rebuild the PDF if prices or layout changed, and upload it over the old one.
    The ATFA logo in the PDF's title bar comes from `assets/` (see `assets/README.md`).
 
@@ -117,3 +118,6 @@ already on screen and redraws it sharp when the finger stops, so pans and pinche
 smooth; the page behind is paused and pinned (no scrolling underneath on iPhones). Sideways
 on a phone, the card sits beside the plan. While /expo-2027/ is private, visitors who go to
 it are sent (302) to the old floor plan page, and menu links to it only show for staff.
+
+v3.2.0 (awards plugin 1.8.0, 19 October 2026): moved out of Code Snippets into the awards plugin.
+Nothing changed for visitors.
