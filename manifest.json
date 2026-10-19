@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
   "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip",
   "last_updated": "2026-10-19",
-  "changelog": "<p><strong>1.7.0</strong> (2026-10-19): Section bands: full-width warm charcoal bands break the entries page into chapters (season dates, sponsors and categories, awards dinner), with cards, dividers and small grey text a step lighter so nothing gets lost on the black. New Also on the awards weekend row under the dinner: Expo and Conference 2027, linking to the Hall 5 floor plan, and the Ladies Breakfast, whose link switches on once its page is up. Expo floor plan link added to the footer.</p>"
+  "changelog": "<p><strong>1.7.1</strong> (2026-10-19): Weekend cards under the awards dinner restyled to match the One weekend, three events band on the Expo page: date-led (Fri 21, Sat 22) with a top rule, the Expo card linking to the new Expo page at atfa.com.au/expo-2027, and the Ladies Breakfast showing Saturday 22 May with venue and tickets coming soon. Footer link now goes to the Expo page too.</p>"
 }

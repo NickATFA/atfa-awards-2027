@@ -139,22 +139,23 @@ html.aw-lock{overflow:hidden}
 .aw .band .tl{border-top-color:#463D35}
 .aw .band .tl.now{border-top-color:#F8931F}
 .aw .band .sponsor{border-color:#4A4038;color:#8F857A;background:rgba(12,11,10,.28)}
-/* The rest of the awards weekend, under the dinner: the Expo and the ladies breakfast (atfa_awards_weekend()). */
+/* The rest of the ATFA weekend, under the dinner (atfa_awards_weekend()). Date-led cards in the same style as the
+   "One weekend, three events" band on the Expo page, so the two pages read as one weekend. */
 .aw .weekend{margin-top:44px;padding-top:32px;border-top:1px solid #3B332C}
-.aw .weekend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
-.aw .wk{display:flex;flex-direction:column;gap:8px;min-width:0;padding:24px 26px;border-radius:6px;background:#221D19;border:1px solid #3B332C;color:#F4EFE7;text-decoration:none;transition:border-color .2s}
+.aw .weekend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+.aw .wk{display:flex;flex-direction:column;gap:10px;min-width:0;padding:24px;border-top:2px solid #463D35;border-radius:0 0 6px 6px;background:#221D19;color:#F4EFE7;text-decoration:none;transition:border-color .2s,background-color .2s}
 .aw a.wk,.aw a.wk:hover{color:#F4EFE7}
-.aw a.wk:hover{border-color:#F8931F}
+.aw a.wk:hover{border-top-color:#F8931F;background:#262019}
 .aw a.wk:focus-visible{outline:2px solid #F8931F;outline-offset:2px}
-.aw .wk-when{font-size:13px;font-weight:600;color:#C3B8A9}
-.aw .wk-t{font-size:32px;font-weight:700}
-.aw .wk-d{font-size:14px;line-height:1.5;color:#B4A99A;max-width:54ch}
+.aw .wk-day{font-size:64px;font-weight:700;line-height:.85;color:#F4EFE7}
+.aw .wk-t{font-size:36px;font-weight:700}
+.aw .wk-d{font-size:14px;line-height:1.5;color:#B4A99A;max-width:56ch}
 .aw .wk-go{display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:#F8931F}
 .aw a.wk:hover .wk-go{color:#FFA640}
-.aw .wk-soon{margin-top:auto;padding-top:8px;font-size:13px;color:#8F857A}
+.aw .wk-soon{margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:#8F857A}
 @media (max-width:900px){.aw .band{margin-top:80px;padding:64px 0}.aw .band-tight{padding:52px 0}}
-@media (max-width:700px){.aw .weekend-grid{grid-template-columns:1fr}}
-@media (max-width:560px){.aw .band{margin-top:64px;padding:56px 0}.aw .band-tight{padding:48px 0 56px}.aw .wk{padding:20px}.aw .wk-t{font-size:28px}}
+@media (max-width:900px){.aw .weekend-grid{grid-template-columns:1fr}}
+@media (max-width:560px){.aw .band{margin-top:64px;padding:56px 0}.aw .band-tight{padding:48px 0 56px}.aw .wk{padding:20px}.aw .wk-day{font-size:56px}.aw .wk-t{font-size:32px}}
 @media (max-width:900px){.aw .hero-h1{font-size:104px}.aw .bg{width:100%}.aw .bgwrap{--o:.5}.aw .winners{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .whatsnew > div{grid-column:span 12 !important}.aw .grid3{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .hero{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .hero > div{grid-column:span 1 !important}.aw .two{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .steps{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .timeline{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .sponsors{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .dinner{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .dinner > div{grid-column:span 1 !important}.aw .dinner .disp{font-size:56px !important}}
 @media (max-width:560px){.aw .wrap{padding:0 20px}.aw .hero-h1{font-size:84px}.aw .two .disp{font-size:44px !important}.aw .steps{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .timeline{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.aw .caps{height:auto}.aw .cap{position:static;display:none}.aw .cap.lead{display:block}}
 </style>
@@ -378,7 +379,7 @@ html.aw-lock{overflow:hidden}
   </div>
 </div>
 <div class="weekend">
-  <div class="eyebrow">Also on the awards weekend</div>
+  <div class="eyebrow">Also on the ATFA weekend</div>
   <div class="weekend-grid">
 <?php foreach ( atfa_awards_weekend() as $ev ) : ?>
     <?php echo atfa_awards_weekend_card( $ev ); ?>
