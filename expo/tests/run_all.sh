@@ -38,9 +38,9 @@ checks=[
  ("php: www links get https://", S['S02']['url']=='https://www.smithjones.com.au'),
  ("php: multi-line bios kept", '\n\n' in S['S02']['bio']),
  ("php: 'Unsold' is not sold", S['G01']['status']=='available'),
- ("php: stand numbers tidied (s7 -> S7, 'Stand B12' -> B12)", S['S7']['status']=='sold' and S['B12']['status']=='hold', sorted(S)),
+ ("php: stand numbers tidied (s4 -> S4, 'Stand B12' -> B12)", S['S4']['status']=='sold' and S['B12']['status']=='hold', sorted(S)),
  ("php: stand number check", ids=={'s01':'S01','stand_b12':'B12','305':'305','total':'','s01a':'','empty':''}, ids),
- ("php: all 28 Concept 5 stands read from the sheet", len(r['rest']['stands'])==28),
+ ("php: all 58 stands of the 58-booth layout read from the sheet", len(r['rest']['stands'])==58),
  ("php: Google down, nothing cached -> ok:false, no rows", f['rest']['ok'] is False and f['rest']['stands']==[]),
  ("php: Google returns a web page -> treated as failure", h['rest']['ok'] is False),
  ("php: shortcode prints once per page", e['second_shortcode_empty']),
@@ -49,8 +49,8 @@ checks=[
  ("php: page tells the plan where the static copy is", e['config_has_static_url']),
  ("php: odd spaces from the sheet (non-breaking, wide, byte-order mark) are ignored",
   U.get('S01',{}).get('status')=='sold' and U['S01'].get('name')=='Acme Timber' and U.get('S02',{}).get('status')=='sold'
-  and U.get('S03',{}).get('status')=='hold' and 'name' not in U['S03'] and U.get('S05',{}).get('status')=='sold'
-  and U.get('S06',{}).get('status')=='sold' and U.get('O01',{}).get('status')=='sold' and U.get('O02',{}).get('status')=='hold', U),
+  and U.get('S03',{}).get('status')=='hold' and 'name' not in U['S03'] and U.get('O05',{}).get('status')=='sold'
+  and U.get('O06',{}).get('status')=='sold' and U.get('O01',{}).get('status')=='sold' and U.get('O02',{}).get('status')=='hold', U),
  ("php: ?refresh=1 by a logged-in editor fetches the sheet", re_['http_calls']==1 and re_['snapshot']),
  ("php: ?refresh=1 by a visitor does nothing", rv['http_calls']==0 and not rv['snapshot']),
  ("php: visitors get no staff bar and no sheet link",

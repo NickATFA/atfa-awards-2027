@@ -3,10 +3,13 @@ Checks a stand layout in src/geometry.json against the hall's rules:
 
   - every stand inside the 3 m perimeter (fire / non-build) lane, including the curved wall
   - no overlapping stands; any gap between stands is a usable aisle (3 m or more)
-  - 3.5 m clear around the demonstration and stage zone
-  - the main pedestrian route kept clear, the arrival area inside the main entrance
-    kept clear (8 m), and 4 m clear in front of Entry 2
+  - nothing on the demonstration and stage zone, and 4 m clear in front of Entry 2
   - sizes, areas and prices consistent; stand numbers unique and well formed
+
+A layout can add its own rules in geometry.json ("rules"): Concept 5 kept 3.5 m clear
+around the demo zone ("demo_clear"), an 8 m arrival area inside the main entrance
+("arrival_clear") and its main pedestrian route ("route"). The distances are always
+measured and printed, whether or not a layout sets a rule for them.
 
     python3 tools/check_layout.py        (also run automatically by build.py)
 """
@@ -23,8 +26,6 @@ from hallgeo import (rect_buildable, poly_poly_dist, rect_corners, rect_rect_dis
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 MIN_AISLE = 3.0
-DEMO_CLEAR = 3.5
-ARRIVAL_CLEAR = 8.0
 ENTRY2_CLEAR = 4.0
 ROUTE_MARGIN = 0.5           # extra space between the route band and the nearest stand
 ID_RE = re.compile(r"^[A-Z]{1,3}\d{1,3}$|^\d{1,4}$")
@@ -109,6 +110,7 @@ def validate(geo):
             sid = block[sid]
         return sid
 
+    min_aisle_rule = (geo.get("rules") or {}).get("min_aisle", MIN_AISLE)
     min_aisle = math.inf
     for i, a in enumerate(stands):
         for b in stands[i + 1:]:
@@ -131,8 +133,8 @@ def validate(geo):
                     if len(free) >= 2:
                         errors.append("stands %s and %s only touch at a corner (a pinch point, no way between them)" % (a["id"], b["id"]))
                 continue
-            if d < MIN_AISLE - 1e-6 and gap_is_empty(ra, rb):
-                errors.append("gap between %s and %s is %.2f m (aisles need %.1f m)" % (a["id"], b["id"], d, MIN_AISLE))
+            if d < min_aisle_rule - 1e-6 and gap_is_empty(ra, rb):
+                errors.append("gap between %s and %s is %.2f m (aisles need %.1f m)" % (a["id"], b["id"], d, min_aisle_rule))
     blocks = {}
     for sid in rects:
         blocks.setdefault(find(sid), []).append(sid)
@@ -141,14 +143,21 @@ def validate(geo):
             if find(a["id"]) != find(b["id"]):
                 min_aisle = min(min_aisle, rect_rect_dist(rects[a["id"]], rects[b["id"]]))
 
+    rules = geo.get("rules") or {}
     demo = [(37, 49.4), (55, 49.4), (55, 31.4)]
-    min_demo = min(poly_poly_dist(rect_corners(r), demo) for r in rects.values())
-    if min_demo < DEMO_CLEAR - 1e-6:
-        errors.append("a stand is %.2f m from the demo zone (needs %.1f m)" % (min_demo, DEMO_CLEAR))
+    demo_d = {sid: poly_poly_dist(rect_corners(r), demo) for sid, r in rects.items()}
+    nearest_demo = min(demo_d, key=demo_d.get)
+    min_demo = demo_d[nearest_demo]
+    for sid, d in demo_d.items():
+        if d <= 1e-6:
+            errors.append("stand %s is on the demo and stage zone" % sid)
+    demo_clear = rules.get("demo_clear")
+    if demo_clear and min_demo < demo_clear - 1e-6:
+        errors.append("stand %s is %.2f m from the demo zone (this layout needs %.1f m)" % (nearest_demo, min_demo, demo_clear))
 
     summary = {"stands": len(stands), "blocks": len(blocks), "area": sum(s["sqm"] for s in stands),
                "total": sum(s["price"] for s in stands), "min_aisle": round(min_aisle, 2),
-               "demo_clear": round(min_demo, 2)}
+               "demo_clear": round(min_demo, 2), "demo_nearest": nearest_demo}
     mix = {}
     for s in stands:
         mix[s["size"]] = mix.get(s["size"], 0) + 1
@@ -168,16 +177,20 @@ def validate(geo):
     door = entrance_points(geo, "MAIN ENTRANCE")
     if door:
         mid = ((door[0][0] + door[1][0]) / 2, (door[0][1] + door[1][1]) / 2)
-        near = min(rect_point_dist(r, *mid) for r in rects.values())
+        near_id = min(rects, key=lambda sid: rect_point_dist(rects[sid], *mid))
+        near = rect_point_dist(rects[near_id], *mid)
         summary["arrival_clear"] = round(near, 2)
-        if near < ARRIVAL_CLEAR - 1e-6:
-            errors.append("a stand is %.2f m inside the main entrance (arrival area needs %.0f m)" % (near, ARRIVAL_CLEAR))
+        summary["arrival_nearest"] = near_id
+        arrival = rules.get("arrival_clear")
+        if arrival and near < arrival - 1e-6:
+            errors.append("stand %s is %.2f m inside the main entrance (this layout's arrival area needs %.0f m)" % (near_id, near, arrival))
     e2 = entrance_points(geo, "ENTRY 2")
     if e2:
         near = min(rect_seg_dist(r, e2[0], e2[1]) for r in rects.values())
         summary["entry2_clear"] = round(near, 2)
-        if near < ENTRY2_CLEAR - 1e-6:
-            errors.append("a stand is %.2f m from the Entry 2 doors (needs %.0f m)" % (near, ENTRY2_CLEAR))
+        need = rules.get("entry2_clear", ENTRY2_CLEAR)
+        if near < need - 1e-6:
+            errors.append("a stand is %.2f m from the Entry 2 doors (needs %.0f m)" % (near, need))
 
     for w in geo.get("walls", []):
         x1, y1, x2, y2 = w

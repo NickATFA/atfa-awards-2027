@@ -39,6 +39,18 @@ def fail(msg):
     sys.exit(1)
 
 
+def number_words(n):
+    """1 to 99 in words, as the page copy writes stand counts ("fifty-eight")."""
+    ones = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen " \
+           "sixteen seventeen eighteen nineteen".split()
+    tens = "twenty thirty forty fifty sixty seventy eighty ninety".split()
+    if not 0 < n < 100:
+        return str(n)
+    if n < 20:
+        return ones[n]
+    return tens[n // 10 - 2] + ("-" + ones[n % 10] if n % 10 else "")
+
+
 def main():
     settings = json.loads((ROOT / "settings.json").read_text(encoding="utf-8"))
     version = settings["version"]
@@ -68,6 +80,11 @@ def main():
     if "__SIZE_CHIPS__" not in markup:
         fail("markup is missing __SIZE_CHIPS__")
     markup = markup.replace("__SIZE_CHIPS__", chips)
+    route_li = '          <li><i class="is-route"></i>Main pedestrian route</li>\n'
+    if not geometry.get("route"):
+        if route_li not in markup:
+            fail("markup's route legend line has changed; update build.py")
+        markup = markup.replace(route_li, "")
 
     # Safety checks on what ends up inside the page.
     if re.search(r"</script", js, re.I):
@@ -115,8 +132,8 @@ def main():
     legend = swatches + "".join([
         '<span><i style="background:#3B2F1D;border-color:#D99A21"></i>On hold</span>',
         '<span><i style="background:#34302B;border-color:#6F665D"></i>Sold</span>',
-        '<span><i style="background:#DCEAF7;border-color:#2E6DA4;box-shadow:inset 0 -3px 0 #0C0B0A"></i>Shared back wall</span>',
-        '<span><i style="background:#27221E;border-color:#7A6E62;border-style:dashed"></i>Main pedestrian route</span>',
+        '<span><i style="background:#DCEAF7;border-color:#2E6DA4;box-shadow:inset 0 -3px 0 #0C0B0A"></i>Back wall</span>',
+        '<span><i style="background:#27221E;border-color:#7A6E62;border-style:dashed"></i>Main pedestrian route</span>' if geometry.get("route") else "",
         '<span><i style="background:#2A1D11;border-color:#F8931F;border-style:dashed"></i>Demo &amp; stage zone</span>',
         '<span><i style="background:#2A1C1A;border-color:#4A2C28"></i>Fire / non-build lane</span>',
         '<span><i style="background:#F8931F;border-color:#F8931F"></i>Entrance</span>',
@@ -124,7 +141,8 @@ def main():
     ])
     page_markup = (SRC / "page.html").read_text(encoding="utf-8").strip("\n")
     for token, val in (("__PRICE_CARDS__", "".join(cards)), ("__RATE_LIST__", rate), ("__LEGEND__", legend),
-                       ("__PHONE_KEY__", swatches), ("__FROM_PRICE__", money(min_price)), ("__TOTAL__", str(len(stands)))):
+                       ("__PHONE_KEY__", swatches), ("__FROM_PRICE__", money(min_price)), ("__TOTAL__", str(len(stands))),
+                       ("__TOTAL_WORDS__", number_words(len(stands)).capitalize())):
         if token not in page_markup:
             fail("page markup is missing " + token)
         page_markup = page_markup.replace(token, val)
@@ -218,11 +236,14 @@ def main():
     preview_cfg = {
         "version": version, "restUrl": "https://test.local/api/stands", "csvUrl": "https://test.local/api/csv",
         "enquiryEmail": "cherie@atfa.com.au", "enquiryName": "Cherie",
-        "enquiryUrl": settings.get("enquiry_url", ""), "pdfUrl": settings.get("pdf_url", ""),
+        "enquiryUrl": settings.get("enquiry_url", ""), "pdfUrl": "",
         "currency": "AUD", "priceNote": "excl. GST",
     }
+    pdf_live = settings.get("pdf_url", "")
+    if pdf_live.startswith("plugin:"):
+        pdf_live = "https://www.atfa.com.au/wp-content/plugins/atfa-awards-2027/" + pdf_live[7:].lstrip("/")
     pdf_btn = ('<a class="afpx-btn is-ghost is-small" href="%s" target="_blank" rel="noopener">Download the PDF floor plan</a>'
-               % settings["pdf_url"]) if settings.get("pdf_url") else ""
+               % pdf_live) if pdf_live else ""
     shell = (markup.replace("{{VERSION}}", version).replace("{{EMAIL}}", "cherie@atfa.com.au")
              .replace("{{MAILTO}}", "mailto:cherie@atfa.com.au").replace("{{PDF}}", pdf_btn)
              .replace("{{STAFF}}", ""))
@@ -246,11 +267,12 @@ def main():
     (DIST / "preview.html").write_text(preview, encoding="utf-8")
 
     print("built v%s: php %d bytes, js %d, css %d, markup %d" % (version, len(php.encode()), len(js.encode()), len(css.encode()), len(markup.encode())))
-    print("layout: %d stands %s, %d m2, total if all sold $%s; narrowest aisle %.1f m, demo zone %.1f m, "
-          "route %.1f m to nearest stand, arrival area %.1f m, Entry 2 %.1f m"
-          % (len(stands), json.dumps(summary["mix"]), summary["area"], format(total, ","), summary["min_aisle"],
-             summary["demo_clear"], summary.get("route_nearest_stand", 0), summary.get("arrival_clear", 0),
-             summary.get("entry2_clear", 0)))
+    print("layout: %s, %d stands %s, %d m2, total if all sold $%s; narrowest aisle %.1f m, demo zone %.1f m (%s), "
+          "%sarrival area %.1f m (%s), Entry 2 %.1f m"
+          % (geometry.get("layout", "unnamed"), len(stands), json.dumps(summary["mix"]), summary["area"], format(total, ","),
+             summary["min_aisle"], summary["demo_clear"], summary.get("demo_nearest", "?"),
+             ("route %.1f m to nearest stand, " % summary["route_nearest_stand"]) if "route_nearest_stand" in summary else "",
+             summary.get("arrival_clear", 0), summary.get("arrival_nearest", "?"), summary.get("entry2_clear", 0)))
 
 
 if __name__ == "__main__":

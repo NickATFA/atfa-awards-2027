@@ -141,7 +141,20 @@
     return m ? m[1] + m[2] : '';
   }
 
-  // How many sides of a stand face an aisle (no other stand against them).
+  // A rear wall drawn along a side closes it, even with no stand behind it.
+  function wallAlong(horiz, lo, hi, at) {
+    var e = 1e-6;
+    return (GEO.walls || []).some(function (w) {
+      if (horiz) {
+        return Math.abs(w[1] - at) < e && Math.abs(w[3] - at) < e &&
+          Math.min(hi, Math.max(w[0], w[2])) - Math.max(lo, Math.min(w[0], w[2])) > e;
+      }
+      return Math.abs(w[0] - at) < e && Math.abs(w[2] - at) < e &&
+        Math.min(hi, Math.max(w[1], w[3])) - Math.max(lo, Math.min(w[1], w[3])) > e;
+    });
+  }
+
+  // How many sides of a stand face an aisle (no other stand or rear wall against them).
   function openSides(s) {
     var e = 1e-6, open = 0;
     [['N', s.x, s.x + s.w, s.y], ['S', s.x, s.x + s.w, s.y + s.h],
@@ -155,7 +168,7 @@
         }
         var edgeX = side[0] === 'W' ? o.x + o.w : o.x;
         return Math.abs(edgeX - at) < e && Math.min(hi, o.y + o.h) - Math.max(lo, o.y) > e;
-      });
+      }) || wallAlong(horiz, lo, hi, at);
       if (!blocked) { open++; }
     });
     return open;
@@ -464,7 +477,7 @@
     });
   }
 
-  // Shared rear walls (back-to-back stands).
+  // Rear walls (between back-to-back stands, or closing the back of a row).
   var wallLayer = sv('g', { 'aria-hidden': 'true', 'pointer-events': 'none' }, svg);
   (GEO.walls || []).forEach(function (w) {
     sv('line', { x1: w[0], y1: w[1], x2: w[2], y2: w[3], stroke: '#16211C', 'stroke-width': 0.36 }, wallLayer);

@@ -16,6 +16,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 GEO = json.loads((ROOT / "src" / "geometry.json").read_text(encoding="utf-8"))
 OUT_PDF = DIST / "ATFA-Expo-2027-Hall-5-Floor-Plan.pdf"
+# The copy the site serves ships in the awards plugin (settings.json: "plugin:assets/expo/...").
+PLUGIN_PDF = ROOT.parent / "atfa-awards-2027" / "assets" / "expo" / OUT_PDF.name
 # White version of the ATFA horizontal logo, for the dark title bar (see assets/README.md).
 LOGO = ROOT / "assets" / "atfa-horiz-logo-white.png"
 
@@ -30,12 +32,26 @@ def money(n):
     return "${:,.0f}".format(n)
 
 
+def wall_along(horiz, lo, hi, at):
+    """A rear wall drawn along a side closes it, even with no stand behind it."""
+    e = 1e-6
+    for x1, y1, x2, y2 in GEO.get("walls", []):
+        if horiz and abs(y1 - at) < e and abs(y2 - at) < e and min(hi, max(x1, x2)) - max(lo, min(x1, x2)) > e:
+            return True
+        if not horiz and abs(x1 - at) < e and abs(x2 - at) < e and min(hi, max(y1, y2)) - max(lo, min(y1, y2)) > e:
+            return True
+    return False
+
+
 def open_text(s, stands):
-    """Same rule as the website: a side is open if no other stand is against it."""
+    """Same rule as the website: a side is open if no other stand or rear wall is against it."""
     e = 1e-6
     sides = 0
     for side in ("N", "S", "W", "E"):
-        blocked = False
+        if side in ("N", "S"):
+            blocked = wall_along(True, s["x"], s["x"] + s["w"], s["y"] if side == "N" else s["y"] + s["h"])
+        else:
+            blocked = wall_along(False, s["y"], s["y"] + s["h"], s["x"] if side == "W" else s["x"] + s["w"])
         for o in stands:
             if o is s:
                 continue
@@ -127,6 +143,10 @@ def build_html(svg):
                           for k in USED)
 
     today = datetime.date.today().strftime("%-d %B %Y")
+    island_note = (". Island stands are open on all four" if any(open_text(s, GEO["stands"]).startswith("Island") for s in GEO["stands"])
+                   else "; a rear wall closes a side")
+    route_legend = ('<span><i style="background:#E7ECEA;border-color:#C9D1CD;width:5mm"></i>Main pedestrian route</span>'
+                    if GEO.get("route") else "")
     css = """
 @page { size: A3 landscape; margin: 0; }
 * { box-sizing: border-box; }
@@ -205,8 +225,8 @@ td i, .legend i { display: inline-block; width: 3mm; height: 3mm; border: 0.3mm 
   </div>
   <div class="legend">
     {size_legend}
-    <span><i style="background:#16211C;border-color:#16211C;height:0.8mm;width:5mm;border-radius:0"></i>Shared back wall</span>
-    <span><i style="background:#E7ECEA;border-color:#C9D1CD;width:5mm"></i>Main pedestrian route</span>
+    <span><i style="background:#16211C;border-color:#16211C;height:0.8mm;width:5mm;border-radius:0"></i>Back wall</span>
+    {route_legend}
     <span><i style="background:#F7EFE4;border-color:#A8600C"></i>Demo &amp; stage zone</span>
     <span><i style="background:#FBEDED;border-color:#EFC3C3"></i>Fire / non-build lane</span>
     <span><i style="background:#D64A4A;border-color:#D64A4A"></i>Fire exit</span>
@@ -226,7 +246,7 @@ td i, .legend i { display: inline-block; width: 3mm; height: 3mm; border: 0.3mm 
     <div class="card"><h2>Notes</h2><ul>
       <li>All prices are in Australian dollars and exclude GST.</li>
       <li>Savings against the same area in 3 × 3 m stands: {savings_text}.</li>
-      <li>"Open sides" are the sides of a stand facing an aisle. Island stands are open on all four.</li>
+      <li>"Open sides" are the sides of a stand facing an aisle{island_note}.</li>
       <li>Layout is a guide and may change before the event.</li></ul></div>
     <div class="card book"><h2>Book a stand</h2><p class="big">cherie@atfa.com.au</p>
       <p>See which stands are still available, and send an enquiry, at<br><b>atfa.com.au/expo-2027-hall-5-interactive-floor-plan</b></p></div>
@@ -252,6 +272,10 @@ def main():
         page.screenshot(path=str(DIST / "print-page1.png"), full_page=False)
         browser.close()
     print("wrote", OUT_PDF, OUT_PDF.stat().st_size, "bytes")
+    if PLUGIN_PDF.parent.parent.is_dir():
+        PLUGIN_PDF.parent.mkdir(exist_ok=True)
+        PLUGIN_PDF.write_bytes(OUT_PDF.read_bytes())
+        print("copied to", PLUGIN_PDF)
 
 
 if __name__ == "__main__":

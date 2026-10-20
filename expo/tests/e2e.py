@@ -121,10 +121,10 @@ def main():
         page.goto("https://test.local/page", wait_until="domcontentloaded")
         page.wait_for_function("() => window.ATFAExpo27")
         first = counts(page)
-        check("desktop: first paint uses the server snapshot (no placeholders)", first == "21/5/2", first)
+        check("desktop: first paint uses the server snapshot (no placeholders)", first == "51/5/2", first)
         release_held(rest_edge)
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent !== '21'", timeout=5000)
-        check("desktop: REST data replaces the snapshot", counts(page) == "19/3/6", counts(page))
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent !== '51'", timeout=5000)
+        check("desktop: REST data replaces the snapshot", counts(page) == "49/3/6", counts(page))
         sS02 = stand_state(page, "S02")
         check("desktop: sold stand shows company on the map", sS02["sub"].startswith("Smith") and "is-sold" in sS02["cls"], sS02)
         sO01 = stand_state(page, "O01")
@@ -135,8 +135,8 @@ def main():
               page.evaluate("() => !/Example Timber|Coatings Australia|Subfloor Systems|Sanding Machinery/.test(document.body.innerText)"))
         check("desktop: unknown stand Z99 in data is ignored",
               page.evaluate("() => !document.querySelector('.afpx-stand[data-id=\"Z99\"]')"))
-        sS07 = stand_state(page, "S07")
-        check("desktop: 's7' in the sheet matches stand S07", "is-sold" in sS07["cls"] and "Lower Case Id Co" in sS07["label"], sS07)
+        sS04 = stand_state(page, "S04")
+        check("desktop: 's4' in the sheet matches stand S04", "is-sold" in sS04["cls"] and "Lower Case Id Co" in sS04["label"], sS04)
         sB12 = stand_state(page, "B12")
         check("desktop: 'Stand B12' in the sheet matches B12, name kept private", "is-hold" in sB12["cls"] and "Hidden" not in sB12["label"], sB12)
         drawn = page.evaluate("""() => ({stands: document.querySelectorAll('.afpx-stand').length,
@@ -145,13 +145,13 @@ def main():
             routeText: [...document.querySelectorAll('.afpx-svg text')].some(t => /MAIN PEDESTRIAN ROUTE/.test(t.textContent)),
             arrival: [...document.querySelectorAll('.afpx-svg text')].some(t => /ARRIVAL AREA/.test(t.textContent)),
             oldAisles: [...document.querySelectorAll('.afpx-svg text')].some(t => /MAIN AISLE|CROSS AISLE/.test(t.textContent))})""")
-        check("desktop: Concept 5 drawn (28 stands, 4 shared walls, route, arrival area)",
-              drawn == {"stands": 28, "walls": 4, "route": True, "routeText": True, "arrival": True, "oldAisles": False}, drawn)
+        check("desktop: 58-booth layout drawn (58 stands, 12 rear walls, no Concept 5 route or arrival area)",
+              drawn == {"stands": 58, "walls": 12, "route": False, "routeText": False, "arrival": False, "oldAisles": False}, drawn)
         chips = page.evaluate("() => [...document.querySelectorAll('.afpx-chip[data-size]')].map(c => c.dataset.size + ':' + c.textContent.trim())")
         check("desktop: size filters match the sizes used", chips == ["3x3:3 × 3 m", "3x6:3 × 6 m", "6x3:6 × 3 m", "6x6:6 × 6 m"], chips)
         sides = page.evaluate("() => Object.fromEntries(ATFAExpo27.stands().map(s => [s.id, s.open]))")
-        check("desktop: open sides worked out from the layout",
-              [sides[k] for k in ("S06", "S01", "B03", "B02", "G01", "O03", "O05")] == [4, 3, 2, 1, 2, 3, 1], sides)
+        check("desktop: open sides worked out from the layout, rear walls included",
+              [sides[k] for k in ("S01", "S04", "B01", "B03", "G01", "G02", "O03", "O05", "O12")] == [3, 3, 2, 1, 2, 1, 3, 2, 2], sides)
 
         # theme-proofing
         h1 = page.evaluate("() => { const s=getComputedStyle(document.querySelector('#atfa-expo27 h1')); return [s.textTransform, s.color, s.marginTop]; }")
@@ -239,7 +239,7 @@ def main():
         check("popup: tags in names are text, not markup", p104["title"] == "<b>Bold</b> Co" and "&lt;b&gt;" in p104["html"], p104)
         check("popup: '<' and '>' in bios survive", p104["bio"] == "Boards < 5mm and > 2mm thick", p104["bio"])
         page.click("#atfa-expo27-modal .afpx-modal-bd", position={"x": 5, "y": 5})
-        page.click(".afpx-stand[data-id='S05']")
+        page.click(".afpx-stand[data-id='O05']")
         site = page.evaluate("() => document.querySelector('#atfa-expo27-modal .afpx-site').textContent")
         check("popup: international website names shown as typed (not xn--)", site == "émile.example", site)
         page.keyboard.press("Escape")
@@ -264,7 +264,7 @@ def main():
         check("popup: email fallback shown", "cherie@atfa.com.au" in (p202["alt"] or ""), p202)
         check("popup: Enquire goes to the form with the stand filled in", p202["href"] == "https://www.atfa.com.au/expo-2027-stand-enquiry/?stand=G01", p202["href"])
         pdf = page.evaluate("() => { const a=document.querySelector('#atfa-expo27 .afpx-legend a.afpx-btn'); return a ? a.getAttribute('href') : null; }")
-        check("legend: PDF download button present", pdf and pdf.endswith("ATFA-Expo-2027-Hall-5-Floor-Plan.pdf"), pdf)
+        check("legend: PDF download button present (the copy in the plugin)", pdf and "/atfa-awards-2027/assets/expo/ATFA-Expo-2027-Hall-5-Floor-Plan.pdf?v=" in pdf, pdf)
         check("popup: no em dashes in visible text", page.evaluate("() => !/—/.test(document.getElementById('atfa-expo27').innerText + document.getElementById('atfa-expo27-modal').innerText)"))
         page.screenshot(path=str(SHOTS / "desktop-popup-available.png"))
         # Tab trap
@@ -297,8 +297,8 @@ def main():
             for nxt in graph[todo.pop()]:
                 if nxt and nxt not in seen:
                     seen.add(nxt); todo.append(nxt)
-        check("keyboard: every stand can be reached with the arrow keys", len(seen) == 28, sorted(set(ids) - seen))
-        check("keyboard: Right from O04 doesn't jump up to the top row", graph["O04"][0] not in ("B03", "B06"), graph["O04"])
+        check("keyboard: every stand can be reached with the arrow keys", len(seen) == 58, sorted(set(ids) - seen))
+        check("keyboard: Right from O04 doesn't jump up to the top row", graph["O04"][0] not in ("B13", "B14", "B15", "B16"), graph["O04"])
 
         # filters and search
         page.click(".afpx-chip[data-filter='available']")
@@ -306,7 +306,7 @@ def main():
         page.wait_for_timeout(300)
         avail = page.evaluate("() => document.querySelectorAll('.afpx-item').length")
         chip_on = page.evaluate("() => { const c=document.querySelector('.afpx-chip[data-filter=available]'); return [c.getAttribute('aria-pressed'), getComputedStyle(c).backgroundColor]; }")
-        check("filters: Available only shows available stands", avail == 19, avail)
+        check("filters: Available only shows available stands", avail == 49, avail)
         check("filters: pressed chip is clearly highlighted", chip_on == ["true", "rgb(168, 96, 12)"], chip_on)
         page.click(".afpx-chip[data-filter='available']")
         def search(term):
@@ -315,17 +315,17 @@ def main():
         found = search("smith")
         check("search: finds a sold exhibitor by name", found == ["S02"], found)
         found = search("s0")
-        check("search: stand-number prefix (no S04 in this layout)", found == ["S01", "S02", "S03", "S05", "S06", "S07"], found)
+        check("search: stand-number prefix", found == ["S01", "S02", "S03", "S04"], found)
         found = search("b1")
-        check("search: 'b1' finds B01 and B10 to B12", sorted(found) == ["B01", "B10", "B11", "B12"], found)
+        check("search: 'b1' finds B01 and B10 to B19", sorted(found) == ["B01"] + ["B%d" % n for n in range(10, 20)], found)
         found = search("12")
-        check("search: a plain number finds B12", found == ["B12"], found)
+        check("search: a plain number finds every stand numbered 12", sorted(found) == ["B12", "O12"], found)
         found = search("B01")
         check("search: a full stand number finds just that stand", found == ["B01"], found)
         found = search("01")
         check("search: '01' finds every stand numbered 01", found == ["B01", "G01", "O01", "S01"], found)
         found = search("Stand O0")
-        check("search: 'Stand O0' finds the 6 x 3 stands", sorted(found) == ["O01", "O02", "O03", "O04", "O05", "O06"], found)
+        check("search: 'Stand O0' finds O01 to O09", sorted(found) == ["O0%d" % n for n in range(1, 10)], found)
         found = search("Secret")
         check("search: hold names can't be found", found == [], found)
         found = search("Hidden Hold")
@@ -359,7 +359,7 @@ def main():
         page.goto("https://test.local/page")
         page.wait_for_function("() => document.querySelector('[data-stat=sold]').textContent !== '–'", timeout=8000)
         c = counts(page)
-        check("fallback: REST down, Google CSV used", c == "19/3/6", c)
+        check("fallback: REST down, Google CSV used", c == "49/3/6", c)
         page.click(".afpx-stand[data-id='S02']")
         bios = page.evaluate("() => [...document.querySelectorAll('#atfa-expo27-modal .afpx-bio')].map(p=>p.textContent)")
         check("fallback: client CSV parser keeps multi-line bios and pipes", len(bios) == 2 and "|" in bios[1], bios)
@@ -393,7 +393,7 @@ def main():
         page.wait_for_function("() => document.querySelector('[data-stat=sold]').textContent !== '–'", timeout=8000)
         st = page.evaluate("() => Object.fromEntries(ATFAExpo27.stands().filter(s => s.status !== 'available').map(s => [s.id, s.status + ':' + s.name]))")
         check("fallback: odd spaces in the sheet read the same in the browser as on the server",
-              st == {"S01": "sold:Acme Timber", "S02": "sold:Beta Floors", "S03": "hold:", "S05": "sold:Wide Space Co", "S06": "sold:Spaced Co",
+              st == {"S01": "sold:Acme Timber", "S02": "sold:Beta Floors", "S03": "hold:", "O05": "sold:Wide Space Co", "O06": "sold:Spaced Co",
                      "O01": "sold:Zero Width Co", "O02": "hold:"}, st)
         ctx.close()
         rest_uni = json.loads((OUT / "rest-unicode.json").read_text(encoding="utf-8"))
@@ -402,7 +402,7 @@ def main():
         page.route("**/*", make_router(strip_snapshot(edge_html), rest=rest_uni))
         page.goto("https://test.local/page")
         page.wait_for_function("() => document.querySelector('[data-stat=sold]').textContent !== '–'", timeout=8000)
-        check("server: odd spaces in the sheet give the same counts", counts(page) == "21/2/5", counts(page))
+        check("server: odd spaces in the sheet give the same counts", counts(page) == "51/2/5", counts(page))
         ctx.close()
 
         # ---------------------------------------------------------------- data that doesn't match these stands is ignored
@@ -416,8 +416,8 @@ def main():
         early = (counts(page), stand_state(page, "S01")["cls"])
         check("old stand numbers: an old snapshot or fast copy isn't shown as 'all available'", early[0] == "–/–/–" and "is-loading" in early[1], early)
         release_held(rest_edge)
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=5000)
-        check("old stand numbers: live data still arrives", counts(page) == "19/3/6", counts(page))
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=5000)
+        check("old stand numbers: live data still arrives", counts(page) == "49/3/6", counts(page))
         ctx.close()
         ctx = browser.new_context(viewport={"width": 1366, "height": 900})
         page = ctx.new_page()
@@ -435,7 +435,7 @@ def main():
         page.goto("https://test.local/page")
         page.wait_for_function("() => !document.querySelector('[data-role=notice]').hidden", timeout=8000)
         note = page.evaluate("() => document.querySelector('[data-role=notice]').textContent")
-        check("stale: keeps last known data and says when it's from", counts(page) == "21/5/2" and "as of" in note, (counts(page), note))
+        check("stale: keeps last known data and says when it's from", counts(page) == "51/5/2" and "as of" in note, (counts(page), note))
         ctx.close()
 
         # ---------------------------------------------------------------- slow REST, no snapshot: loading state, never sample data
@@ -451,8 +451,8 @@ def main():
         check("loading: popup says it's checking, not that it failed", "Checking live availability" in txt and "couldn" not in txt, txt[:160])
         page.screenshot(path=str(SHOTS / "loading.png"))
         release_held(rest_real)
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '21'", timeout=8000)
-        check("loading: real data arrives", counts(page) == "21/5/2")
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '51'", timeout=8000)
+        check("loading: real data arrives", counts(page) == "51/5/2")
         txt = page.evaluate("() => document.getElementById('atfa-expo27-modal').innerText")
         check("loading: open popup updates when data arrives (S03 on hold)", "on hold at the moment" in txt and "Ask about stand S03" in txt, txt[:200])
         page.keyboard.press("Escape")
@@ -464,8 +464,8 @@ def main():
         page = ctx.new_page()
         page.route("**/*", make_router(real_html, rest=rest_edge, hold_rest=True, static=newer_static))
         page.goto("https://test.local/page", wait_until="domcontentloaded")
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=5000)
-        check("static copy: newer data shows before the slow live endpoint answers", counts(page) == "19/3/6" and len(HELD) == 1, counts(page))
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=5000)
+        check("static copy: newer data shows before the slow live endpoint answers", counts(page) == "49/3/6" and len(HELD) == 1, counts(page))
         release_held(rest_edge)
         ctx.close()
         older_static = dict(rest_edge, updated="2001-01-01T00:00:00+00:00")
@@ -474,10 +474,10 @@ def main():
         page.route("**/*", make_router(real_html, rest=rest_edge, hold_rest=True, static=older_static))
         page.goto("https://test.local/page", wait_until="domcontentloaded")
         page.wait_for_timeout(600)
-        check("static copy: older than the page's own data is ignored", counts(page) == "21/5/2", counts(page))
+        check("static copy: older than the page's own data is ignored", counts(page) == "51/5/2", counts(page))
         release_held(rest_edge)
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=5000)
-        check("static copy: live endpoint still wins afterwards", counts(page) == "19/3/6", counts(page))
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=5000)
+        check("static copy: live endpoint still wins afterwards", counts(page) == "49/3/6", counts(page))
         ctx.close()
 
         # ---------------------------------------------------------------- phone
@@ -487,7 +487,7 @@ def main():
         page.on("pageerror", lambda e: console_errors.append(str(e)))
         page.route("**/*", make_router(real_html, rest=rest_edge))
         page.goto("https://test.local/page")
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
         m = page.evaluate("""() => { const st=document.querySelector('.afpx-stage'); const r=st.getBoundingClientRect();
             const s=document.querySelector('.afpx-stand[data-id="B07"] rect').getBoundingClientRect();
             const big=document.querySelector('.afpx-stand[data-id="S01"] rect').getBoundingClientRect();
@@ -514,7 +514,7 @@ def main():
         check("phone: search text is 16px so iPhones don't zoom in when it's tapped", targets["searchFont"] >= 16, targets)
         lst = page.evaluate("""() => { const l=document.querySelector('.afpx-list'); const cs=getComputedStyle(l);
             return {overflow: cs.overflowY, scroll: l.scrollHeight - l.clientHeight, items: l.querySelectorAll('.afpx-item').length}; }""")
-        check("phone: stand list scrolls with the page (no box-within-a-box scrolling)", lst["overflow"] == "visible" and lst["scroll"] <= 1 and lst["items"] == 28, lst)
+        check("phone: stand list scrolls with the page (no box-within-a-box scrolling)", lst["overflow"] == "visible" and lst["scroll"] <= 1 and lst["items"] == 58, lst)
         lbl = page.evaluate("""() => ['B07','S01'].map(id => { const g=document.querySelector('.afpx-stand[data-id="'+id+'"]');
             return [g.querySelector('.afpx-sub').getAttribute('display'), Math.round(g.querySelector('.afpx-lbl').getBoundingClientRect().height)]; })""")
         check("phone: zoomed out, stands show just a big, readable number", lbl[0][0] == "none" and lbl[0][1] >= 8 and lbl[1][1] >= 11, lbl)
@@ -574,30 +574,35 @@ def main():
         check("phone: a small drag on the sheet springs back", still == [False, ""], still)
         drag_sheet(260)
         check("phone: dragging the sheet down closes it", page.evaluate("() => document.getElementById('atfa-expo27-modal').hidden"))
-        page.tap(".afpx-stand[data-id='S06']")
+        page.tap(".afpx-stand[data-id='G02']")
         page.wait_for_selector("#atfa-expo27-modal:not([hidden])")
         isl = page.evaluate("() => document.querySelector('#atfa-expo27-modal .afpx-open').textContent")
-        check("phone: island stand says so", isl == "Island, open on all 4 sides", isl)
+        check("phone: a stand against a rear wall says it's open on 1 side", isl == "Open on 1 side", isl)
         page.tap("#atfa-expo27-modal .afpx-modal-bd", position={"x": 20, "y": 20})
         page.wait_for_timeout(150)
         check("phone: tapping outside the sheet closes it", page.evaluate("() => document.getElementById('atfa-expo27-modal').hidden"))
-        b = page.evaluate("() => { const r=document.querySelector('.afpx-stand[data-id=\"B07\"] rect').getBoundingClientRect(); return [r.left, r.top + r.height/2]; }")
+        # B01 is at the west end of its row, with open floor to its left
+        b = page.evaluate("() => { const r=document.querySelector('.afpx-stand[data-id=\"B01\"] rect').getBoundingClientRect(); return [r.left, r.top + r.height/2]; }")
         page.touchscreen.tap(b[0] - 5, b[1])
         page.wait_for_timeout(200)
         near = page.evaluate("() => !document.getElementById('atfa-expo27-modal').hidden && document.querySelector('#afpx-mtitle').textContent")
-        check("phone: a tap just outside a small stand still opens it", near == "Stand B07", near)
+        check("phone: a tap just outside a small stand still opens it", near == "Stand B01", near)
         page.keyboard.press("Escape")
         page.wait_for_timeout(100)
-        # middle of the pedestrian route, well away from every stand
-        far = page.evaluate("() => { const svg=document.querySelector('.afpx-svg'); const p=svg.createSVGPoint(); p.x=30; p.y=27.25; const q=p.matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }")
+        # open floor between the O13 block and O17, 3 m from every stand
+        far = page.evaluate("() => { const svg=document.querySelector('.afpx-svg'); const p=svg.createSVGPoint(); p.x=24; p.y=36; const q=p.matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }")
         page.touchscreen.tap(far[0], far[1])
         page.wait_for_timeout(200)
         check("phone: tapping empty floor opens nothing", page.evaluate("() => document.getElementById('atfa-expo27-modal').hidden"))
-        # middle of the 3.5 m aisle between the top row (B04) and G02 below it
-        mid = page.evaluate("() => { const svg=document.querySelector('.afpx-svg'); const p=svg.createSVGPoint(); p.x=43.5; p.y=13.75; const q=p.matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }")
+        # middle of the 3 m cross lane between the top row (B07) and G03 below it
+        mid = page.evaluate("() => { const svg=document.querySelector('.afpx-svg'); const p=svg.createSVGPoint(); p.x=36.5; p.y=13.5; const q=p.matrixTransform(svg.getScreenCTM()); return [q.x, q.y]; }")
         page.touchscreen.tap(mid[0], mid[1])
         page.wait_for_timeout(200)
-        check("phone: a tap in the middle of an aisle opens nothing", page.evaluate("() => document.getElementById('atfa-expo27-modal').hidden"))
+        # The lanes are 3 m (about 20 px here), so the phone's own fat-finger help may give the
+        # tap to a stand on either side; it must never open one further away.
+        got = page.evaluate("() => document.getElementById('atfa-expo27-modal').hidden ? null : document.querySelector('#afpx-mtitle').textContent")
+        check("phone: a tap in the middle of a lane opens nothing, or a stand right next to it",
+              got in (None, "Stand B07", "Stand B08", "Stand G02", "Stand G03"), got)
         ctx.close()
 
         # ---------------------------------------------------------------- small phone and landscape phone
@@ -608,14 +613,14 @@ def main():
             page.on("pageerror", lambda e: console_errors.append(str(e)))
             page.route("**/*", make_router(real_html, rest=rest_edge))
             page.goto("https://test.local/page")
-            page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+            page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
             d = page.evaluate("""() => ({docW: document.documentElement.scrollWidth, vw: innerWidth, vh: innerHeight,
                 stageH: Math.round(document.querySelector('.afpx-stage').getBoundingClientRect().height),
                 tb: Math.round(document.querySelector('.afpx-toolbar').getBoundingClientRect().height)})""")
             s3 = page.evaluate("() => Math.round(document.querySelector('.afpx-stand[data-id=\"B07\"] rect').getBoundingClientRect().width)")
             check(label + ": no sideways scrolling, plan fits the screen", d["docW"] <= d["vw"] and d["stageH"] <= 0.9 * d["vh"] and d["stageH"] >= 180, d)
             check(label + ": stands big enough to tap (3x3 >= 16px)", s3 >= 16, s3)
-            page.tap(".afpx-stand[data-id='S05']")
+            page.tap(".afpx-stand[data-id='O05']")
             page.wait_for_selector("#atfa-expo27-modal:not([hidden])")
             page.wait_for_timeout(300)
             c = page.evaluate("() => { const r=document.querySelector('#atfa-expo27-modal .afpx-modal-card').getBoundingClientRect(); return [Math.round(r.top), Math.round(r.bottom), innerHeight]; }")
@@ -628,9 +633,9 @@ def main():
         page = ctx.new_page()
         page.route("**/*", make_router(real_html.replace('<style id="atfa-expo27-css">', '<style>html{scrollbar-gutter:stable}</style><style id="atfa-expo27-css">'), rest=rest_edge))
         page.goto("https://test.local/page")
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
         w0 = page.evaluate("() => Math.round(document.querySelector('.afpx-stage').getBoundingClientRect().width)")
-        page.click(".afpx-stand[data-id='S06']")
+        page.click(".afpx-stand[data-id='S04']")
         page.wait_for_selector("#atfa-expo27-modal:not([hidden])")
         w1 = page.evaluate("() => Math.round(document.querySelector('.afpx-stage').getBoundingClientRect().width)")
         check("popup: no shift behind it on themes with a fixed scrollbar gutter", w0 == w1, (w0, w1))
@@ -644,7 +649,7 @@ def main():
         page = ctx.new_page()
         page.route("**/*", make_router(real_html, rest=rest_edge))
         page.goto("https://test.local/page")
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
         lap = page.evaluate("""() => ({b07: Math.round(document.querySelector('.afpx-stand[data-id="B07"] rect').getBoundingClientRect().width),
             vb: document.querySelector('.afpx-svg').getAttribute('viewBox')})""")
         check("laptop 1366x768: starts on the hall so stands are a usable size", lap["b07"] >= 28, lap)
@@ -660,7 +665,7 @@ def main():
         page = ctx.new_page()
         page.route("**/*", make_router(real_html, rest=rest_edge))
         page.goto("https://test.local/page")
-        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+        page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
         page.wait_for_timeout(300)
         fills = page.evaluate("""() => ['S01','S02','S03','G01'].map(id => getComputedStyle(document.querySelector('.afpx-stand[data-id="'+id+'"] rect')).fill)""")
         check("tablet: stand colours follow the latest data", fills == ["rgb(228, 218, 241)", "rgb(150, 162, 156)", "rgb(150, 162, 156)", "rgb(207, 230, 214)"], fills)
@@ -682,7 +687,7 @@ def main():
             page.on("pageerror", lambda e: console_errors.append(str(e)))
             page.route("**/*", make_router(staff_html, rest=rest_edge))
             page.goto("https://test.local/page")
-            page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '19'", timeout=8000)
+            page.wait_for_function("() => document.querySelector('[data-stat=available]').textContent === '49'", timeout=8000)
             st = page.evaluate("""() => {
                 const bar = document.querySelector('#atfa-expo27 .afpx-staff'), wrap = document.querySelector('#atfa-expo27 .afpx-wrap');
                 const a = [...bar.querySelectorAll('a')];

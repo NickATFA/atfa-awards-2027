@@ -5,6 +5,7 @@ shown as For Sale, no live data calls, a banner saying it isn't live.
     python3 tools/make_preview.py     ->  dist/floor-plan-preview.html
 """
 import json
+from html import escape as html_escape
 import pathlib
 import re
 
@@ -35,7 +36,7 @@ def main():
         "<style>body{margin:0;padding:16px;background:#ECEFEE;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif}"
         ".pv{max-width:1400px;margin:0 auto 14px;padding:10px 14px;border-radius:10px;background:#FFF7E6;border:1px solid #F2D49A;"
         "color:#6B4B12;font-size:14px;line-height:1.45}.pv b{color:#4A3309}</style></head><body>"
-        "<div class=\"pv\"><b>Preview, not live.</b> Revised Concept 5 fitted to scale (v" + settings["version"] + "). "
+        "<div class=\"pv\"><b>Preview, not live.</b> " + html_escape(geo.get("layout", "Hall 5 layout")) + ", fitted to scale (v" + settings["version"] + "). "
         "Every stand is shown as For Sale. Buttons work as they will on the site.</div>"
         + css + shell +
         "<script type=\"application/json\" id=\"atfa-expo27-config\">" + json.dumps(cfg) + "</script>"

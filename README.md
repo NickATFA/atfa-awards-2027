@@ -31,8 +31,10 @@ The plugin also runs the ATFA Expo & Conference 2027 page at /expo-2027/ with th
 Releasing an Expo change is the same as any other: edit `expo/src`, run `python3 expo/build.py`, then
 `./build.sh x.y.z "What changed"`, commit and push, and click Update now.
 
-Tests (optional): `bash expo/tests/run_all.sh` for the PHP checks and the older plan, then
-`php expo/tests/page_harness.php expo/tests/fixtures/real.csv expo/tests/out VISITOR` (also VISITOR_COLD and STAFF),
-copy `expo/tests/out/page-visitor.html` to `page-visitor-real.html`, and `python3 expo/tests/e2e_page.py`
-(Playwright; set FONT_PKG to an npm folder with @fontsource/barlow-condensed and @fontsource/montserrat for
-true-to-life screenshots).
+If the layout or prices change, run `python3 expo/tools/make_pdf.py` too: it rebuilds the stand PDF into
+`atfa-awards-2027/assets/expo/`, so the PDF goes out with the release.
+
+Tests (optional): `bash expo/tests/run_all.sh` for the PHP checks and the older plan, and
+`bash expo/tests/run_page.sh` for the Expo page (PHP checks including share links, browser tests, then a
+random-tapping stress test on five phone sizes). Both need PHP 8 and Python Playwright; set FONT_PKG to an
+npm folder with @fontsource/barlow-condensed and @fontsource/montserrat for true-to-life screenshots.

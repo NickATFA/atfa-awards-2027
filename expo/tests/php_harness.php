@@ -21,6 +21,10 @@ if ( 0 === strpos( $mode, 'REFRESH' ) ) {
 if ( 0 === strpos( $mode, 'STAFF' ) ) {
 	$GLOBALS['__can_edit'] = true;
 }
+// The awards plugin the code ships in (for its PDF copy): the folder next to expo/ unless
+// AWARDS_DIR says otherwise.
+define( 'ATFA_AWARDS_URL', 'https://www.atfa.com.au/wp-content/plugins/atfa-awards-2027/' );
+define( 'ATFA_AWARDS_DIR', ( getenv( 'AWARDS_DIR' ) ?: dirname( __DIR__, 2 ) . '/atfa-awards-2027' ) . '/' );
 $GLOBALS['__shortcodes'] = array();
 $GLOBALS['__actions']    = array();
 $GLOBALS['__routes']     = array();

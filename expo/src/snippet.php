@@ -41,6 +41,15 @@
  *   Visitors never get the bar, and the sheet link isn't printed anywhere else.
  *   ("Refresh from the sheet" is the same as adding ?refresh=1 to the page address.)
  *
+ * SHARING THE PAGE WHILE IT'S PRIVATE
+ *   On the Expo page the staff bar can also make a link that lets someone without a login
+ *   (a potential sponsor, say) see the page for 24 hours, 3 days or 7 days:
+ *   /expo-2027/?xp-share=<random key>. They see exactly what visitors will see once the page
+ *   is public: no staff bar, no sheet link, no menu link. A link stops working when its time
+ *   is up or when staff stop it, and then goes to the old floor plan page like any visitor.
+ *   Shared views are never cached and ask search engines not to index them. The links are
+ *   kept in the option atfa_expo27_shares; staff manage them with /wp-json/atfa/v1/expo27/shares.
+ *
  * WHERE THIS LIVES
  *   In the ATFA Flooring Awards 2027 plugin (includes/expo-2027.php), built from expo/ in the
  *   plugin's GitHub repo (NickATFA/atfa-awards-2027). It used to be a Code Snippet; if that
@@ -60,6 +69,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	// (stand numbers like S01), so data cached by the older plan is never reused.
 	define( 'ATFA_EXPO27_CACHE_KEY', 'atfa_expo27_stands_v3' );
 	define( 'ATFA_EXPO27_LAST_GOOD_KEY', 'atfa_expo27_stands_last_good_v3' );
+	// Share links for the private Expo page: the address argument and where they're kept.
+	define( 'ATFA_EXPO27_SHARE_ARG', 'xp-share' );
+	define( 'ATFA_EXPO27_SHARES_OPTION', 'atfa_expo27_shares' );
 
 	/**
 	 * Settings. Safe to edit.
@@ -75,7 +87,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			// Leave empty to use email instead.
 			'enquiry_url'   => '__ENQUIRY_URL__',
 			// Downloadable PDF of the floor plan and rate card. Leave empty to hide the button.
-			'pdf_url'       => '__PDF_URL__',
+			// "plugin:..." is the copy that ships in the awards plugin (tools/make_pdf.py).
+			'pdf_url'       => atfa_expo27_asset_url( '__PDF_URL__' ),
 			// Staff only: the sheet staff edit (Master tab). Shown as a button in the staff bar.
 			// Leave empty to hide the button.
 			'sheet_url'     => '__SHEET_URL__',
@@ -111,6 +124,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	add_action( 'template_redirect', 'atfa_expo27_hidden_page_redirect', 5 );
 	add_filter( 'wp_nav_menu_objects', 'atfa_expo27_menu_items' );
 	add_filter( 'wp_get_nav_menu_items', 'atfa_expo27_menu_items_list', 10, 3 );
+	add_action( 'pre_get_posts', 'atfa_expo27_share_query' );
+	add_action( 'template_redirect', 'atfa_expo27_share_headers', 1 );
+	add_filter( 'wp_robots', 'atfa_expo27_share_robots' );
 
 	add_action( 'rest_api_init', function () {
 		register_rest_route( 'atfa/v1', '/expo27/stands', array(
@@ -118,7 +134,42 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'callback'            => 'atfa_expo27_rest_stands',
 			'permission_callback' => '__return_true',
 		) );
+		register_rest_route( 'atfa/v1', '/expo27/shares', array(
+			array(
+				'methods'             => 'GET',
+				'callback'            => 'atfa_expo27_rest_shares',
+				'permission_callback' => 'atfa_expo27_is_staff',
+			),
+			array(
+				'methods'             => 'POST',
+				'callback'            => 'atfa_expo27_rest_share_make',
+				'permission_callback' => 'atfa_expo27_is_staff',
+			),
+		) );
+		register_rest_route( 'atfa/v1', '/expo27/shares/(?P<key>[A-Za-z0-9]{24,64})', array(
+			'methods'             => 'DELETE',
+			'callback'            => 'atfa_expo27_rest_share_stop',
+			'permission_callback' => 'atfa_expo27_is_staff',
+		) );
 	} );
+
+	/**
+	 * "plugin:assets/expo/file.pdf" is a file that ships in the awards plugin (built from expo/,
+	 * see tools/make_pdf.py), so it updates with the plugin; anything else is an ordinary
+	 * address. The ?v= changes whenever the plugin brings a new copy, so nobody gets an old
+	 * one from their browser's cache.
+	 */
+	function atfa_expo27_asset_url( $value ) {
+		$value = (string) $value;
+		if ( 0 !== strpos( $value, 'plugin:' ) ) {
+			return $value;
+		}
+		$path = ltrim( substr( $value, 7 ), '/' );
+		if ( ! defined( 'ATFA_AWARDS_URL' ) || ! defined( 'ATFA_AWARDS_DIR' ) || ! is_file( ATFA_AWARDS_DIR . $path ) ) {
+			return '';
+		}
+		return ATFA_AWARDS_URL . $path . '?v=' . (int) filemtime( ATFA_AWARDS_DIR . $path );
+	}
 
 	/**
 	 * Staff = logged-in users who can edit pages (Editors and Administrators).
@@ -469,7 +520,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	 *
 	 * $refreshed: what a "Refresh from the sheet" just fetched, or null.
 	 */
-	function atfa_expo27_staff_bar( $settings, $refreshed = null ) {
+	function atfa_expo27_staff_bar( $settings, $refreshed = null, $extra = '' ) {
 		if ( ! atfa_expo27_is_staff() ) {
 			return '';
 		}
@@ -505,6 +556,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			. '<div class="afpx-staff-text"><span class="afpx-staff-status' . ( $warn ? ' is-warn' : '' ) . '">' . esc_html( $status ) . '</span> '
 			. '<span class="afpx-staff-note">Sheet edits can take up to 5 minutes to come through from Google. Visitors don\'t see this bar.</span></div>'
 			. '<div class="afpx-staff-btns">' . $buttons . '</div>'
+			. $extra
 			. '</div>';
 	}
 
@@ -600,6 +652,160 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			}
 		}
 		return $items;
+	}
+
+	/**
+	 * Share links that haven't run out yet (key => array( expires, created, by, note )).
+	 * Links that have run out are tidied away here.
+	 */
+	function atfa_expo27_shares() {
+		$all  = get_option( ATFA_EXPO27_SHARES_OPTION, array() );
+		$all  = is_array( $all ) ? $all : array();
+		$live = array();
+		foreach ( $all as $key => $share ) {
+			if ( is_array( $share ) && preg_match( '/^[A-Za-z0-9]{24,64}$/', (string) $key ) && (int) ( $share['expires'] ?? 0 ) > time() ) {
+				$live[ (string) $key ] = $share;
+			}
+		}
+		if ( count( $live ) !== count( $all ) ) {
+			update_option( ATFA_EXPO27_SHARES_OPTION, $live, false );
+		}
+		return $live;
+	}
+
+	/**
+	 * The share key on this request, if it's one that's still live; otherwise ''.
+	 */
+	function atfa_expo27_share_key() {
+		if ( ! isset( $_GET[ ATFA_EXPO27_SHARE_ARG ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return '';
+		}
+		$key = (string) wp_unslash( $_GET[ ATFA_EXPO27_SHARE_ARG ] ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! preg_match( '/^[A-Za-z0-9]{24,64}$/', $key ) ) {
+			return '';
+		}
+		foreach ( array_keys( atfa_expo27_shares() ) as $live ) {
+			if ( hash_equals( (string) $live, $key ) ) {
+				return $key;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * With a live share key, the Expo page's own address shows the page even while it's private.
+	 * Only the main request for that page; nothing else on the site changes.
+	 */
+	function atfa_expo27_share_query( $query ) {
+		if ( is_admin() || ! $query->is_main_query() || ! isset( $_GET[ ATFA_EXPO27_SHARE_ARG ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+		$settings = atfa_expo27_settings();
+		if ( trim( (string) $query->get( 'pagename' ), '/' ) !== $settings['page_slug'] || '' === atfa_expo27_share_key() ) {
+			return;
+		}
+		$query->set( 'post_status', array( 'publish', 'private' ) );
+		$GLOBALS['atfa_expo27_sharing'] = true;
+	}
+
+	function atfa_expo27_sharing() {
+		return ! empty( $GLOBALS['atfa_expo27_sharing'] ) && is_page();
+	}
+
+	/**
+	 * A shared view is never kept by WP Rocket or the browser, and search engines are asked
+	 * not to index it.
+	 */
+	function atfa_expo27_share_headers() {
+		if ( ! atfa_expo27_sharing() ) {
+			return;
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		nocache_headers();
+		header( 'X-Robots-Tag: noindex, nofollow', true );
+	}
+
+	function atfa_expo27_share_robots( $robots ) {
+		if ( atfa_expo27_sharing() ) {
+			$robots['noindex']  = true;
+			$robots['nofollow'] = true;
+		}
+		return $robots;
+	}
+
+	function atfa_expo27_share_url( $key ) {
+		$settings = atfa_expo27_settings();
+		$page     = get_page_by_path( $settings['page_slug'] );
+		$base     = $page ? get_permalink( $page ) : home_url( '/' . $settings['page_slug'] . '/' );
+		return add_query_arg( ATFA_EXPO27_SHARE_ARG, $key, $base );
+	}
+
+	function atfa_expo27_share_public( $key, $share ) {
+		return array(
+			'key'     => $key,
+			'url'     => atfa_expo27_share_url( $key ),
+			'expires' => (int) $share['expires'],
+			'until'   => function_exists( 'wp_date' ) ? wp_date( 'D j M \a\t g:i a', (int) $share['expires'] ) : gmdate( 'D j M H:i', (int) $share['expires'] ) . ' UTC',
+			'note'    => (string) ( $share['note'] ?? '' ),
+		);
+	}
+
+	function atfa_expo27_rest_shares() {
+		$out = array();
+		foreach ( atfa_expo27_shares() as $key => $share ) {
+			$out[] = atfa_expo27_share_public( $key, $share );
+		}
+		usort( $out, function ( $a, $b ) { return $b['expires'] - $a['expires']; } );
+		return rest_ensure_response( array( 'shares' => $out ) );
+	}
+
+	function atfa_expo27_rest_share_make( $request ) {
+		$hours = (int) $request->get_param( 'hours' );
+		if ( ! in_array( $hours, array( 24, 72, 168 ), true ) ) {
+			$hours = 24;
+		}
+		$note   = sanitize_text_field( (string) $request->get_param( 'note' ) );
+		$note   = function_exists( 'mb_substr' ) ? mb_substr( $note, 0, 80 ) : substr( $note, 0, 80 );
+		$shares = atfa_expo27_shares();
+		if ( count( $shares ) >= 20 ) {
+			return new WP_Error( 'atfa_expo27_too_many', 'There are already 20 live links. Stop one before making another.', array( 'status' => 400 ) );
+		}
+		$key            = wp_generate_password( 32, false, false );
+		$share          = array( 'expires' => time() + $hours * HOUR_IN_SECONDS, 'created' => time(), 'by' => get_current_user_id(), 'note' => $note );
+		$shares[ $key ] = $share;
+		update_option( ATFA_EXPO27_SHARES_OPTION, $shares, false );
+		return rest_ensure_response( atfa_expo27_share_public( $key, $share ) );
+	}
+
+	function atfa_expo27_rest_share_stop( $request ) {
+		$key    = (string) $request->get_param( 'key' );
+		$shares = atfa_expo27_shares();
+		unset( $shares[ $key ] );
+		update_option( ATFA_EXPO27_SHARES_OPTION, $shares, false );
+		return rest_ensure_response( array( 'stopped' => true ) );
+	}
+
+	/**
+	 * The share tools in the staff bar on the Expo page (staff only, so never cached). The page
+	 * script wires them up; the links come from /wp-json/atfa/v1/expo27/shares.
+	 */
+	function atfa_expo27_share_tools() {
+		if ( ! atfa_expo27_is_staff() ) {
+			return '';
+		}
+		return '<details class="xp-share" data-role="share" data-rest="' . esc_url( rest_url( 'atfa/v1/expo27/shares' ) ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'wp_rest' ) ) . '">'
+			. '<summary>Share this page with someone who doesn\'t have a login</summary>'
+			. '<p class="xp-share-note">They\'ll see the page as visitors will once it\'s public, until the link runs out. Stop a link at any time.</p>'
+			. '<div class="xp-share-form">'
+			. '<label><span>For</span><input type="text" data-role="sharenote" maxlength="80" placeholder="Who it\'s for (optional)"></label>'
+			. '<label><span>For how long</span><select data-role="sharehours"><option value="24">24 hours</option><option value="72">3 days</option><option value="168">7 days</option></select></label>'
+			. '<button type="button" class="afpx-btn is-small" data-role="sharemake">Make a link</button>'
+			. '</div>'
+			. '<p class="xp-share-msg" data-role="sharemsg" aria-live="polite"></p>'
+			. '<ul class="xp-share-list" data-role="sharelist"></ul>'
+			. '</details>';
 	}
 
 	/**
@@ -743,7 +949,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{EMAIL}}'        => esc_html( $settings['enquiry_email'] ),
 			'{{MAILTO}}'       => esc_attr( 'mailto:' . $settings['enquiry_email'] ),
 			'{{ENQUIRY_NAME}}' => esc_html( $settings['enquiry_name'] ),
-			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed ),
+			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed, atfa_expo27_share_tools() ),
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'

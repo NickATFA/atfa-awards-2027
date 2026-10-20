@@ -108,6 +108,28 @@ function is_404() { return ! empty( $GLOBALS['__is404'] ); }
 function nocache_headers() { $GLOBALS['__nocache'] = true; }
 function add_query_arg( $k, $v, $url ) { return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . rawurlencode( $k ) . '=' . rawurlencode( $v ); }
 $GLOBALS['wp'] = (object) array( 'request' => '' );
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) { define( 'HOUR_IN_SECONDS', 3600 ); }
+function wp_create_nonce( $a ) { return 'n0nce' . substr( md5( $a ), 0, 6 ); }
+function wp_unslash( $v ) { return is_string( $v ) ? stripslashes( $v ) : $v; }
+function sanitize_text_field( $v ) { return trim( preg_replace( '/[\r\n\t ]+/', ' ', strip_tags( (string) $v ) ) ); }
+function wp_generate_password( $n = 12, $special = true, $extra = false ) {
+	$c = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; $o = '';
+	for ( $i = 0; $i < $n; $i++ ) { $o .= $c[ random_int( 0, 61 ) ]; }
+	return $o;
+}
+function get_current_user_id() { return empty( $GLOBALS['__can_edit'] ) ? 0 : 7; }
+class FakeQuery {
+	public $vars; private $main;
+	public function __construct( $vars, $main = true ) { $this->vars = $vars; $this->main = $main; }
+	public function is_main_query() { return $this->main; }
+	public function get( $k ) { return $this->vars[ $k ] ?? ''; }
+	public function set( $k, $v ) { $this->vars[ $k ] = $v; }
+}
+class FakeRequest {
+	private $p;
+	public function __construct( $p ) { $this->p = $p; }
+	public function get_param( $k ) { return $this->p[ $k ] ?? null; }
+}
 function wp_safe_redirect( $to, $code = 302 ) { $GLOBALS['__redirect'] = array( $to, $code ); throw new Redirected(); }
 
 require dirname( __DIR__ ) . '/dist/atfa-expo27-floorplan.php';
@@ -172,6 +194,62 @@ if ( 'FORWARD' === $mode ) {
 		(object) array( 'type' => 'custom', 'object_id' => 0, 'title' => 'Social Events' ),
 	) ) );
 	$result['hidden_hooked']        = in_array( 'atfa_expo27_hidden_page_redirect', $GLOBALS['__actions']['template_redirect'] ?? array(), true );
+	echo json_encode( $result, JSON_UNESCAPED_SLASHES ), "\n";
+	exit;
+}
+
+if ( 'SHARE' === $mode ) {
+	$GLOBALS['__options'] = array();
+	$GLOBALS['__can_edit'] = true;
+	$made  = atfa_expo27_rest_share_make( new FakeRequest( array( 'hours' => 24, 'note' => '<b>Sponsor</b> Co' ) ) )->data;
+	$made3 = atfa_expo27_rest_share_make( new FakeRequest( array( 'hours' => 5000 ) ) )->data;
+	$list  = atfa_expo27_rest_shares()->data['shares'];
+	$result['made_url']    = $made['url'];
+	$result['made_note']   = $made['note'];
+	$result['made_hours']  = round( ( $made['expires'] - time() ) / 3600 );
+	$result['odd_hours']   = round( ( $made3['expires'] - time() ) / 3600 );
+	$result['listed']      = count( $list );
+	$result['routes_staff_only'] = 'atfa_expo27_is_staff' === $GLOBALS['__routes']['atfa/v1/expo27/shares'][0]['permission_callback']
+		&& 'atfa_expo27_is_staff' === $GLOBALS['__routes']['atfa/v1/expo27/shares'][1]['permission_callback']
+		&& 'atfa_expo27_is_staff' === $GLOBALS['__routes']['atfa/v1/expo27/shares/(?P<key>[A-Za-z0-9]{24,64})']['permission_callback'];
+	$GLOBALS['__can_edit'] = false;
+	$query = function ( $get, $pagename, $main = true ) {
+		$_GET = $get;
+		unset( $GLOBALS['atfa_expo27_sharing'] );
+		$q = new FakeQuery( array( 'pagename' => $pagename ), $main );
+		atfa_expo27_share_query( $q );
+		return array( $q->get( 'post_status' ), ! empty( $GLOBALS['atfa_expo27_sharing'] ) );
+	};
+	$result['visitor_with_key']    = $query( array( 'xp-share' => $made['key'] ), 'expo-2027' );
+	$result['visitor_no_key']      = $query( array(), 'expo-2027' );
+	$result['visitor_wrong_key']   = $query( array( 'xp-share' => str_repeat( 'a', 32 ) ), 'expo-2027' );
+	$result['visitor_bad_key']     = $query( array( 'xp-share' => "x' OR 1=1" ), 'expo-2027' );
+	$result['key_on_other_page']   = $query( array( 'xp-share' => $made['key'] ), 'some-other-page' );
+	$result['key_not_main_query']  = $query( array( 'xp-share' => $made['key'] ), 'expo-2027', false );
+	$GLOBALS['__page'] = 20001;
+	$GLOBALS['atfa_expo27_sharing'] = true;
+	$result['robots_shared'] = atfa_expo27_share_robots( array() );
+	unset( $GLOBALS['atfa_expo27_sharing'] );
+	$result['robots_normal'] = atfa_expo27_share_robots( array() );
+	$GLOBALS['__can_edit'] = true;
+	atfa_expo27_rest_share_stop( new FakeRequest( array( 'key' => $made['key'] ) ) );
+	$GLOBALS['__can_edit'] = false;
+	$result['after_stop']    = $query( array( 'xp-share' => $made['key'] ), 'expo-2027' );
+	// Run out: a link whose time is up stops working and is tidied away.
+	$opts = get_option( 'atfa_expo27_shares' );
+	$opts[ $made3['key'] ]['expires'] = time() - 5;
+	update_option( 'atfa_expo27_shares', $opts );
+	$result['expired']       = $query( array( 'xp-share' => $made3['key'] ), 'expo-2027' );
+	$result['left_stored']   = count( get_option( 'atfa_expo27_shares' ) );
+	$result['hooks']         = in_array( 'atfa_expo27_share_query', $GLOBALS['__actions']['pre_get_posts'] ?? array(), true )
+		&& in_array( 'atfa_expo27_share_headers', $GLOBALS['__actions']['template_redirect'] ?? array(), true )
+		&& in_array( 'atfa_expo27_share_robots', $GLOBALS['__filters']['wp_robots'] ?? array(), true );
+	// The share tools are in the staff bar only.
+	$_GET = array();
+	$GLOBALS['__can_edit'] = false;
+	$result['tools_visitor'] = atfa_expo27_share_tools();
+	$GLOBALS['__can_edit'] = true;
+	$result['tools_staff']   = false !== strpos( atfa_expo27_share_tools(), 'data-role="share"' );
 	echo json_encode( $result, JSON_UNESCAPED_SLASHES ), "\n";
 	exit;
 }

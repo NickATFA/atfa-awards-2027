@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
  * ---------------------------------------------------------------------------
- * Version 3.2.0 · 19 October 2026 · Prepared for ATFA (Nick Warren)
+ * Version 3.3.0 · 20 October 2026 · Prepared for ATFA (Nick Warren)
  *
  * WHAT THIS ADDS
  *   [atfa_expo27_page]               The ATFA Expo 2027 page at /expo-2027/: the dark awards-style
@@ -46,6 +46,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   Visitors never get the bar, and the sheet link isn't printed anywhere else.
  *   ("Refresh from the sheet" is the same as adding ?refresh=1 to the page address.)
  *
+ * SHARING THE PAGE WHILE IT'S PRIVATE
+ *   On the Expo page the staff bar can also make a link that lets someone without a login
+ *   (a potential sponsor, say) see the page for 24 hours, 3 days or 7 days:
+ *   /expo-2027/?xp-share=<random key>. They see exactly what visitors will see once the page
+ *   is public: no staff bar, no sheet link, no menu link. A link stops working when its time
+ *   is up or when staff stop it, and then goes to the old floor plan page like any visitor.
+ *   Shared views are never cached and ask search engines not to index them. The links are
+ *   kept in the option atfa_expo27_shares; staff manage them with /wp-json/atfa/v1/expo27/shares.
+ *
  * WHERE THIS LIVES
  *   In the ATFA Flooring Awards 2027 plugin (includes/expo-2027.php), built from expo/ in the
  *   plugin's GitHub repo (NickATFA/atfa-awards-2027). It used to be a Code Snippet; if that
@@ -65,6 +74,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	// (stand numbers like S01), so data cached by the older plan is never reused.
 	define( 'ATFA_EXPO27_CACHE_KEY', 'atfa_expo27_stands_v3' );
 	define( 'ATFA_EXPO27_LAST_GOOD_KEY', 'atfa_expo27_stands_last_good_v3' );
+	// Share links for the private Expo page: the address argument and where they're kept.
+	define( 'ATFA_EXPO27_SHARE_ARG', 'xp-share' );
+	define( 'ATFA_EXPO27_SHARES_OPTION', 'atfa_expo27_shares' );
 
 	/**
 	 * Settings. Safe to edit.
@@ -80,7 +92,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			// Leave empty to use email instead.
 			'enquiry_url'   => 'https://www.atfa.com.au/expo-2027-stand-enquiry/',
 			// Downloadable PDF of the floor plan and rate card. Leave empty to hide the button.
-			'pdf_url'       => 'https://www.atfa.com.au/wp-content/uploads/2026/10/ATFA-Expo-2027-Hall-5-Floor-Plan.pdf',
+			// "plugin:..." is the copy that ships in the awards plugin (tools/make_pdf.py).
+			'pdf_url'       => atfa_expo27_asset_url( 'plugin:assets/expo/ATFA-Expo-2027-Hall-5-Floor-Plan.pdf' ),
 			// Staff only: the sheet staff edit (Master tab). Shown as a button in the staff bar.
 			// Leave empty to hide the button.
 			'sheet_url'     => 'https://docs.google.com/spreadsheets/d/1cYp8wew5Qvfds0_IjBaXA8mb6kuOHh4TmVZqsfbXWsI/edit#gid=885922016',
@@ -116,6 +129,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	add_action( 'template_redirect', 'atfa_expo27_hidden_page_redirect', 5 );
 	add_filter( 'wp_nav_menu_objects', 'atfa_expo27_menu_items' );
 	add_filter( 'wp_get_nav_menu_items', 'atfa_expo27_menu_items_list', 10, 3 );
+	add_action( 'pre_get_posts', 'atfa_expo27_share_query' );
+	add_action( 'template_redirect', 'atfa_expo27_share_headers', 1 );
+	add_filter( 'wp_robots', 'atfa_expo27_share_robots' );
 
 	add_action( 'rest_api_init', function () {
 		register_rest_route( 'atfa/v1', '/expo27/stands', array(
@@ -123,7 +139,42 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'callback'            => 'atfa_expo27_rest_stands',
 			'permission_callback' => '__return_true',
 		) );
+		register_rest_route( 'atfa/v1', '/expo27/shares', array(
+			array(
+				'methods'             => 'GET',
+				'callback'            => 'atfa_expo27_rest_shares',
+				'permission_callback' => 'atfa_expo27_is_staff',
+			),
+			array(
+				'methods'             => 'POST',
+				'callback'            => 'atfa_expo27_rest_share_make',
+				'permission_callback' => 'atfa_expo27_is_staff',
+			),
+		) );
+		register_rest_route( 'atfa/v1', '/expo27/shares/(?P<key>[A-Za-z0-9]{24,64})', array(
+			'methods'             => 'DELETE',
+			'callback'            => 'atfa_expo27_rest_share_stop',
+			'permission_callback' => 'atfa_expo27_is_staff',
+		) );
 	} );
+
+	/**
+	 * "plugin:assets/expo/file.pdf" is a file that ships in the awards plugin (built from expo/,
+	 * see tools/make_pdf.py), so it updates with the plugin; anything else is an ordinary
+	 * address. The ?v= changes whenever the plugin brings a new copy, so nobody gets an old
+	 * one from their browser's cache.
+	 */
+	function atfa_expo27_asset_url( $value ) {
+		$value = (string) $value;
+		if ( 0 !== strpos( $value, 'plugin:' ) ) {
+			return $value;
+		}
+		$path = ltrim( substr( $value, 7 ), '/' );
+		if ( ! defined( 'ATFA_AWARDS_URL' ) || ! defined( 'ATFA_AWARDS_DIR' ) || ! is_file( ATFA_AWARDS_DIR . $path ) ) {
+			return '';
+		}
+		return ATFA_AWARDS_URL . $path . '?v=' . (int) filemtime( ATFA_AWARDS_DIR . $path );
+	}
 
 	/**
 	 * Staff = logged-in users who can edit pages (Editors and Administrators).
@@ -425,7 +476,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.2.0';
+		$version  = '3.3.0';
 
 		// Staff: "Refresh from the sheet" in the staff bar (the page with ?refresh=1 on the end)
 		// pulls the latest from the sheet straight away, skipping the 2-minute cache.
@@ -474,7 +525,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	 *
 	 * $refreshed: what a "Refresh from the sheet" just fetched, or null.
 	 */
-	function atfa_expo27_staff_bar( $settings, $refreshed = null ) {
+	function atfa_expo27_staff_bar( $settings, $refreshed = null, $extra = '' ) {
 		if ( ! atfa_expo27_is_staff() ) {
 			return '';
 		}
@@ -510,6 +561,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			. '<div class="afpx-staff-text"><span class="afpx-staff-status' . ( $warn ? ' is-warn' : '' ) . '">' . esc_html( $status ) . '</span> '
 			. '<span class="afpx-staff-note">Sheet edits can take up to 5 minutes to come through from Google. Visitors don\'t see this bar.</span></div>'
 			. '<div class="afpx-staff-btns">' . $buttons . '</div>'
+			. $extra
 			. '</div>';
 	}
 
@@ -608,6 +660,160 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	}
 
 	/**
+	 * Share links that haven't run out yet (key => array( expires, created, by, note )).
+	 * Links that have run out are tidied away here.
+	 */
+	function atfa_expo27_shares() {
+		$all  = get_option( ATFA_EXPO27_SHARES_OPTION, array() );
+		$all  = is_array( $all ) ? $all : array();
+		$live = array();
+		foreach ( $all as $key => $share ) {
+			if ( is_array( $share ) && preg_match( '/^[A-Za-z0-9]{24,64}$/', (string) $key ) && (int) ( $share['expires'] ?? 0 ) > time() ) {
+				$live[ (string) $key ] = $share;
+			}
+		}
+		if ( count( $live ) !== count( $all ) ) {
+			update_option( ATFA_EXPO27_SHARES_OPTION, $live, false );
+		}
+		return $live;
+	}
+
+	/**
+	 * The share key on this request, if it's one that's still live; otherwise ''.
+	 */
+	function atfa_expo27_share_key() {
+		if ( ! isset( $_GET[ ATFA_EXPO27_SHARE_ARG ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return '';
+		}
+		$key = (string) wp_unslash( $_GET[ ATFA_EXPO27_SHARE_ARG ] ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( ! preg_match( '/^[A-Za-z0-9]{24,64}$/', $key ) ) {
+			return '';
+		}
+		foreach ( array_keys( atfa_expo27_shares() ) as $live ) {
+			if ( hash_equals( (string) $live, $key ) ) {
+				return $key;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * With a live share key, the Expo page's own address shows the page even while it's private.
+	 * Only the main request for that page; nothing else on the site changes.
+	 */
+	function atfa_expo27_share_query( $query ) {
+		if ( is_admin() || ! $query->is_main_query() || ! isset( $_GET[ ATFA_EXPO27_SHARE_ARG ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+			return;
+		}
+		$settings = atfa_expo27_settings();
+		if ( trim( (string) $query->get( 'pagename' ), '/' ) !== $settings['page_slug'] || '' === atfa_expo27_share_key() ) {
+			return;
+		}
+		$query->set( 'post_status', array( 'publish', 'private' ) );
+		$GLOBALS['atfa_expo27_sharing'] = true;
+	}
+
+	function atfa_expo27_sharing() {
+		return ! empty( $GLOBALS['atfa_expo27_sharing'] ) && is_page();
+	}
+
+	/**
+	 * A shared view is never kept by WP Rocket or the browser, and search engines are asked
+	 * not to index it.
+	 */
+	function atfa_expo27_share_headers() {
+		if ( ! atfa_expo27_sharing() ) {
+			return;
+		}
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+		nocache_headers();
+		header( 'X-Robots-Tag: noindex, nofollow', true );
+	}
+
+	function atfa_expo27_share_robots( $robots ) {
+		if ( atfa_expo27_sharing() ) {
+			$robots['noindex']  = true;
+			$robots['nofollow'] = true;
+		}
+		return $robots;
+	}
+
+	function atfa_expo27_share_url( $key ) {
+		$settings = atfa_expo27_settings();
+		$page     = get_page_by_path( $settings['page_slug'] );
+		$base     = $page ? get_permalink( $page ) : home_url( '/' . $settings['page_slug'] . '/' );
+		return add_query_arg( ATFA_EXPO27_SHARE_ARG, $key, $base );
+	}
+
+	function atfa_expo27_share_public( $key, $share ) {
+		return array(
+			'key'     => $key,
+			'url'     => atfa_expo27_share_url( $key ),
+			'expires' => (int) $share['expires'],
+			'until'   => function_exists( 'wp_date' ) ? wp_date( 'D j M \a\t g:i a', (int) $share['expires'] ) : gmdate( 'D j M H:i', (int) $share['expires'] ) . ' UTC',
+			'note'    => (string) ( $share['note'] ?? '' ),
+		);
+	}
+
+	function atfa_expo27_rest_shares() {
+		$out = array();
+		foreach ( atfa_expo27_shares() as $key => $share ) {
+			$out[] = atfa_expo27_share_public( $key, $share );
+		}
+		usort( $out, function ( $a, $b ) { return $b['expires'] - $a['expires']; } );
+		return rest_ensure_response( array( 'shares' => $out ) );
+	}
+
+	function atfa_expo27_rest_share_make( $request ) {
+		$hours = (int) $request->get_param( 'hours' );
+		if ( ! in_array( $hours, array( 24, 72, 168 ), true ) ) {
+			$hours = 24;
+		}
+		$note   = sanitize_text_field( (string) $request->get_param( 'note' ) );
+		$note   = function_exists( 'mb_substr' ) ? mb_substr( $note, 0, 80 ) : substr( $note, 0, 80 );
+		$shares = atfa_expo27_shares();
+		if ( count( $shares ) >= 20 ) {
+			return new WP_Error( 'atfa_expo27_too_many', 'There are already 20 live links. Stop one before making another.', array( 'status' => 400 ) );
+		}
+		$key            = wp_generate_password( 32, false, false );
+		$share          = array( 'expires' => time() + $hours * HOUR_IN_SECONDS, 'created' => time(), 'by' => get_current_user_id(), 'note' => $note );
+		$shares[ $key ] = $share;
+		update_option( ATFA_EXPO27_SHARES_OPTION, $shares, false );
+		return rest_ensure_response( atfa_expo27_share_public( $key, $share ) );
+	}
+
+	function atfa_expo27_rest_share_stop( $request ) {
+		$key    = (string) $request->get_param( 'key' );
+		$shares = atfa_expo27_shares();
+		unset( $shares[ $key ] );
+		update_option( ATFA_EXPO27_SHARES_OPTION, $shares, false );
+		return rest_ensure_response( array( 'stopped' => true ) );
+	}
+
+	/**
+	 * The share tools in the staff bar on the Expo page (staff only, so never cached). The page
+	 * script wires them up; the links come from /wp-json/atfa/v1/expo27/shares.
+	 */
+	function atfa_expo27_share_tools() {
+		if ( ! atfa_expo27_is_staff() ) {
+			return '';
+		}
+		return '<details class="xp-share" data-role="share" data-rest="' . esc_url( rest_url( 'atfa/v1/expo27/shares' ) ) . '" data-nonce="' . esc_attr( wp_create_nonce( 'wp_rest' ) ) . '">'
+			. '<summary>Share this page with someone who doesn\'t have a login</summary>'
+			. '<p class="xp-share-note">They\'ll see the page as visitors will once it\'s public, until the link runs out. Stop a link at any time.</p>'
+			. '<div class="xp-share-form">'
+			. '<label><span>For</span><input type="text" data-role="sharenote" maxlength="80" placeholder="Who it\'s for (optional)"></label>'
+			. '<label><span>For how long</span><select data-role="sharehours"><option value="24">24 hours</option><option value="72">3 days</option><option value="168">7 days</option></select></label>'
+			. '<button type="button" class="afpx-btn is-small" data-role="sharemake">Make a link</button>'
+			. '</div>'
+			. '<p class="xp-share-msg" data-role="sharemsg" aria-live="polite"></p>'
+			. '<ul class="xp-share-list" data-role="sharelist"></ul>'
+			. '</details>';
+	}
+
+	/**
 	 * An image from the awards plugin (logo, wordmark, dinner photo), or '' if the plugin
 	 * or the file isn't there.
 	 */
@@ -670,7 +876,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.2.0';
+		$version  = '3.3.0';
 		$photos   = atfa_expo27_page_photos();
 
 		// Staff: "Refresh from the sheet" reads the sheet straight away, skipping the cache.
@@ -748,7 +954,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{EMAIL}}'        => esc_html( $settings['enquiry_email'] ),
 			'{{MAILTO}}'       => esc_attr( 'mailto:' . $settings['enquiry_email'] ),
 			'{{ENQUIRY_NAME}}' => esc_html( $settings['enquiry_name'] ),
-			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed ),
+			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed, atfa_expo27_share_tools() ),
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'
@@ -796,7 +1002,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <div class="xp-hero-t">
         <span class="eyebrow ld d2">ATFA Expo &amp; Conference · Sydney Showground · Friday 21 May 2027</span>
         <h1 class="disp xp-h1 ld d3">{{WORDMARK}}Expo <span class="or">2027</span></h1>
-        <p class="xp-lead ld d4">The timber flooring industry in one hall for a day. Twenty-eight stands, a live demonstration stage, and the awards dinner the next night.</p>
+        <p class="xp-lead ld d4">The timber flooring industry in one hall for a day. Fifty-eight stands, a live demonstration stage, and the awards dinner the next night.</p>
         <div class="xp-ctas ld d5">
           <a class="btn btn-primary" href="#floor-plan" data-plan="open">Pick your stand</a>
           <a class="btn btn-ghost" href="#weekend">The weekend</a>
@@ -816,7 +1022,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
     </div>
     <div class="r">
       <span class="disp n" data-role="days" hidden></span>
-      <span class="nt" data-role="daysnote">28 stands from $1,200 excl. GST</span>
+      <span class="nt" data-role="daysnote">58 stands from $1,200 excl. GST</span>
     </div>
   </div>
 </div>
@@ -824,7 +1030,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 <section class="wrap sec" id="floor-plan" style="margin-top:96px" aria-labelledby="xp-plan-h">
   <div class="sec-head">
     <h2 class="disp" id="xp-plan-h" style="font-size:72px;max-width:12ch">Pick your stand</h2>
-    <p>Twenty-eight stands in Hall 5, drawn to scale. Select any stand for its size, price and open sides, then send an enquiry with the stand number already filled in.</p>
+    <p>Fifty-eight stands in Hall 5, drawn to scale. Select any stand for its size, price and open sides, then send an enquiry with the stand number already filled in.</p>
   </div>
   {{STAFF}}
   <div class="card xp-plan">
@@ -838,13 +1044,13 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
     <div class="xp-pbody">
       <div class="xp-mapcol">
         <div class="xp-map" data-role="map">
-          <div class="xp-ptop" aria-hidden="true"><span class="xp-badge"><i></i><span data-role="availbadge">28 stands</span></span><span class="xp-from">From $1,200</span></div>
+          <div class="xp-ptop" aria-hidden="true"><span class="xp-badge"><i></i><span data-role="availbadge">58 stands</span></span><span class="xp-from">From $1,200</span></div>
           <div class="xp-north" aria-hidden="true"><svg width="26" height="26" viewBox="-10 -10 20 20"><circle r="9" fill="none" stroke="#E9E1D5" stroke-width="1"></circle><path d="M0 -6.6 L -2.9 3.7 L 0 1.6 L 2.9 3.7 Z" fill="#E9E1D5"></path></svg><span>N</span></div>
           <div class="xp-tip" data-role="tip" aria-hidden="true"></div>
           <noscript><p class="xp-noscript">The interactive floor plan needs JavaScript. To ask about a stand, email <a href="{{MAILTO}}">{{EMAIL}}</a> or download the PDF floor plan.</p></noscript>
         </div>
         <button type="button" class="xp-open" data-plan="full">Open the floor plan<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"></path><path d="M20 4l-7 7"></path><path d="M10 20H4v-6"></path><path d="M4 20l7-7"></path></svg></button>
-        <div class="xp-legend"><span><i style="background:#DCEAF7;border-color:#2E6DA4"></i>3 × 3 m</span><span><i style="background:#CFE6D6;border-color:#2E7D4F"></i>3 × 6 m</span><span><i style="background:#FBE4C9;border-color:#C2761A"></i>6 × 3 m</span><span><i style="background:#E4DAF1;border-color:#67509B"></i>6 × 6 m</span><span><i style="background:#3B2F1D;border-color:#D99A21"></i>On hold</span><span><i style="background:#34302B;border-color:#6F665D"></i>Sold</span><span><i style="background:#DCEAF7;border-color:#2E6DA4;box-shadow:inset 0 -3px 0 #0C0B0A"></i>Shared back wall</span><span><i style="background:#27221E;border-color:#7A6E62;border-style:dashed"></i>Main pedestrian route</span><span><i style="background:#2A1D11;border-color:#F8931F;border-style:dashed"></i>Demo &amp; stage zone</span><span><i style="background:#2A1C1A;border-color:#4A2C28"></i>Fire / non-build lane</span><span><i style="background:#F8931F;border-color:#F8931F"></i>Entrance</span><span><i style="background:#E5534B;border-color:#E5534B"></i>Fire exit</span></div>
+        <div class="xp-legend"><span><i style="background:#DCEAF7;border-color:#2E6DA4"></i>3 × 3 m</span><span><i style="background:#CFE6D6;border-color:#2E7D4F"></i>3 × 6 m</span><span><i style="background:#FBE4C9;border-color:#C2761A"></i>6 × 3 m</span><span><i style="background:#E4DAF1;border-color:#67509B"></i>6 × 6 m</span><span><i style="background:#3B2F1D;border-color:#D99A21"></i>On hold</span><span><i style="background:#34302B;border-color:#6F665D"></i>Sold</span><span><i style="background:#DCEAF7;border-color:#2E6DA4;box-shadow:inset 0 -3px 0 #0C0B0A"></i>Back wall</span><span><i style="background:#2A1D11;border-color:#F8931F;border-style:dashed"></i>Demo &amp; stage zone</span><span><i style="background:#2A1C1A;border-color:#4A2C28"></i>Fire / non-build lane</span><span><i style="background:#F8931F;border-color:#F8931F"></i>Entrance</span><span><i style="background:#E5534B;border-color:#E5534B"></i>Fire exit</span></div>
       </div>
       <aside class="xp-side" aria-label="Stand details">
         <p class="xp-notice" data-role="notice" role="status" hidden></p>
@@ -874,7 +1080,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
     <h2 class="disp" id="xp-prices-h" style="font-size:56px">Stand sizes and prices</h2>
     <span class="small" style="font-size:13px">Larger stands save against the same area in 3 × 3 m stands. Prices in AUD, excl. GST.</span>
   </div>
-  <div class="xp-prices"><div class="card xp-pc"><div class="top"><span class="eyebrow or">Base rate</span></div><span class="disp s">3 × 3 m</span><span class="disp p">$1,200</span><span class="m">9 m² · 12 stands<br>$133.33 per m²</span></div><div class="card xp-pc"><div class="top"><span class="eyebrow or">Save 5%</span></div><span class="disp s">3 × 6 m</span><span class="disp p">$2,280</span><span class="m">18 m² · 4 stands<br>$126.67 per m²</span></div><div class="card xp-pc"><div class="top"><span class="eyebrow or">Save 5%</span></div><span class="disp s">6 × 3 m</span><span class="disp p">$2,280</span><span class="m">18 m² · 6 stands<br>$126.67 per m²</span></div><div class="card xp-pc feat"><div class="top"><span class="eyebrow">Save 15%</span><span class="tag rib">Best value</span></div><span class="disp s">6 × 6 m</span><span class="disp p">$4,080</span><span class="m">36 m² · 6 stands<br>$113.33 per m²</span></div></div>
+  <div class="xp-prices"><div class="card xp-pc"><div class="top"><span class="eyebrow or">Base rate</span></div><span class="disp s">3 × 3 m</span><span class="disp p">$1,200</span><span class="m">9 m² · 32 stands<br>$133.33 per m²</span></div><div class="card xp-pc"><div class="top"><span class="eyebrow or">Save 5%</span></div><span class="disp s">3 × 6 m</span><span class="disp p">$2,280</span><span class="m">18 m² · 4 stands<br>$126.67 per m²</span></div><div class="card xp-pc"><div class="top"><span class="eyebrow or">Save 5%</span></div><span class="disp s">6 × 3 m</span><span class="disp p">$2,280</span><span class="m">18 m² · 18 stands<br>$126.67 per m²</span></div><div class="card xp-pc feat"><div class="top"><span class="eyebrow">Save 15%</span><span class="tag rib">Best value</span></div><span class="disp s">6 × 6 m</span><span class="disp p">$4,080</span><span class="m">36 m² · 4 stands<br>$113.33 per m²</span></div></div>
 </div>
 </section>
 
@@ -898,7 +1104,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <div class="xp-wkc-b">
         <span class="eyebrow or">Friday 21 May</span>
         <span class="disp t">Expo &amp; Conference</span>
-        <span class="x">Sydney Showground, Hall 5. Twenty-eight stands, demonstrations on the stage, and breakout and seminar space.</span>
+        <span class="x">Sydney Showground, Hall 5. Fifty-eight stands, demonstrations on the stage, and breakout and seminar space.</span>
         <a class="xp-wkc-a" href="#floor-plan" data-plan="open">See the floor plan<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>
       </div>
     </div>
@@ -946,9 +1152,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <p>Also behind the operable wall.</p>
     </div>
     <div class="card xp-hc" style="grid-column:span 6">
-      <span class="eyebrow or">Main entrance</span>
-      <span class="disp t">A clear way in</span>
-      <p>The main entrance opens onto a clear arrival area, and a pedestrian route runs straight across the hall to the stage. Both are kept free of stands.</p>
+      <span class="eyebrow or">Getting around</span>
+      <span class="disp t">A circuit of lanes</span>
+      <p>Three-metre lanes connect every row of stands, so visitors can explore the hall several ways and come back through different rows.</p>
     </div>
     <div class="card xp-hc" style="grid-column:span 6">
       <span class="eyebrow or">Open sides</span>
@@ -1021,7 +1227,7 @@ ATFA_EXPO27_PAGE_HTML;
 
 	function atfa_expo27_page_css() {
 		return <<<'ATFA_EXPO27_PAGE_CSS'
-/* ATFA Expo 2027 page (v3.2.0). Same family as the awards page: black, Barlow Condensed and
+/* ATFA Expo 2027 page (v3.3.0). Same family as the awards page: black, Barlow Condensed and
    Montserrat, the orange, and warm charcoal bands for the chapters. Everything is scoped to .xp. */
 html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !important;padding:0 !important}
 .xp{position:relative;min-height:100vh;box-sizing:border-box;background:#0C0B0A;color:#F4EFE7;font-family:'Montserrat',system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;line-height:1.4;overflow-x:clip;text-align:left}
@@ -1284,11 +1490,25 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .xp .afpx-staff .afpx-btn{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:4px;border:1px solid #F8931F;background:#F8931F;color:#1A1208;font-size:13px;font-weight:600}
 .xp .afpx-staff .afpx-btn.is-ghost{background:transparent;color:#F4EFE7;border-color:#3A332D}
 .xp .afpx-staff .afpx-btn.is-ghost:hover{border-color:#F4EFE7}
+.xp .xp-share{flex:1 1 100%;border-top:1px dashed rgba(217,154,33,.45);padding-top:10px}
+.xp .xp-share summary{cursor:pointer;font-weight:600;color:#F0C36A;padding:4px 0}
+.xp .xp-share-note{margin:6px 0 10px;color:#B4A99A}
+.xp .xp-share-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
+.xp .xp-share-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#C2B7A8}
+.xp .xp-share input,.xp .xp-share select{min-height:40px;padding:0 10px;border-radius:4px;border:1px solid #3A332D;background:#131110;color:#F4EFE7;font:inherit;font-size:16px}
+.xp .xp-share-form input{width:230px;max-width:100%}
+.xp .xp-share-msg{margin:10px 0 0;min-height:1em;color:#E6DFD4}
+.xp .xp-share-list{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.xp .xp-share-list li{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #3A332D;border-radius:6px}
+.xp .xp-share-list li.is-new{border-color:#F8931F}
+.xp .xp-share-row{display:flex;flex-wrap:wrap;gap:8px}
+.xp .xp-share-row input{flex:1 1 260px;min-width:0;font-size:14px}
+.xp .xp-share-none{color:#B4A99A;border:0 !important;padding:0 !important}
 .xp .afpx-sr{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* The full-screen plan (phones and tablets, and Full screen on desktop).
    The map gets the screen: no panel until a stand is picked, then a compact card. */
-.xp-ex{position:fixed;inset:0;z-index:100001;background:#0C0B0A;color:#F4EFE7;overflow:hidden;overscroll-behavior:contain;-webkit-tap-highlight-color:transparent;font-size:15px;--xp-top:108px;--xp-right:0px}
+.xp-ex{position:fixed;inset:0;z-index:100001;background:#0C0B0A;color:#F4EFE7;overflow:hidden;overscroll-behavior:contain;-webkit-tap-highlight-color:transparent;font-size:15px;--xp-top:108px;--xp-right:0px;touch-action:pan-x pan-y}
 .xp-ex button,.xp-ex a{touch-action:manipulation}
 .xp-ex-map{position:absolute;inset:0;overflow:hidden;touch-action:none;background:radial-gradient(120% 75% at 50% 42%,#1D1916 0%,#131110 62%,#0C0B0A 100%);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .xp-ex-map.is-grab{cursor:grabbing}
@@ -1320,8 +1540,10 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .xp-hint i{width:9px;height:9px;border-radius:50%;background:#F8931F;box-shadow:0 0 0 4px rgba(248,147,31,.22);flex-shrink:0}
 @keyframes xp-hint-in{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
 .xp-ex:not([data-mode="peek"]) .xp-hint{display:none}
-.xp-ex[data-mode="list"] .xp-zoom,.xp-ex.is-cramped .xp-zoom{display:none}
-.xp-sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;flex-direction:column;max-height:72%;max-width:640px;margin:0 auto;background:#1A1613;border:1px solid #3A332D;border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -14px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);animation:xp-sheet-in .3s cubic-bezier(.2,.8,.2,1) backwards}
+.xp-ex.is-used .xp-hint{animation:xp-hint-out .35s ease both}
+@keyframes xp-hint-out{from{opacity:1;transform:translateX(-50%)}to{opacity:0;transform:translate(-50%,10px);visibility:hidden}}
+.xp-ex[data-mode="list"] .xp-zoom,.xp-ex.is-cramped .xp-zoom [data-role="exin"],.xp-ex.is-cramped .xp-zoom [data-role="exout"]{display:none}
+.xp-sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;flex-direction:column;max-height:min(72%,calc(100% - var(--xp-top) - 120px));max-width:640px;margin:0 auto;background:#1A1613;border:1px solid #3A332D;border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -14px 40px rgba(0,0,0,.6);padding-bottom:env(safe-area-inset-bottom);animation:xp-sheet-in .3s cubic-bezier(.2,.8,.2,1) backwards}
 .xp-sheet.is-tall{max-height:calc(100% - var(--xp-top) - 4px)}
 @keyframes xp-sheet-in{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
 .xp-grab{display:flex;align-items:center;justify-content:center;height:20px;flex-shrink:0;cursor:grab;touch-action:none}
@@ -1393,7 +1615,7 @@ html.xp-ex-on .xp > :not(.xp-ex),html.xp-ex-on .xp > :not(.xp-ex) *{animation-pl
 .xp-row .rt.is-sold{font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8F857A}
 .xp-list-foot{font-size:12.5px;font-weight:500;color:#8F857A;line-height:1.5;padding:14px 0 6px;border-top:1px solid #2F2924}
 
-@media (prefers-reduced-motion:reduce){.xp .ld,.xp .sr,.xp-bg,.xp-cam > svg,.xp-sin.is-in,.xp-sheet,.xp-hint{animation:none}.xp-bg img,.xp-cap{animation-play-state:paused}.xp svg .xs.is-sel .pulse{animation:none}}
+@media (prefers-reduced-motion:reduce){.xp .ld,.xp .sr,.xp-bg,.xp-cam > svg,.xp-sin.is-in,.xp-sheet,.xp-hint{animation:none}.xp-bg img,.xp-cap{animation-play-state:paused}.xp svg .xs.is-sel .pulse{animation:none}.xp-ex.is-used .xp-hint{animation:none;visibility:hidden}}
 
 @media (max-width:1099px){.xp-pbody{grid-template-columns:minmax(0,1fr) 300px}.xp-side{padding:18px}.xp-sd-id{font-size:60px}}
 @media (max-width:900px){
@@ -1541,7 +1763,7 @@ ATFA_EXPO27_PAGE_CSS;
 		return <<<'ATFA_EXPO27_PAGE_JS'
 /*!
  * ATFA Expo & Conference 2027 page: Hall 5 floor plan (dark), live stand data and the
- * full-screen plan for phones. Version 3.2.0
+ * full-screen plan for phones. Version 3.3.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below, in the dark awards style.
@@ -1566,7 +1788,7 @@ ATFA_EXPO27_PAGE_CSS;
   /* Data and settings                                                   */
   /* ------------------------------------------------------------------ */
 
-  var GEO = {"hall":{"w":58,"d":54,"area":4136,"floor":2729},"sizes":{"3x3":{"w":3,"d":3,"sqm":9,"price":1200,"rate":133.33,"disc":0,"label":"3 × 3 m","fill":"#DCEAF7","line":"#2E6DA4"},"3x6":{"w":3,"d":6,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"3 × 6 m","fill":"#CFE6D6","line":"#2E7D4F"},"6x3":{"w":6,"d":3,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"6 × 3 m","fill":"#FBE4C9","line":"#C2761A"},"6x6":{"w":6,"d":6,"sqm":36,"price":4080,"rate":113.33,"disc":0.15,"label":"6 × 6 m","fill":"#E4DAF1","line":"#67509B"}},"stands":[{"id":"S01","size":"6x6","x":30.0,"y":6.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O01","size":"6x3","x":36.0,"y":6.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O02","size":"6x3","x":36.0,"y":9.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"B01","size":"3x3","x":42.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B02","size":"3x3","x":45.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B03","size":"3x3","x":48.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B04","size":"3x3","x":42.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B05","size":"3x3","x":45.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B06","size":"3x3","x":48.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"S02","size":"6x6","x":33.0,"y":15.5,"w":6,"h":6,"sqm":36,"price":4080},{"id":"G01","size":"3x6","x":39.0,"y":15.5,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G02","size":"3x6","x":42.0,"y":15.5,"w":3,"h":6,"sqm":18,"price":2280},{"id":"O03","size":"6x3","x":45.0,"y":15.5,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S03","size":"6x6","x":39.0,"y":25.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O04","size":"6x3","x":45.0,"y":25.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G03","size":"3x6","x":8.5,"y":23.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G04","size":"3x6","x":8.5,"y":26.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S05","size":"6x6","x":14.5,"y":23.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"S06","size":"6x6","x":23.0,"y":31.5,"w":6,"h":6,"sqm":36,"price":4080},{"id":"B07","size":"3x3","x":11.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B08","size":"3x3","x":14.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B09","size":"3x3","x":17.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B10","size":"3x3","x":11.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B11","size":"3x3","x":14.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B12","size":"3x3","x":17.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"O05","size":"6x3","x":20.5,"y":41.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O06","size":"6x3","x":20.5,"y":44.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S07","size":"6x6","x":26.5,"y":41.0,"w":6,"h":6,"sqm":36,"price":4080}],"paths":{"outer":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L -17.00 43.00 L -16.96 40.86 L -16.85 38.72 L -16.66 36.59 L -16.40 34.46 L -16.06 32.35 L -15.65 30.25 L -15.17 28.16 L -14.61 26.10 L -13.98 24.05 L -13.28 22.03 L -12.51 20.04 L -11.67 18.08 L -10.76 16.14 L -9.78 14.25 L -8.74 12.38 L -7.63 10.56 L -6.46 8.78 L -5.23 7.04 L -3.94 5.35 L -2.59 3.71 L -1.18 2.11 L 0.28 0.57 L 1.80 -0.91 L 3.36 -2.34 L 4.98 -3.72 L 6.64 -5.03 L 8.35 -6.29 L 10.10 -7.48 L 11.89 -8.60 L 13.72 -9.66 L 15.59 -10.65 L 17.49 -11.58 L 19.42 -12.43 L 21.38 -13.22 L 23.37 -13.93 L 25.38 -14.57 L 27.41 -15.14 L 29.46 -15.63 L 31.52 -16.05 L 33.60 -16.39 L 35.69 -16.66 L 37.79 -16.85 L 39.89 -16.96 L 42.00 -17.00 Z","hall":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00 Z","lane":"M 42.00 3.00 L 31.42 4.50 L 27.18 6.00 L 24.03 7.50 L 21.46 9.00 L 19.26 10.50 L 17.35 12.00 L 15.66 13.50 L 14.15 15.00 L 12.79 16.50 L 11.56 18.00 L 10.44 19.50 L 9.43 21.00 L 8.51 22.50 L 7.68 24.00 L 6.93 25.50 L 6.26 27.00 L 5.65 28.50 L 5.12 30.00 L 4.65 31.50 L 4.24 33.00 L 3.89 34.50 L 3.60 36.00 L 3.37 37.50 L 3.20 39.00 L 3.08 40.50 L 3.01 42.00 L 3.00 51.00 L 48.50 51.00 L 48.50 49.40 L 55.00 49.40 L 55.00 3.00 Z","demo":"M 37.00 49.40 L 55.00 49.40 L 55.00 31.40 Z","arc":"M 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00"},"stage":{"cx":55,"cy":49.4,"r":5},"stagePath":"M 55.00 49.40 L 50.00 49.40 A 5.00 5.00 0 0 1 55.00 44.40 Z","seats":[{"x":48.04,"y":48.67},{"x":48.17,"y":47.88},{"x":48.38,"y":47.12},{"x":48.68,"y":46.39},{"x":49.06,"y":45.69},{"x":49.52,"y":45.04},{"x":50.05,"y":44.45},{"x":50.64,"y":43.92},{"x":51.29,"y":43.46},{"x":51.99,"y":43.08},{"x":52.72,"y":42.78},{"x":53.48,"y":42.57},{"x":54.27,"y":42.44},{"x":46.22,"y":48.79},{"x":46.31,"y":48},{"x":46.47,"y":47.23},{"x":46.7,"y":46.48},{"x":46.99,"y":45.75},{"x":47.35,"y":45.05},{"x":47.77,"y":44.38},{"x":48.25,"y":43.76},{"x":48.78,"y":43.18},{"x":49.36,"y":42.65},{"x":49.98,"y":42.17},{"x":50.65,"y":41.75},{"x":51.35,"y":41.39},{"x":52.08,"y":41.1},{"x":52.83,"y":40.87},{"x":53.6,"y":40.71},{"x":54.39,"y":40.62}],"speakers":[{"x":49.16,"y":48.58,"label":"Main L"},{"x":54.18,"y":43.56,"label":"Main R"},{"x":41.5,"y":48.2,"label":"Delay L"},{"x":53.2,"y":36.5,"label":"Delay R"}],"mix":{"x":46.02,"y":40.82,"w":2.4,"h":1.6,"label":"AV / MIX"},"entrances":[{"label":"MAIN ENTRANCE","path":"M 16.26 9.02 L 15.85 9.35 L 15.45 9.68 L 15.06 10.01 L 14.67 10.35 L 14.28 10.70 L 13.90 11.04 L 13.52 11.40 L 13.14 11.76 L 12.77 12.12 L 12.41 12.49 L 12.04 12.86 L 11.69 13.24","lx":11.09,"ly":7.92,"rot":-42},{"label":"ENTRY 2","path":"M 37.76 0.22 L 37.25 0.28 L 36.74 0.34 L 36.23 0.41 L 35.72 0.48 L 35.21 0.57 L 34.71 0.65 L 34.20 0.75 L 33.70 0.85 L 33.20 0.96 L 32.69 1.07 L 32.20 1.19 L 31.70 1.31","lx":34.4,"ly":-1.3,"rot":-10}],"fire":[{"side":"S","v":14},{"side":"S","v":30},{"side":"S","v":44},{"side":"E","v":18},{"side":"E","v":40},{"side":"N","v":50}],"radial":"M 12.30 12.59 L 0.28 0.57","view":{"x":-19,"y":-19,"w":82,"h":79},"focus":{"x":4.5,"y":-2.6,"w":54,"h":57.1},"labels":[{"text":"BREAKOUT / SEMINAR · 680 m²","x":24,"y":-9,"size":1.15,"color":"#9A8455","rotate":-24,"bold":true},{"text":"CATERING & NETWORKING · 680 m²","x":-6.5,"y":30,"size":1,"color":"#9A8455","rotate":-24,"bold":true},{"text":"DEMONSTRATION & STAGE ZONE","x":45.65,"y":40.05,"size":1.02,"color":"#A8600C","rotate":-45,"bold":true},{"text":"OPERABLE WALL","x":9.5,"y":12.5,"size":0.85,"color":"#9A8455","rotate":-47,"bold":true},{"text":"CLEAR\nARRIVAL AREA","x":21.5,"y":10.2,"size":0.95,"color":"#4F6F8F","rotate":0,"bold":true}],"walls":[[36.0,9.0,51.0,9.0],[42.0,15.5,42.0,21.5],[8.5,26.0,14.5,26.0],[11.5,44.0,26.5,44.0]],"route":{"x1":13.84,"y1":11.09,"x2":44.58,"y2":41.83,"width":4.0,"stop":1.6}};
+  var GEO = {"hall":{"w":58,"d":54,"area":4136,"floor":2729},"sizes":{"3x3":{"w":3,"d":3,"sqm":9,"price":1200,"rate":133.33,"disc":0,"label":"3 × 3 m","fill":"#DCEAF7","line":"#2E6DA4"},"3x6":{"w":3,"d":6,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"3 × 6 m","fill":"#CFE6D6","line":"#2E7D4F"},"6x3":{"w":6,"d":3,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"6 × 3 m","fill":"#FBE4C9","line":"#C2761A"},"6x6":{"w":6,"d":6,"sqm":36,"price":4080,"rate":113.33,"disc":0.15,"label":"6 × 6 m","fill":"#E4DAF1","line":"#67509B"}},"stands":[{"id":"B01","size":"3x3","x":28.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B02","size":"3x3","x":31.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B03","size":"3x3","x":34.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B04","size":"3x3","x":37.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B05","size":"3x3","x":28.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B06","size":"3x3","x":31.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B07","size":"3x3","x":34.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B08","size":"3x3","x":37.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B09","size":"3x3","x":43.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B10","size":"3x3","x":46.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B11","size":"3x3","x":49.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B12","size":"3x3","x":52.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B13","size":"3x3","x":43.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B14","size":"3x3","x":46.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B15","size":"3x3","x":49.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B16","size":"3x3","x":52.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"S01","size":"6x6","x":15.0,"y":15.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O01","size":"6x3","x":21.0,"y":15.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O02","size":"6x3","x":21.0,"y":18.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G01","size":"3x6","x":30.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G02","size":"3x6","x":33.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G03","size":"3x6","x":36.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G04","size":"3x6","x":39.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"O03","size":"6x3","x":45.0,"y":15.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O04","size":"6x3","x":45.0,"y":18.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S02","size":"6x6","x":12.0,"y":24.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O05","size":"6x3","x":18.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O06","size":"6x3","x":18.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O07","size":"6x3","x":27.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O08","size":"6x3","x":33.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O09","size":"6x3","x":27.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O10","size":"6x3","x":33.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S03","size":"6x6","x":42.0,"y":24.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O11","size":"6x3","x":48.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O12","size":"6x3","x":48.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O13","size":"6x3","x":9.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O14","size":"6x3","x":15.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O15","size":"6x3","x":9.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O16","size":"6x3","x":15.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S04","size":"6x6","x":33.0,"y":33.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O17","size":"6x3","x":27.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O18","size":"6x3","x":27.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"B17","size":"3x3","x":6.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B18","size":"3x3","x":9.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B19","size":"3x3","x":12.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B20","size":"3x3","x":15.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B21","size":"3x3","x":6.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B22","size":"3x3","x":9.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B23","size":"3x3","x":12.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B24","size":"3x3","x":15.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B25","size":"3x3","x":21.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B26","size":"3x3","x":24.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B27","size":"3x3","x":27.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B28","size":"3x3","x":30.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B29","size":"3x3","x":21.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B30","size":"3x3","x":24.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B31","size":"3x3","x":27.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B32","size":"3x3","x":30.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200}],"paths":{"outer":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L -17.00 43.00 L -16.96 40.86 L -16.85 38.72 L -16.66 36.59 L -16.40 34.46 L -16.06 32.35 L -15.65 30.25 L -15.17 28.16 L -14.61 26.10 L -13.98 24.05 L -13.28 22.03 L -12.51 20.04 L -11.67 18.08 L -10.76 16.14 L -9.78 14.25 L -8.74 12.38 L -7.63 10.56 L -6.46 8.78 L -5.23 7.04 L -3.94 5.35 L -2.59 3.71 L -1.18 2.11 L 0.28 0.57 L 1.80 -0.91 L 3.36 -2.34 L 4.98 -3.72 L 6.64 -5.03 L 8.35 -6.29 L 10.10 -7.48 L 11.89 -8.60 L 13.72 -9.66 L 15.59 -10.65 L 17.49 -11.58 L 19.42 -12.43 L 21.38 -13.22 L 23.37 -13.93 L 25.38 -14.57 L 27.41 -15.14 L 29.46 -15.63 L 31.52 -16.05 L 33.60 -16.39 L 35.69 -16.66 L 37.79 -16.85 L 39.89 -16.96 L 42.00 -17.00 Z","hall":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00 Z","lane":"M 42.00 3.00 L 31.42 4.50 L 27.18 6.00 L 24.03 7.50 L 21.46 9.00 L 19.26 10.50 L 17.35 12.00 L 15.66 13.50 L 14.15 15.00 L 12.79 16.50 L 11.56 18.00 L 10.44 19.50 L 9.43 21.00 L 8.51 22.50 L 7.68 24.00 L 6.93 25.50 L 6.26 27.00 L 5.65 28.50 L 5.12 30.00 L 4.65 31.50 L 4.24 33.00 L 3.89 34.50 L 3.60 36.00 L 3.37 37.50 L 3.20 39.00 L 3.08 40.50 L 3.01 42.00 L 3.00 51.00 L 48.50 51.00 L 48.50 49.40 L 55.00 49.40 L 55.00 3.00 Z","demo":"M 37.00 49.40 L 55.00 49.40 L 55.00 31.40 Z","arc":"M 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00"},"stage":{"cx":55,"cy":49.4,"r":5},"stagePath":"M 55.00 49.40 L 50.00 49.40 A 5.00 5.00 0 0 1 55.00 44.40 Z","seats":[{"x":48.04,"y":48.67},{"x":48.17,"y":47.88},{"x":48.38,"y":47.12},{"x":48.68,"y":46.39},{"x":49.06,"y":45.69},{"x":49.52,"y":45.04},{"x":50.05,"y":44.45},{"x":50.64,"y":43.92},{"x":51.29,"y":43.46},{"x":51.99,"y":43.08},{"x":52.72,"y":42.78},{"x":53.48,"y":42.57},{"x":54.27,"y":42.44},{"x":46.22,"y":48.79},{"x":46.31,"y":48},{"x":46.47,"y":47.23},{"x":46.7,"y":46.48},{"x":46.99,"y":45.75},{"x":47.35,"y":45.05},{"x":47.77,"y":44.38},{"x":48.25,"y":43.76},{"x":48.78,"y":43.18},{"x":49.36,"y":42.65},{"x":49.98,"y":42.17},{"x":50.65,"y":41.75},{"x":51.35,"y":41.39},{"x":52.08,"y":41.1},{"x":52.83,"y":40.87},{"x":53.6,"y":40.71},{"x":54.39,"y":40.62}],"speakers":[{"x":49.16,"y":48.58,"label":"Main L"},{"x":54.18,"y":43.56,"label":"Main R"},{"x":41.5,"y":48.2,"label":"Delay L"},{"x":53.2,"y":36.5,"label":"Delay R"}],"mix":{"x":46.02,"y":40.82,"w":2.4,"h":1.6,"label":"AV / MIX"},"entrances":[{"label":"MAIN ENTRANCE","path":"M 16.26 9.02 L 15.85 9.35 L 15.45 9.68 L 15.06 10.01 L 14.67 10.35 L 14.28 10.70 L 13.90 11.04 L 13.52 11.40 L 13.14 11.76 L 12.77 12.12 L 12.41 12.49 L 12.04 12.86 L 11.69 13.24","lx":11.09,"ly":7.92,"rot":-42},{"label":"ENTRY 2","path":"M 37.76 0.22 L 37.25 0.28 L 36.74 0.34 L 36.23 0.41 L 35.72 0.48 L 35.21 0.57 L 34.71 0.65 L 34.20 0.75 L 33.70 0.85 L 33.20 0.96 L 32.69 1.07 L 32.20 1.19 L 31.70 1.31","lx":34.4,"ly":-1.3,"rot":-10}],"fire":[{"side":"S","v":14},{"side":"S","v":30},{"side":"S","v":44},{"side":"E","v":18},{"side":"E","v":40},{"side":"N","v":50}],"radial":"M 12.30 12.59 L 0.28 0.57","view":{"x":-19,"y":-19,"w":82,"h":79},"focus":{"x":4.5,"y":-2.6,"w":54,"h":57.1},"labels":[{"text":"BREAKOUT / SEMINAR · 680 m²","x":24,"y":-9,"size":1.15,"color":"#9A8455","rotate":-24,"bold":true},{"text":"CATERING & NETWORKING · 680 m²","x":-6.5,"y":30,"size":1,"color":"#9A8455","rotate":-24,"bold":true},{"text":"DEMONSTRATION & STAGE ZONE","x":45.65,"y":40.05,"size":1.02,"color":"#A8600C","rotate":-45,"bold":true},{"text":"OPERABLE WALL","x":9.5,"y":12.5,"size":0.85,"color":"#9A8455","rotate":-47,"bold":true}],"walls":[[28.0,9.0,40.0,9.0],[43.0,9.0,55.0,9.0],[21.0,15.0,21.0,21.0],[30.0,21.0,42.0,21.0],[45.0,18.0,51.0,18.0],[18.0,24.0,18.0,30.0],[27.0,27.0,39.0,27.0],[48.0,24.0,48.0,30.0],[9.0,36.0,21.0,36.0],[33.0,33.0,33.0,39.0],[6.0,45.0,18.0,45.0],[21.0,45.0,33.0,45.0]],"layout":"Alternative layout with 58 booths (Phil, 20 October 2026)","rules":{"min_aisle":3.0,"entry2_clear":4.0}};
   var CFG = readJSON('atfa-expo27-page-config') || {};
   var SNAP = readJSON('atfa-expo27-page-snapshot');
   var SIZES = GEO.sizes;
@@ -1719,7 +1941,20 @@ ATFA_EXPO27_PAGE_CSS;
     return m ? m[1] + m[2] : '';
   }
 
-  // Which sides of a stand face an aisle (no other stand against them).
+  // A rear wall drawn along a side closes it, even with no stand behind it.
+  function wallAlong(horiz, lo, hi, at) {
+    var e = 1e-6;
+    return (GEO.walls || []).some(function (w) {
+      if (horiz) {
+        return Math.abs(w[1] - at) < e && Math.abs(w[3] - at) < e &&
+          Math.min(hi, Math.max(w[0], w[2])) - Math.max(lo, Math.min(w[0], w[2])) > e;
+      }
+      return Math.abs(w[0] - at) < e && Math.abs(w[2] - at) < e &&
+        Math.min(hi, Math.max(w[1], w[3])) - Math.max(lo, Math.min(w[1], w[3])) > e;
+    });
+  }
+
+  // Which sides of a stand face an aisle (no other stand or rear wall against them).
   function sidesOf(s) {
     var e = 1e-6, out = {};
     [['N', s.x, s.x + s.w, s.y], ['S', s.x, s.x + s.w, s.y + s.h],
@@ -1733,7 +1968,7 @@ ATFA_EXPO27_PAGE_CSS;
         }
         var edgeX = side[0] === 'W' ? o.x + o.w : o.x;
         return Math.abs(edgeX - at) < e && Math.min(hi, o.y + o.h) - Math.max(lo, o.y) > e;
-      });
+      }) || wallAlong(horiz, lo, hi, at);
       out[side[0]] = !blocked;
     });
     return out;
@@ -2089,6 +2324,20 @@ ATFA_EXPO27_PAGE_CSS;
     });
   }
 
+  // The stand at a point on screen (within tolPx of it), from a plan drawing's own scale.
+  function standAt(svg, clientX, clientY, tolPx) {
+    var ctm = svg.getScreenCTM && svg.getScreenCTM();
+    if (!ctm || !ctm.a) { return null; }
+    var mx = (clientX - ctm.e) / ctm.a, my = (clientY - ctm.f) / ctm.d, tol = (tolPx || 0) / ctm.a;
+    var best = null, bestD = Infinity;
+    STANDS.forEach(function (s) {
+      var dx = Math.max(s.x - mx, 0, mx - (s.x + s.w)), dy = Math.max(s.y - my, 0, my - (s.y + s.h));
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= tol && d < bestD) { best = s; bestD = d; }
+    });
+    return best;
+  }
+
   function standAria(s) {
     var base = 'Stand ' + s.id + ', ' + sizeSpoken(s.size) + ', ' + s.sqm + ' square metres, ' + openShort(s).toLowerCase();
     if (s.status === 'sold') { return base + (s.name ? ', sold to ' + s.name : ', sold'); }
@@ -2112,6 +2361,11 @@ ATFA_EXPO27_PAGE_CSS;
     else if (inst.fade && selId && s.id !== selId) { cls += ' is-fade'; }
     if (inst.hoverId === s.id) { cls += ' is-hover'; }
     n.g.setAttribute('class', cls);
+    // In the full-screen plan the chosen stand is drawn last, so its ring isn't hidden under
+    // its neighbours. (Not in the page's plan, where moving a focused stand would lose focus.)
+    if (inst.fade && s.id === selId && n.g.parentNode && n.g.parentNode.lastChild !== n.g) {
+      n.g.parentNode.appendChild(n.g);
+    }
     var sub, fs = s.fs;
     if (s.status === 'sold' && s.name) {
       if (textWidth(s.name, fs) > s.w - 0.4) { fs = round3(s.fs * 0.8); }
@@ -2542,8 +2796,12 @@ ATFA_EXPO27_PAGE_CSS;
       }
       return;
     }
-    // On narrow screens the whole plan card opens the full-screen plan.
+    // On narrow screens the whole plan card opens the full-screen plan, on the stand that was
+    // tapped if it was one. (The picture itself doesn't take taps there, so find the stand from
+    // where the tap landed on it.)
     if (mqNarrow.matches && mapEl.contains(e.target)) {
+      var hit = standAt(inline.svg, e.clientX, e.clientY, 3);
+      if (hit) { selId = hit.id; }
       openEx({ opener: q('.xp-open') });
     }
   });
@@ -2576,7 +2834,7 @@ ATFA_EXPO27_PAGE_CSS;
   }
 
   var mqSide = window.matchMedia ? window.matchMedia('(orientation: landscape) and (max-height: 520px)') : { matches: false };
-  var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null;
+  var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null, hintTimer = null;
   var view = { x: CROP.x, y: CROP.y, w: CROP.w, h: CROP.h };   // the camera, in metres
   var drawn = null;                                             // where the plan was last drawn
   var box = { w: 390, h: 664, top: 108, bottom: 0, right: 0 };
@@ -2631,7 +2889,8 @@ ATFA_EXPO27_PAGE_CSS;
     }
     ex.style.setProperty('--xp-top', box.top + 'px');
     ex.style.setProperty('--xp-right', box.right + 'px');
-    // Short of room above the card (small phones): the pinch is enough, so the zoom buttons go.
+    // Short of room above the card (small phones): the pinch is enough, so + and - go; the
+    // whole-hall button stays, as the way back to the overview.
     ex.classList.toggle('is-cramped', box.h - box.bottom - box.top < 300);
   }
 
@@ -2772,13 +3031,30 @@ ATFA_EXPO27_PAGE_CSS;
     anim = requestAnimationFrame(step);
   }
 
+  // Bring the chosen stand into view with as little movement as possible. From the whole hall
+  // the plan zooms in on it (about 18 m across: the stand with its neighbours); once you're in
+  // that close, choosing the stand next door doesn't move the plan at all, and one that's
+  // partly hidden (under the card, say) only slides far enough to be seen.
   function exCameraForSel() {
     if (!exOpen || !selId) { return; }
     measure();
     var s = BY_ID[selId];
-    // Close enough to read the stand, with its neighbours around it: about 18 m across.
     var want = Math.min(bandW(), bandH()) / 18;
-    var px = clamp(Math.max(pxNow(), want), fitPx(), maxPx());
+    var px = pxNow();
+    if (px >= want * 0.95) {
+      var m = 14, L = m, T = box.top + m, R = bandW() - m, B = box.top + bandH() - m;
+      var l = (s.x - view.x) * px, t = (s.y - view.y) * px, r = l + s.w * px, b = t + s.h * px;
+      var seen = r > 0 && l < bandW() && b > box.top && t < box.top + bandH();
+      if (seen) {
+        var dx = 0, dy = 0;
+        if (r - l > R - L) { dx = (l + r - L - R) / 2; } else if (l < L) { dx = l - L; } else if (r > R) { dx = r - R; }
+        if (b - t > B - T) { dy = (t + b - T - B) / 2; } else if (t < T) { dy = t - T; } else if (b > B) { dy = b - B; }
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { if (!anim) { settle(); } return; }
+        glide({ x: view.x + dx / px, y: view.y + dy / px, w: view.w, h: view.h });
+        return;
+      }
+    }
+    px = clamp(Math.max(px, want), fitPx(), maxPx());
     glide(viewAt(px, s.x + s.w / 2, s.y + s.h / 2, bandCx(), bandCy()));
   }
 
@@ -2978,6 +3254,7 @@ ATFA_EXPO27_PAGE_CSS;
   // The handle on the card: drag down to put it away (or fold "More"), up or tap for "More".
   var grab = null;
   exGrab.addEventListener('pointerdown', function (e) {
+    if (cardQuiet(e)) { return; }
     grab = { y: e.clientY, id: e.pointerId };
     try { exGrab.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
   });
@@ -3003,6 +3280,14 @@ ATFA_EXPO27_PAGE_CSS;
   exGrab.addEventListener('pointerup', endGrab);
   exGrab.addEventListener('pointercancel', endGrab);
 
+  // The "Tap a stand" hint goes once the plan has been touched (or after a few seconds), so it
+  // never sits over stands for long.
+  function hintDone() {
+    clearTimeout(hintTimer);
+    hintTimer = null;
+    ex.classList.add('is-used');
+  }
+
   function openEx(opts) {
     opts = opts || {};
     if (!exInst) {
@@ -3020,6 +3305,7 @@ ATFA_EXPO27_PAGE_CSS;
       exOpen = true;
       lockScroll(true);
       hideTip();
+      if (!ex.classList.contains('is-used') && !hintTimer) { hintTimer = setTimeout(hintDone, 7000); }
     }
     exMode = opts.list ? 'list' : (selId ? 'sel' : 'peek');
     exMore = false;
@@ -3064,8 +3350,8 @@ ATFA_EXPO27_PAGE_CSS;
     renderSheet(true);
     if (exMode === 'sel') { exCameraForSel(); }
   });
-  exIn.addEventListener('click', function () { if (zoomOk(exIn)) { zoomAt({ x: bandCx(), y: bandCy() }, 1.8); } });
-  exOut.addEventListener('click', function () { if (zoomOk(exOut)) { zoomAt({ x: bandCx(), y: bandCy() }, 1 / 1.8); } });
+  exIn.addEventListener('click', function () { hintDone(); if (zoomOk(exIn)) { zoomAt({ x: bandCx(), y: bandCy() }, 1.8); } });
+  exOut.addEventListener('click', function () { hintDone(); if (zoomOk(exOut)) { zoomAt({ x: bandCx(), y: bandCy() }, 1 / 1.8); } });
   exWhole.addEventListener('click', function () {
     if (selId) { setSel(null, { keepCamera: true }); }
     measure();
@@ -3110,6 +3396,13 @@ ATFA_EXPO27_PAGE_CSS;
   // Touch and mouse on the map: drag to move (it keeps sliding after a flick), pinch, wheel
   // or double-tap to zoom, tap a stand to see it.
   var pointers = {}, gesture = null, lastTap = null, trail = [];
+  // A double tap on a stand where the card is about to appear: the first tap brings the card in
+  // under the finger and the second would press whatever is there (Enquire, say). For half a
+  // second after a tap on the map chooses a stand, the card ignores a tap in the same spot.
+  var quietTap = null;
+  function cardQuiet(e) {
+    return !!quietTap && Date.now() < quietTap.until && Math.abs(e.clientX - quietTap.x) + Math.abs(e.clientY - quietTap.y) < 48;
+  }
 
   // Where the map sits on screen, read once per gesture (reading it on every move makes the
   // browser stop and lay out the page).
@@ -3177,6 +3470,7 @@ ATFA_EXPO27_PAGE_CSS;
       return;
     }
     if (hit.stand) {
+      quietTap = { until: now + 500, x: e.clientX, y: e.clientY };
       if (hit.stand.id !== selId) { exMore = false; }
       exMode = 'sel';
       setSel(hit.stand.id);
@@ -3190,6 +3484,7 @@ ATFA_EXPO27_PAGE_CSS;
 
   exMap.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) { return; }
+    hintDone();
     if (!Object.keys(pointers).length) { var mr = exMap.getBoundingClientRect(); mapAt = { left: mr.left, top: mr.top }; }
     var p = local(e);
     // A touch that stops the plan sliding after a flick just stops it, like a phone's scrolling.
@@ -3251,6 +3546,16 @@ ATFA_EXPO27_PAGE_CSS;
     settle();
   }
   exMap.addEventListener('pointerup', endPointer);
+  // Taps on the map are handled on pointerup. The click a phone sends after the finger lifts
+  // would land on whatever is under it by then: the card that has just slid in under a stand
+  // near the bottom of the screen, say, sending the visitor off to the enquiry form. The map
+  // doesn't need those clicks, so it doesn't let them happen; nor does the card's handle.
+  [exMap, exGrab].forEach(function (node) {
+    node.addEventListener('touchend', function (e) { if (e.cancelable) { e.preventDefault(); } }, { passive: false });
+  });
+  exSheet.addEventListener('click', function (e) {
+    if (cardQuiet(e)) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
   exMap.addEventListener('pointercancel', endPointer);
   exMap.addEventListener('lostpointercapture', endPointer);
   exMap.addEventListener('wheel', function (e) {
@@ -3276,9 +3581,11 @@ ATFA_EXPO27_PAGE_CSS;
       layoutInline();
       if (exOpen) {
         stopMotion();
-        var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() });
+        var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() }), whole = px <= fitPx() * 1.03;
         measure();
-        view = clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
+        // At the whole hall before (the phone turned, say)? Then the whole hall again, sized to
+        // the new screen; otherwise keep the zoom and the middle of the view.
+        view = whole && !selId ? wholeView() : clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
         commit();
         if (selId && exMode !== 'list') { exCameraForSel(); }
       }
@@ -3410,13 +3717,108 @@ ATFA_EXPO27_PAGE_CSS;
       });
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Share links (staff only)                                            */
+  /* ------------------------------------------------------------------ */
+  // The staff bar can make a link that lets someone without a login see this page while it's
+  // private (24 hours, 3 days or 7 days), list the live ones and stop them.
+
+  function initShare(box) {
+    var rest = box.getAttribute('data-rest'), nonce = box.getAttribute('data-nonce');
+    var list = q('[data-role="sharelist"]', box), msg = q('[data-role="sharemsg"]', box);
+    var make = q('[data-role="sharemake"]', box), note = q('[data-role="sharenote"]', box), hours = q('[data-role="sharehours"]', box);
+    var loaded = false;
+
+    function call(method, url, body) {
+      return fetch(url, {
+        method: method, credentials: 'same-origin',
+        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) { throw new Error(j && j.message ? j.message : 'the site answered ' + r.status); }
+          return j;
+        });
+      });
+    }
+
+    function copy(text, btn) {
+      var done = function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = 'Copy link'; }, 1800);
+      };
+      var fallback = function () {
+        var t = el('textarea', { readonly: true, style: 'position:fixed;left:-9999px;top:0' });
+        t.value = text;
+        document.body.appendChild(t);
+        t.select();
+        try { document.execCommand('copy'); done(); } catch (e) { msg.textContent = 'Couldn’t copy. Select the link and copy it yourself.'; }
+        document.body.removeChild(t);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); }
+      else { fallback(); }
+    }
+
+    function fail(e) {
+      msg.textContent = 'That didn’t work (' + (e && e.message ? e.message : 'please try again') + ').';
+      make.disabled = false;
+    }
+
+    function render(shares, fresh) {
+      list.textContent = '';
+      if (!shares.length) {
+        list.appendChild(el('li', { className: 'xp-share-none', text: 'No live links at the moment.' }));
+        return;
+      }
+      shares.forEach(function (sh) {
+        var input = el('input', { type: 'text', readonly: true, 'aria-label': 'Link' + (sh.note ? ' for ' + sh.note : '') });
+        input.value = sh.url;
+        input.addEventListener('focus', function () { input.select(); });
+        var cp = el('button', { type: 'button', className: 'afpx-btn is-small', text: 'Copy link' });
+        cp.addEventListener('click', function () { copy(sh.url, cp); });
+        var stop = el('button', { type: 'button', className: 'afpx-btn is-ghost is-small', text: 'Stop' });
+        stop.addEventListener('click', function () {
+          stop.disabled = true;
+          call('DELETE', rest + '/' + encodeURIComponent(sh.key)).then(function () {
+            msg.textContent = 'Stopped. That link now goes to the old floor plan page.';
+            load();
+          }, fail);
+        });
+        list.appendChild(el('li', { className: sh.key === fresh ? 'is-new' : '' }, [
+          el('div', { className: 'xp-share-who' }, [el('b', { text: sh.note || 'Link' }), ' · works until ' + sh.until]),
+          el('div', { className: 'xp-share-row' }, [input, cp, stop])
+        ]));
+      });
+    }
+
+    function load(fresh) {
+      loaded = true;
+      return call('GET', rest).then(function (j) { render(j.shares || [], fresh || null); }, fail);
+    }
+
+    make.addEventListener('click', function () {
+      make.disabled = true;
+      msg.textContent = 'Making a link…';
+      call('POST', rest, { hours: Number(hours.value), note: note.value }).then(function (sh) {
+        msg.textContent = 'Done. The link works until ' + sh.until + '. Copy it and send it on.';
+        note.value = '';
+        make.disabled = false;
+        load(sh.key);
+      }, fail);
+    });
+    box.addEventListener('toggle', function () { if (box.open && !loaded) { load(); } });
+  }
+
+  var shareBox = document.querySelector('[data-role="share"]');
+  if (shareBox) { initShare(shareBox); }
+
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27Page = {
-    version: CFG.version || '3.2.0',
+    version: CFG.version || '3.3.0',
     reload: function () { load(false); },
     open: function (id) { if (id && BY_ID[id]) { selId = id; } openEx({}); },
     close: function () { closeEx(false); },
-    view: function () { return { x: view.x, y: view.y, w: view.w, h: view.h, px: pxNow(), fit: fitPx(), max: maxPx(), top: box.top, bottom: box.bottom, right: box.right, open: exOpen, mode: exMode, sel: selId, more: exMore, sliding: animKind === 'coast' }; },
+    view: function () { return { x: view.x, y: view.y, w: view.w, h: view.h, px: pxNow(), fit: fitPx(), max: maxPx(), top: box.top, bottom: box.bottom, right: box.right, open: exOpen, mode: exMode, sel: selId, more: exMore, sliding: animKind === 'coast', busy: !!anim || moving || !!commitTimer || !!grab, bw: box.w, bh: box.h }; },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });
     }
@@ -3473,8 +3875,7 @@ ATFA_EXPO27_PAGE_JS;
           <li><i style="background:#fff;border-color:#2E7D4F"></i>Available</li>
           <li><i style="background:#FBE9C8;border-color:#D99A21"></i>On hold</li>
           <li><i style="background:#96A29C;border-color:#7D8A84"></i>Sold</li>
-          <li><i class="is-wall"></i>Shared back wall</li>
-          <li><i class="is-route"></i>Main pedestrian route</li>
+          <li><i class="is-wall"></i>Back wall</li>
           <li><i style="background:#F7EFE4;border-color:#A8600C"></i>Demo &amp; stage zone</li>
           <li><i style="background:#F5F1E8;border-color:#D9CDB4"></i>Breakout area</li>
           <li><i style="background:#FBEDED;border-color:#EFC3C3"></i>Fire / non-build lane</li>
@@ -3509,7 +3910,7 @@ ATFA_EXPO27_HTML;
 
 	function atfa_expo27_css() {
 		return <<<'ATFA_EXPO27_CSS'
-/* ATFA Expo 2027 Hall 5 floor plan, v3.2.0.
+/* ATFA Expo 2027 Hall 5 floor plan, v3.3.0.
    Every rule is scoped to #atfa-expo27 (the plan) or #atfa-expo27-modal (the popup),
    so the theme and Elementor can't restyle the buttons, headings or links inside. */
 
@@ -3965,7 +4366,7 @@ ATFA_EXPO27_CSS;
 		return <<<'ATFA_EXPO27_JS'
 /*!
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
- * Version 3.2.0
+ * Version 3.3.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below (stands, stage, seating, exits).
@@ -3990,7 +4391,7 @@ ATFA_EXPO27_CSS;
   /* Data and settings                                                   */
   /* ------------------------------------------------------------------ */
 
-  var GEO = {"hall":{"w":58,"d":54,"area":4136,"floor":2729},"sizes":{"3x3":{"w":3,"d":3,"sqm":9,"price":1200,"rate":133.33,"disc":0,"label":"3 × 3 m","fill":"#DCEAF7","line":"#2E6DA4"},"3x6":{"w":3,"d":6,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"3 × 6 m","fill":"#CFE6D6","line":"#2E7D4F"},"6x3":{"w":6,"d":3,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"6 × 3 m","fill":"#FBE4C9","line":"#C2761A"},"6x6":{"w":6,"d":6,"sqm":36,"price":4080,"rate":113.33,"disc":0.15,"label":"6 × 6 m","fill":"#E4DAF1","line":"#67509B"}},"stands":[{"id":"S01","size":"6x6","x":30.0,"y":6.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O01","size":"6x3","x":36.0,"y":6.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O02","size":"6x3","x":36.0,"y":9.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"B01","size":"3x3","x":42.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B02","size":"3x3","x":45.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B03","size":"3x3","x":48.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B04","size":"3x3","x":42.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B05","size":"3x3","x":45.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B06","size":"3x3","x":48.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"S02","size":"6x6","x":33.0,"y":15.5,"w":6,"h":6,"sqm":36,"price":4080},{"id":"G01","size":"3x6","x":39.0,"y":15.5,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G02","size":"3x6","x":42.0,"y":15.5,"w":3,"h":6,"sqm":18,"price":2280},{"id":"O03","size":"6x3","x":45.0,"y":15.5,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S03","size":"6x6","x":39.0,"y":25.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O04","size":"6x3","x":45.0,"y":25.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G03","size":"3x6","x":8.5,"y":23.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G04","size":"3x6","x":8.5,"y":26.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S05","size":"6x6","x":14.5,"y":23.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"S06","size":"6x6","x":23.0,"y":31.5,"w":6,"h":6,"sqm":36,"price":4080},{"id":"B07","size":"3x3","x":11.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B08","size":"3x3","x":14.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B09","size":"3x3","x":17.5,"y":41.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B10","size":"3x3","x":11.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B11","size":"3x3","x":14.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B12","size":"3x3","x":17.5,"y":44.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"O05","size":"6x3","x":20.5,"y":41.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O06","size":"6x3","x":20.5,"y":44.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S07","size":"6x6","x":26.5,"y":41.0,"w":6,"h":6,"sqm":36,"price":4080}],"paths":{"outer":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L -17.00 43.00 L -16.96 40.86 L -16.85 38.72 L -16.66 36.59 L -16.40 34.46 L -16.06 32.35 L -15.65 30.25 L -15.17 28.16 L -14.61 26.10 L -13.98 24.05 L -13.28 22.03 L -12.51 20.04 L -11.67 18.08 L -10.76 16.14 L -9.78 14.25 L -8.74 12.38 L -7.63 10.56 L -6.46 8.78 L -5.23 7.04 L -3.94 5.35 L -2.59 3.71 L -1.18 2.11 L 0.28 0.57 L 1.80 -0.91 L 3.36 -2.34 L 4.98 -3.72 L 6.64 -5.03 L 8.35 -6.29 L 10.10 -7.48 L 11.89 -8.60 L 13.72 -9.66 L 15.59 -10.65 L 17.49 -11.58 L 19.42 -12.43 L 21.38 -13.22 L 23.37 -13.93 L 25.38 -14.57 L 27.41 -15.14 L 29.46 -15.63 L 31.52 -16.05 L 33.60 -16.39 L 35.69 -16.66 L 37.79 -16.85 L 39.89 -16.96 L 42.00 -17.00 Z","hall":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00 Z","lane":"M 42.00 3.00 L 31.42 4.50 L 27.18 6.00 L 24.03 7.50 L 21.46 9.00 L 19.26 10.50 L 17.35 12.00 L 15.66 13.50 L 14.15 15.00 L 12.79 16.50 L 11.56 18.00 L 10.44 19.50 L 9.43 21.00 L 8.51 22.50 L 7.68 24.00 L 6.93 25.50 L 6.26 27.00 L 5.65 28.50 L 5.12 30.00 L 4.65 31.50 L 4.24 33.00 L 3.89 34.50 L 3.60 36.00 L 3.37 37.50 L 3.20 39.00 L 3.08 40.50 L 3.01 42.00 L 3.00 51.00 L 48.50 51.00 L 48.50 49.40 L 55.00 49.40 L 55.00 3.00 Z","demo":"M 37.00 49.40 L 55.00 49.40 L 55.00 31.40 Z","arc":"M 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00"},"stage":{"cx":55,"cy":49.4,"r":5},"stagePath":"M 55.00 49.40 L 50.00 49.40 A 5.00 5.00 0 0 1 55.00 44.40 Z","seats":[{"x":48.04,"y":48.67},{"x":48.17,"y":47.88},{"x":48.38,"y":47.12},{"x":48.68,"y":46.39},{"x":49.06,"y":45.69},{"x":49.52,"y":45.04},{"x":50.05,"y":44.45},{"x":50.64,"y":43.92},{"x":51.29,"y":43.46},{"x":51.99,"y":43.08},{"x":52.72,"y":42.78},{"x":53.48,"y":42.57},{"x":54.27,"y":42.44},{"x":46.22,"y":48.79},{"x":46.31,"y":48},{"x":46.47,"y":47.23},{"x":46.7,"y":46.48},{"x":46.99,"y":45.75},{"x":47.35,"y":45.05},{"x":47.77,"y":44.38},{"x":48.25,"y":43.76},{"x":48.78,"y":43.18},{"x":49.36,"y":42.65},{"x":49.98,"y":42.17},{"x":50.65,"y":41.75},{"x":51.35,"y":41.39},{"x":52.08,"y":41.1},{"x":52.83,"y":40.87},{"x":53.6,"y":40.71},{"x":54.39,"y":40.62}],"speakers":[{"x":49.16,"y":48.58,"label":"Main L"},{"x":54.18,"y":43.56,"label":"Main R"},{"x":41.5,"y":48.2,"label":"Delay L"},{"x":53.2,"y":36.5,"label":"Delay R"}],"mix":{"x":46.02,"y":40.82,"w":2.4,"h":1.6,"label":"AV / MIX"},"entrances":[{"label":"MAIN ENTRANCE","path":"M 16.26 9.02 L 15.85 9.35 L 15.45 9.68 L 15.06 10.01 L 14.67 10.35 L 14.28 10.70 L 13.90 11.04 L 13.52 11.40 L 13.14 11.76 L 12.77 12.12 L 12.41 12.49 L 12.04 12.86 L 11.69 13.24","lx":11.09,"ly":7.92,"rot":-42},{"label":"ENTRY 2","path":"M 37.76 0.22 L 37.25 0.28 L 36.74 0.34 L 36.23 0.41 L 35.72 0.48 L 35.21 0.57 L 34.71 0.65 L 34.20 0.75 L 33.70 0.85 L 33.20 0.96 L 32.69 1.07 L 32.20 1.19 L 31.70 1.31","lx":34.4,"ly":-1.3,"rot":-10}],"fire":[{"side":"S","v":14},{"side":"S","v":30},{"side":"S","v":44},{"side":"E","v":18},{"side":"E","v":40},{"side":"N","v":50}],"radial":"M 12.30 12.59 L 0.28 0.57","view":{"x":-19,"y":-19,"w":82,"h":79},"focus":{"x":4.5,"y":-2.6,"w":54,"h":57.1},"labels":[{"text":"BREAKOUT / SEMINAR · 680 m²","x":24,"y":-9,"size":1.15,"color":"#9A8455","rotate":-24,"bold":true},{"text":"CATERING & NETWORKING · 680 m²","x":-6.5,"y":30,"size":1,"color":"#9A8455","rotate":-24,"bold":true},{"text":"DEMONSTRATION & STAGE ZONE","x":45.65,"y":40.05,"size":1.02,"color":"#A8600C","rotate":-45,"bold":true},{"text":"OPERABLE WALL","x":9.5,"y":12.5,"size":0.85,"color":"#9A8455","rotate":-47,"bold":true},{"text":"CLEAR\nARRIVAL AREA","x":21.5,"y":10.2,"size":0.95,"color":"#4F6F8F","rotate":0,"bold":true}],"walls":[[36.0,9.0,51.0,9.0],[42.0,15.5,42.0,21.5],[8.5,26.0,14.5,26.0],[11.5,44.0,26.5,44.0]],"route":{"x1":13.84,"y1":11.09,"x2":44.58,"y2":41.83,"width":4.0,"stop":1.6}};
+  var GEO = {"hall":{"w":58,"d":54,"area":4136,"floor":2729},"sizes":{"3x3":{"w":3,"d":3,"sqm":9,"price":1200,"rate":133.33,"disc":0,"label":"3 × 3 m","fill":"#DCEAF7","line":"#2E6DA4"},"3x6":{"w":3,"d":6,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"3 × 6 m","fill":"#CFE6D6","line":"#2E7D4F"},"6x3":{"w":6,"d":3,"sqm":18,"price":2280,"rate":126.67,"disc":0.05,"label":"6 × 3 m","fill":"#FBE4C9","line":"#C2761A"},"6x6":{"w":6,"d":6,"sqm":36,"price":4080,"rate":113.33,"disc":0.15,"label":"6 × 6 m","fill":"#E4DAF1","line":"#67509B"}},"stands":[{"id":"B01","size":"3x3","x":28.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B02","size":"3x3","x":31.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B03","size":"3x3","x":34.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B04","size":"3x3","x":37.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B05","size":"3x3","x":28.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B06","size":"3x3","x":31.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B07","size":"3x3","x":34.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B08","size":"3x3","x":37.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B09","size":"3x3","x":43.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B10","size":"3x3","x":46.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B11","size":"3x3","x":49.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B12","size":"3x3","x":52.0,"y":6.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B13","size":"3x3","x":43.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B14","size":"3x3","x":46.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B15","size":"3x3","x":49.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B16","size":"3x3","x":52.0,"y":9.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"S01","size":"6x6","x":15.0,"y":15.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O01","size":"6x3","x":21.0,"y":15.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O02","size":"6x3","x":21.0,"y":18.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"G01","size":"3x6","x":30.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G02","size":"3x6","x":33.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G03","size":"3x6","x":36.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"G04","size":"3x6","x":39.0,"y":15.0,"w":3,"h":6,"sqm":18,"price":2280},{"id":"O03","size":"6x3","x":45.0,"y":15.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O04","size":"6x3","x":45.0,"y":18.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S02","size":"6x6","x":12.0,"y":24.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O05","size":"6x3","x":18.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O06","size":"6x3","x":18.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O07","size":"6x3","x":27.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O08","size":"6x3","x":33.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O09","size":"6x3","x":27.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O10","size":"6x3","x":33.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S03","size":"6x6","x":42.0,"y":24.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O11","size":"6x3","x":48.0,"y":24.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O12","size":"6x3","x":48.0,"y":27.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O13","size":"6x3","x":9.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O14","size":"6x3","x":15.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O15","size":"6x3","x":9.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O16","size":"6x3","x":15.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"S04","size":"6x6","x":33.0,"y":33.0,"w":6,"h":6,"sqm":36,"price":4080},{"id":"O17","size":"6x3","x":27.0,"y":33.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"O18","size":"6x3","x":27.0,"y":36.0,"w":6,"h":3,"sqm":18,"price":2280},{"id":"B17","size":"3x3","x":6.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B18","size":"3x3","x":9.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B19","size":"3x3","x":12.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B20","size":"3x3","x":15.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B21","size":"3x3","x":6.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B22","size":"3x3","x":9.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B23","size":"3x3","x":12.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B24","size":"3x3","x":15.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B25","size":"3x3","x":21.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B26","size":"3x3","x":24.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B27","size":"3x3","x":27.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B28","size":"3x3","x":30.0,"y":42.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B29","size":"3x3","x":21.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B30","size":"3x3","x":24.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B31","size":"3x3","x":27.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200},{"id":"B32","size":"3x3","x":30.0,"y":45.0,"w":3,"h":3,"sqm":9,"price":1200}],"paths":{"outer":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L -17.00 43.00 L -16.96 40.86 L -16.85 38.72 L -16.66 36.59 L -16.40 34.46 L -16.06 32.35 L -15.65 30.25 L -15.17 28.16 L -14.61 26.10 L -13.98 24.05 L -13.28 22.03 L -12.51 20.04 L -11.67 18.08 L -10.76 16.14 L -9.78 14.25 L -8.74 12.38 L -7.63 10.56 L -6.46 8.78 L -5.23 7.04 L -3.94 5.35 L -2.59 3.71 L -1.18 2.11 L 0.28 0.57 L 1.80 -0.91 L 3.36 -2.34 L 4.98 -3.72 L 6.64 -5.03 L 8.35 -6.29 L 10.10 -7.48 L 11.89 -8.60 L 13.72 -9.66 L 15.59 -10.65 L 17.49 -11.58 L 19.42 -12.43 L 21.38 -13.22 L 23.37 -13.93 L 25.38 -14.57 L 27.41 -15.14 L 29.46 -15.63 L 31.52 -16.05 L 33.60 -16.39 L 35.69 -16.66 L 37.79 -16.85 L 39.89 -16.96 L 42.00 -17.00 Z","hall":"M 42.00 0.00 L 58.00 0.00 L 58.00 52.40 L 48.50 52.40 L 48.50 54.00 L 0.00 54.00 L 0.00 43.00 L 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00 Z","lane":"M 42.00 3.00 L 31.42 4.50 L 27.18 6.00 L 24.03 7.50 L 21.46 9.00 L 19.26 10.50 L 17.35 12.00 L 15.66 13.50 L 14.15 15.00 L 12.79 16.50 L 11.56 18.00 L 10.44 19.50 L 9.43 21.00 L 8.51 22.50 L 7.68 24.00 L 6.93 25.50 L 6.26 27.00 L 5.65 28.50 L 5.12 30.00 L 4.65 31.50 L 4.24 33.00 L 3.89 34.50 L 3.60 36.00 L 3.37 37.50 L 3.20 39.00 L 3.08 40.50 L 3.01 42.00 L 3.00 51.00 L 48.50 51.00 L 48.50 49.40 L 55.00 49.40 L 55.00 3.00 Z","demo":"M 37.00 49.40 L 55.00 49.40 L 55.00 31.40 Z","arc":"M 0.00 43.00 L 0.03 41.47 L 0.11 39.93 L 0.24 38.40 L 0.43 36.88 L 0.67 35.37 L 0.96 33.86 L 1.30 32.37 L 1.70 30.89 L 2.15 29.42 L 2.65 27.97 L 3.20 26.54 L 3.80 25.14 L 4.44 23.75 L 5.14 22.39 L 5.88 21.06 L 6.67 19.75 L 7.50 18.48 L 8.38 17.23 L 9.30 16.02 L 10.26 14.84 L 11.26 13.70 L 12.30 12.59 L 13.38 11.53 L 14.50 10.50 L 15.65 9.52 L 16.83 8.58 L 18.05 7.68 L 19.29 6.83 L 20.57 6.02 L 21.87 5.26 L 23.20 4.55 L 24.55 3.89 L 25.93 3.27 L 27.32 2.71 L 28.74 2.20 L 30.17 1.74 L 31.61 1.34 L 33.07 0.98 L 34.54 0.68 L 36.02 0.44 L 37.51 0.25 L 39.00 0.11 L 40.50 0.03 L 42.00 0.00"},"stage":{"cx":55,"cy":49.4,"r":5},"stagePath":"M 55.00 49.40 L 50.00 49.40 A 5.00 5.00 0 0 1 55.00 44.40 Z","seats":[{"x":48.04,"y":48.67},{"x":48.17,"y":47.88},{"x":48.38,"y":47.12},{"x":48.68,"y":46.39},{"x":49.06,"y":45.69},{"x":49.52,"y":45.04},{"x":50.05,"y":44.45},{"x":50.64,"y":43.92},{"x":51.29,"y":43.46},{"x":51.99,"y":43.08},{"x":52.72,"y":42.78},{"x":53.48,"y":42.57},{"x":54.27,"y":42.44},{"x":46.22,"y":48.79},{"x":46.31,"y":48},{"x":46.47,"y":47.23},{"x":46.7,"y":46.48},{"x":46.99,"y":45.75},{"x":47.35,"y":45.05},{"x":47.77,"y":44.38},{"x":48.25,"y":43.76},{"x":48.78,"y":43.18},{"x":49.36,"y":42.65},{"x":49.98,"y":42.17},{"x":50.65,"y":41.75},{"x":51.35,"y":41.39},{"x":52.08,"y":41.1},{"x":52.83,"y":40.87},{"x":53.6,"y":40.71},{"x":54.39,"y":40.62}],"speakers":[{"x":49.16,"y":48.58,"label":"Main L"},{"x":54.18,"y":43.56,"label":"Main R"},{"x":41.5,"y":48.2,"label":"Delay L"},{"x":53.2,"y":36.5,"label":"Delay R"}],"mix":{"x":46.02,"y":40.82,"w":2.4,"h":1.6,"label":"AV / MIX"},"entrances":[{"label":"MAIN ENTRANCE","path":"M 16.26 9.02 L 15.85 9.35 L 15.45 9.68 L 15.06 10.01 L 14.67 10.35 L 14.28 10.70 L 13.90 11.04 L 13.52 11.40 L 13.14 11.76 L 12.77 12.12 L 12.41 12.49 L 12.04 12.86 L 11.69 13.24","lx":11.09,"ly":7.92,"rot":-42},{"label":"ENTRY 2","path":"M 37.76 0.22 L 37.25 0.28 L 36.74 0.34 L 36.23 0.41 L 35.72 0.48 L 35.21 0.57 L 34.71 0.65 L 34.20 0.75 L 33.70 0.85 L 33.20 0.96 L 32.69 1.07 L 32.20 1.19 L 31.70 1.31","lx":34.4,"ly":-1.3,"rot":-10}],"fire":[{"side":"S","v":14},{"side":"S","v":30},{"side":"S","v":44},{"side":"E","v":18},{"side":"E","v":40},{"side":"N","v":50}],"radial":"M 12.30 12.59 L 0.28 0.57","view":{"x":-19,"y":-19,"w":82,"h":79},"focus":{"x":4.5,"y":-2.6,"w":54,"h":57.1},"labels":[{"text":"BREAKOUT / SEMINAR · 680 m²","x":24,"y":-9,"size":1.15,"color":"#9A8455","rotate":-24,"bold":true},{"text":"CATERING & NETWORKING · 680 m²","x":-6.5,"y":30,"size":1,"color":"#9A8455","rotate":-24,"bold":true},{"text":"DEMONSTRATION & STAGE ZONE","x":45.65,"y":40.05,"size":1.02,"color":"#A8600C","rotate":-45,"bold":true},{"text":"OPERABLE WALL","x":9.5,"y":12.5,"size":0.85,"color":"#9A8455","rotate":-47,"bold":true}],"walls":[[28.0,9.0,40.0,9.0],[43.0,9.0,55.0,9.0],[21.0,15.0,21.0,21.0],[30.0,21.0,42.0,21.0],[45.0,18.0,51.0,18.0],[18.0,24.0,18.0,30.0],[27.0,27.0,39.0,27.0],[48.0,24.0,48.0,30.0],[9.0,36.0,21.0,36.0],[33.0,33.0,33.0,39.0],[6.0,45.0,18.0,45.0],[21.0,45.0,33.0,45.0]],"layout":"Alternative layout with 58 booths (Phil, 20 October 2026)","rules":{"min_aisle":3.0,"entry2_clear":4.0}};
   var CFG = readJSON('atfa-expo27-config') || {};
   var SNAP = readJSON('atfa-expo27-snapshot');
 
@@ -4106,7 +4507,20 @@ ATFA_EXPO27_CSS;
     return m ? m[1] + m[2] : '';
   }
 
-  // How many sides of a stand face an aisle (no other stand against them).
+  // A rear wall drawn along a side closes it, even with no stand behind it.
+  function wallAlong(horiz, lo, hi, at) {
+    var e = 1e-6;
+    return (GEO.walls || []).some(function (w) {
+      if (horiz) {
+        return Math.abs(w[1] - at) < e && Math.abs(w[3] - at) < e &&
+          Math.min(hi, Math.max(w[0], w[2])) - Math.max(lo, Math.min(w[0], w[2])) > e;
+      }
+      return Math.abs(w[0] - at) < e && Math.abs(w[2] - at) < e &&
+        Math.min(hi, Math.max(w[1], w[3])) - Math.max(lo, Math.min(w[1], w[3])) > e;
+    });
+  }
+
+  // How many sides of a stand face an aisle (no other stand or rear wall against them).
   function openSides(s) {
     var e = 1e-6, open = 0;
     [['N', s.x, s.x + s.w, s.y], ['S', s.x, s.x + s.w, s.y + s.h],
@@ -4120,7 +4534,7 @@ ATFA_EXPO27_CSS;
         }
         var edgeX = side[0] === 'W' ? o.x + o.w : o.x;
         return Math.abs(edgeX - at) < e && Math.min(hi, o.y + o.h) - Math.max(lo, o.y) > e;
-      });
+      }) || wallAlong(horiz, lo, hi, at);
       if (!blocked) { open++; }
     });
     return open;
@@ -4429,7 +4843,7 @@ ATFA_EXPO27_CSS;
     });
   }
 
-  // Shared rear walls (back-to-back stands).
+  // Rear walls (between back-to-back stands, or closing the back of a row).
   var wallLayer = sv('g', { 'aria-hidden': 'true', 'pointer-events': 'none' }, svg);
   (GEO.walls || []).forEach(function (w) {
     sv('line', { x1: w[0], y1: w[1], x2: w[2], y2: w[3], stroke: '#16211C', 'stroke-width': 0.36 }, wallLayer);
@@ -5335,7 +5749,7 @@ ATFA_EXPO27_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27 = {
-    version: CFG.version || '3.2.0',
+    version: CFG.version || '3.3.0',
     reload: function () { load(false); },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });

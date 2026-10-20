@@ -178,7 +178,20 @@
     return m ? m[1] + m[2] : '';
   }
 
-  // Which sides of a stand face an aisle (no other stand against them).
+  // A rear wall drawn along a side closes it, even with no stand behind it.
+  function wallAlong(horiz, lo, hi, at) {
+    var e = 1e-6;
+    return (GEO.walls || []).some(function (w) {
+      if (horiz) {
+        return Math.abs(w[1] - at) < e && Math.abs(w[3] - at) < e &&
+          Math.min(hi, Math.max(w[0], w[2])) - Math.max(lo, Math.min(w[0], w[2])) > e;
+      }
+      return Math.abs(w[0] - at) < e && Math.abs(w[2] - at) < e &&
+        Math.min(hi, Math.max(w[1], w[3])) - Math.max(lo, Math.min(w[1], w[3])) > e;
+    });
+  }
+
+  // Which sides of a stand face an aisle (no other stand or rear wall against them).
   function sidesOf(s) {
     var e = 1e-6, out = {};
     [['N', s.x, s.x + s.w, s.y], ['S', s.x, s.x + s.w, s.y + s.h],
@@ -192,7 +205,7 @@
         }
         var edgeX = side[0] === 'W' ? o.x + o.w : o.x;
         return Math.abs(edgeX - at) < e && Math.min(hi, o.y + o.h) - Math.max(lo, o.y) > e;
-      });
+      }) || wallAlong(horiz, lo, hi, at);
       out[side[0]] = !blocked;
     });
     return out;
@@ -548,6 +561,20 @@
     });
   }
 
+  // The stand at a point on screen (within tolPx of it), from a plan drawing's own scale.
+  function standAt(svg, clientX, clientY, tolPx) {
+    var ctm = svg.getScreenCTM && svg.getScreenCTM();
+    if (!ctm || !ctm.a) { return null; }
+    var mx = (clientX - ctm.e) / ctm.a, my = (clientY - ctm.f) / ctm.d, tol = (tolPx || 0) / ctm.a;
+    var best = null, bestD = Infinity;
+    STANDS.forEach(function (s) {
+      var dx = Math.max(s.x - mx, 0, mx - (s.x + s.w)), dy = Math.max(s.y - my, 0, my - (s.y + s.h));
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= tol && d < bestD) { best = s; bestD = d; }
+    });
+    return best;
+  }
+
   function standAria(s) {
     var base = 'Stand ' + s.id + ', ' + sizeSpoken(s.size) + ', ' + s.sqm + ' square metres, ' + openShort(s).toLowerCase();
     if (s.status === 'sold') { return base + (s.name ? ', sold to ' + s.name : ', sold'); }
@@ -571,6 +598,11 @@
     else if (inst.fade && selId && s.id !== selId) { cls += ' is-fade'; }
     if (inst.hoverId === s.id) { cls += ' is-hover'; }
     n.g.setAttribute('class', cls);
+    // In the full-screen plan the chosen stand is drawn last, so its ring isn't hidden under
+    // its neighbours. (Not in the page's plan, where moving a focused stand would lose focus.)
+    if (inst.fade && s.id === selId && n.g.parentNode && n.g.parentNode.lastChild !== n.g) {
+      n.g.parentNode.appendChild(n.g);
+    }
     var sub, fs = s.fs;
     if (s.status === 'sold' && s.name) {
       if (textWidth(s.name, fs) > s.w - 0.4) { fs = round3(s.fs * 0.8); }
@@ -1001,8 +1033,12 @@
       }
       return;
     }
-    // On narrow screens the whole plan card opens the full-screen plan.
+    // On narrow screens the whole plan card opens the full-screen plan, on the stand that was
+    // tapped if it was one. (The picture itself doesn't take taps there, so find the stand from
+    // where the tap landed on it.)
     if (mqNarrow.matches && mapEl.contains(e.target)) {
+      var hit = standAt(inline.svg, e.clientX, e.clientY, 3);
+      if (hit) { selId = hit.id; }
       openEx({ opener: q('.xp-open') });
     }
   });
@@ -1035,7 +1071,7 @@
   }
 
   var mqSide = window.matchMedia ? window.matchMedia('(orientation: landscape) and (max-height: 520px)') : { matches: false };
-  var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null;
+  var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null, hintTimer = null;
   var view = { x: CROP.x, y: CROP.y, w: CROP.w, h: CROP.h };   // the camera, in metres
   var drawn = null;                                             // where the plan was last drawn
   var box = { w: 390, h: 664, top: 108, bottom: 0, right: 0 };
@@ -1090,7 +1126,8 @@
     }
     ex.style.setProperty('--xp-top', box.top + 'px');
     ex.style.setProperty('--xp-right', box.right + 'px');
-    // Short of room above the card (small phones): the pinch is enough, so the zoom buttons go.
+    // Short of room above the card (small phones): the pinch is enough, so + and - go; the
+    // whole-hall button stays, as the way back to the overview.
     ex.classList.toggle('is-cramped', box.h - box.bottom - box.top < 300);
   }
 
@@ -1231,13 +1268,30 @@
     anim = requestAnimationFrame(step);
   }
 
+  // Bring the chosen stand into view with as little movement as possible. From the whole hall
+  // the plan zooms in on it (about 18 m across: the stand with its neighbours); once you're in
+  // that close, choosing the stand next door doesn't move the plan at all, and one that's
+  // partly hidden (under the card, say) only slides far enough to be seen.
   function exCameraForSel() {
     if (!exOpen || !selId) { return; }
     measure();
     var s = BY_ID[selId];
-    // Close enough to read the stand, with its neighbours around it: about 18 m across.
     var want = Math.min(bandW(), bandH()) / 18;
-    var px = clamp(Math.max(pxNow(), want), fitPx(), maxPx());
+    var px = pxNow();
+    if (px >= want * 0.95) {
+      var m = 14, L = m, T = box.top + m, R = bandW() - m, B = box.top + bandH() - m;
+      var l = (s.x - view.x) * px, t = (s.y - view.y) * px, r = l + s.w * px, b = t + s.h * px;
+      var seen = r > 0 && l < bandW() && b > box.top && t < box.top + bandH();
+      if (seen) {
+        var dx = 0, dy = 0;
+        if (r - l > R - L) { dx = (l + r - L - R) / 2; } else if (l < L) { dx = l - L; } else if (r > R) { dx = r - R; }
+        if (b - t > B - T) { dy = (t + b - T - B) / 2; } else if (t < T) { dy = t - T; } else if (b > B) { dy = b - B; }
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) { if (!anim) { settle(); } return; }
+        glide({ x: view.x + dx / px, y: view.y + dy / px, w: view.w, h: view.h });
+        return;
+      }
+    }
+    px = clamp(Math.max(px, want), fitPx(), maxPx());
     glide(viewAt(px, s.x + s.w / 2, s.y + s.h / 2, bandCx(), bandCy()));
   }
 
@@ -1437,6 +1491,7 @@
   // The handle on the card: drag down to put it away (or fold "More"), up or tap for "More".
   var grab = null;
   exGrab.addEventListener('pointerdown', function (e) {
+    if (cardQuiet(e)) { return; }
     grab = { y: e.clientY, id: e.pointerId };
     try { exGrab.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
   });
@@ -1462,6 +1517,14 @@
   exGrab.addEventListener('pointerup', endGrab);
   exGrab.addEventListener('pointercancel', endGrab);
 
+  // The "Tap a stand" hint goes once the plan has been touched (or after a few seconds), so it
+  // never sits over stands for long.
+  function hintDone() {
+    clearTimeout(hintTimer);
+    hintTimer = null;
+    ex.classList.add('is-used');
+  }
+
   function openEx(opts) {
     opts = opts || {};
     if (!exInst) {
@@ -1479,6 +1542,7 @@
       exOpen = true;
       lockScroll(true);
       hideTip();
+      if (!ex.classList.contains('is-used') && !hintTimer) { hintTimer = setTimeout(hintDone, 7000); }
     }
     exMode = opts.list ? 'list' : (selId ? 'sel' : 'peek');
     exMore = false;
@@ -1523,8 +1587,8 @@
     renderSheet(true);
     if (exMode === 'sel') { exCameraForSel(); }
   });
-  exIn.addEventListener('click', function () { if (zoomOk(exIn)) { zoomAt({ x: bandCx(), y: bandCy() }, 1.8); } });
-  exOut.addEventListener('click', function () { if (zoomOk(exOut)) { zoomAt({ x: bandCx(), y: bandCy() }, 1 / 1.8); } });
+  exIn.addEventListener('click', function () { hintDone(); if (zoomOk(exIn)) { zoomAt({ x: bandCx(), y: bandCy() }, 1.8); } });
+  exOut.addEventListener('click', function () { hintDone(); if (zoomOk(exOut)) { zoomAt({ x: bandCx(), y: bandCy() }, 1 / 1.8); } });
   exWhole.addEventListener('click', function () {
     if (selId) { setSel(null, { keepCamera: true }); }
     measure();
@@ -1569,6 +1633,13 @@
   // Touch and mouse on the map: drag to move (it keeps sliding after a flick), pinch, wheel
   // or double-tap to zoom, tap a stand to see it.
   var pointers = {}, gesture = null, lastTap = null, trail = [];
+  // A double tap on a stand where the card is about to appear: the first tap brings the card in
+  // under the finger and the second would press whatever is there (Enquire, say). For half a
+  // second after a tap on the map chooses a stand, the card ignores a tap in the same spot.
+  var quietTap = null;
+  function cardQuiet(e) {
+    return !!quietTap && Date.now() < quietTap.until && Math.abs(e.clientX - quietTap.x) + Math.abs(e.clientY - quietTap.y) < 48;
+  }
 
   // Where the map sits on screen, read once per gesture (reading it on every move makes the
   // browser stop and lay out the page).
@@ -1636,6 +1707,7 @@
       return;
     }
     if (hit.stand) {
+      quietTap = { until: now + 500, x: e.clientX, y: e.clientY };
       if (hit.stand.id !== selId) { exMore = false; }
       exMode = 'sel';
       setSel(hit.stand.id);
@@ -1649,6 +1721,7 @@
 
   exMap.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) { return; }
+    hintDone();
     if (!Object.keys(pointers).length) { var mr = exMap.getBoundingClientRect(); mapAt = { left: mr.left, top: mr.top }; }
     var p = local(e);
     // A touch that stops the plan sliding after a flick just stops it, like a phone's scrolling.
@@ -1710,6 +1783,16 @@
     settle();
   }
   exMap.addEventListener('pointerup', endPointer);
+  // Taps on the map are handled on pointerup. The click a phone sends after the finger lifts
+  // would land on whatever is under it by then: the card that has just slid in under a stand
+  // near the bottom of the screen, say, sending the visitor off to the enquiry form. The map
+  // doesn't need those clicks, so it doesn't let them happen; nor does the card's handle.
+  [exMap, exGrab].forEach(function (node) {
+    node.addEventListener('touchend', function (e) { if (e.cancelable) { e.preventDefault(); } }, { passive: false });
+  });
+  exSheet.addEventListener('click', function (e) {
+    if (cardQuiet(e)) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
   exMap.addEventListener('pointercancel', endPointer);
   exMap.addEventListener('lostpointercapture', endPointer);
   exMap.addEventListener('wheel', function (e) {
@@ -1735,9 +1818,11 @@
       layoutInline();
       if (exOpen) {
         stopMotion();
-        var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() });
+        var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() }), whole = px <= fitPx() * 1.03;
         measure();
-        view = clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
+        // At the whole hall before (the phone turned, say)? Then the whole hall again, sized to
+        // the new screen; otherwise keep the zoom and the middle of the view.
+        view = whole && !selId ? wholeView() : clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
         commit();
         if (selId && exMode !== 'list') { exCameraForSel(); }
       }
@@ -1869,13 +1954,108 @@
       });
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Share links (staff only)                                            */
+  /* ------------------------------------------------------------------ */
+  // The staff bar can make a link that lets someone without a login see this page while it's
+  // private (24 hours, 3 days or 7 days), list the live ones and stop them.
+
+  function initShare(box) {
+    var rest = box.getAttribute('data-rest'), nonce = box.getAttribute('data-nonce');
+    var list = q('[data-role="sharelist"]', box), msg = q('[data-role="sharemsg"]', box);
+    var make = q('[data-role="sharemake"]', box), note = q('[data-role="sharenote"]', box), hours = q('[data-role="sharehours"]', box);
+    var loaded = false;
+
+    function call(method, url, body) {
+      return fetch(url, {
+        method: method, credentials: 'same-origin',
+        headers: { 'X-WP-Nonce': nonce, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) { throw new Error(j && j.message ? j.message : 'the site answered ' + r.status); }
+          return j;
+        });
+      });
+    }
+
+    function copy(text, btn) {
+      var done = function () {
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = 'Copy link'; }, 1800);
+      };
+      var fallback = function () {
+        var t = el('textarea', { readonly: true, style: 'position:fixed;left:-9999px;top:0' });
+        t.value = text;
+        document.body.appendChild(t);
+        t.select();
+        try { document.execCommand('copy'); done(); } catch (e) { msg.textContent = 'Couldn’t copy. Select the link and copy it yourself.'; }
+        document.body.removeChild(t);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); }
+      else { fallback(); }
+    }
+
+    function fail(e) {
+      msg.textContent = 'That didn’t work (' + (e && e.message ? e.message : 'please try again') + ').';
+      make.disabled = false;
+    }
+
+    function render(shares, fresh) {
+      list.textContent = '';
+      if (!shares.length) {
+        list.appendChild(el('li', { className: 'xp-share-none', text: 'No live links at the moment.' }));
+        return;
+      }
+      shares.forEach(function (sh) {
+        var input = el('input', { type: 'text', readonly: true, 'aria-label': 'Link' + (sh.note ? ' for ' + sh.note : '') });
+        input.value = sh.url;
+        input.addEventListener('focus', function () { input.select(); });
+        var cp = el('button', { type: 'button', className: 'afpx-btn is-small', text: 'Copy link' });
+        cp.addEventListener('click', function () { copy(sh.url, cp); });
+        var stop = el('button', { type: 'button', className: 'afpx-btn is-ghost is-small', text: 'Stop' });
+        stop.addEventListener('click', function () {
+          stop.disabled = true;
+          call('DELETE', rest + '/' + encodeURIComponent(sh.key)).then(function () {
+            msg.textContent = 'Stopped. That link now goes to the old floor plan page.';
+            load();
+          }, fail);
+        });
+        list.appendChild(el('li', { className: sh.key === fresh ? 'is-new' : '' }, [
+          el('div', { className: 'xp-share-who' }, [el('b', { text: sh.note || 'Link' }), ' · works until ' + sh.until]),
+          el('div', { className: 'xp-share-row' }, [input, cp, stop])
+        ]));
+      });
+    }
+
+    function load(fresh) {
+      loaded = true;
+      return call('GET', rest).then(function (j) { render(j.shares || [], fresh || null); }, fail);
+    }
+
+    make.addEventListener('click', function () {
+      make.disabled = true;
+      msg.textContent = 'Making a link…';
+      call('POST', rest, { hours: Number(hours.value), note: note.value }).then(function (sh) {
+        msg.textContent = 'Done. The link works until ' + sh.until + '. Copy it and send it on.';
+        note.value = '';
+        make.disabled = false;
+        load(sh.key);
+      }, fail);
+    });
+    box.addEventListener('toggle', function () { if (box.open && !loaded) { load(); } });
+  }
+
+  var shareBox = document.querySelector('[data-role="share"]');
+  if (shareBox) { initShare(shareBox); }
+
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27Page = {
     version: CFG.version || '__VERSION__',
     reload: function () { load(false); },
     open: function (id) { if (id && BY_ID[id]) { selId = id; } openEx({}); },
     close: function () { closeEx(false); },
-    view: function () { return { x: view.x, y: view.y, w: view.w, h: view.h, px: pxNow(), fit: fitPx(), max: maxPx(), top: box.top, bottom: box.bottom, right: box.right, open: exOpen, mode: exMode, sel: selId, more: exMore, sliding: animKind === 'coast' }; },
+    view: function () { return { x: view.x, y: view.y, w: view.w, h: view.h, px: pxNow(), fit: fitPx(), max: maxPx(), top: box.top, bottom: box.bottom, right: box.right, open: exOpen, mode: exMode, sel: selId, more: exMore, sliding: animKind === 'coast', busy: !!anim || moving || !!commitTimer || !!grab, bw: box.w, bh: box.h }; },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });
     }

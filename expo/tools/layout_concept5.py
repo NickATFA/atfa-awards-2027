@@ -103,6 +103,8 @@ def main():
     geo["stands"] = stands
     geo["walls"] = [[round(v, 2) for v in w] for w in walls]
     geo["route"] = route()
+    geo["layout"] = "Revised Concept 5"
+    geo["rules"] = {"demo_clear": 3.5, "arrival_clear": 8.0}
     GEO_PATH.write_text(json.dumps(geo, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print("wrote %d stands, %d shared walls, route %s" % (len(stands), len(walls), geo["route"]))
 

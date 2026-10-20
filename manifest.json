@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.8.0",
-  "last_updated": "2026-10-19",
-  "changelog": "<p><strong>1.8.0</strong> (2026-10-19): The ATFA Expo &amp; Conference 2027 page at /expo-2027/ and the Hall 5 floor plan now come with the plugin (they used to be a Code Snippet), including the reworked phone floor plan. After updating, switch off the Code Snippet named ATFA Expo 2027 page and Hall 5 floor plan.</p>"
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.8.1",
+  "last_updated": "2026-10-20",
+  "changelog": "<p><strong>1.8.1</strong> (2026-10-20): Phil's alternative layout with 58 booths on the Expo page and the Hall 5 floor plan, with a new stand PDF (it now comes with the plugin). Phones: a tap or double tap on a stand can no longer press the card that slides in under it; choosing a stand nearby doesn't move the plan; tapping the page's picture of the plan opens the plan on that stand; turning the phone keeps the whole hall in view. Staff can share the private Expo page with a link that works for 24 hours, 3 days or 7 days.</p>"
 }
