@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
  * ---------------------------------------------------------------------------
- * Version 3.3.0 · 20 October 2026 · Prepared for ATFA (Nick Warren)
+ * Version 3.3.1 · 20 October 2026 · Prepared for ATFA (Nick Warren)
  *
  * WHAT THIS ADDS
  *   [atfa_expo27_page]               The ATFA Expo 2027 page at /expo-2027/: the dark awards-style
@@ -476,7 +476,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.3.0';
+		$version  = '3.3.1';
 
 		// Staff: "Refresh from the sheet" in the staff bar (the page with ?refresh=1 on the end)
 		// pulls the latest from the sheet straight away, skipping the 2-minute cache.
@@ -876,7 +876,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.3.0';
+		$version  = '3.3.1';
 		$photos   = atfa_expo27_page_photos();
 
 		// Staff: "Refresh from the sheet" reads the sheet straight away, skipping the cache.
@@ -1227,7 +1227,7 @@ ATFA_EXPO27_PAGE_HTML;
 
 	function atfa_expo27_page_css() {
 		return <<<'ATFA_EXPO27_PAGE_CSS'
-/* ATFA Expo 2027 page (v3.3.0). Same family as the awards page: black, Barlow Condensed and
+/* ATFA Expo 2027 page (v3.3.1). Same family as the awards page: black, Barlow Condensed and
    Montserrat, the orange, and warm charcoal bands for the chapters. Everything is scoped to .xp. */
 html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !important;padding:0 !important}
 .xp{position:relative;min-height:100vh;box-sizing:border-box;background:#0C0B0A;color:#F4EFE7;font-family:'Montserrat',system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;line-height:1.4;overflow-x:clip;text-align:left}
@@ -1763,7 +1763,7 @@ ATFA_EXPO27_PAGE_CSS;
 		return <<<'ATFA_EXPO27_PAGE_JS'
 /*!
  * ATFA Expo & Conference 2027 page: Hall 5 floor plan (dark), live stand data and the
- * full-screen plan for phones. Version 3.3.0
+ * full-screen plan for phones. Version 3.3.1
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below, in the dark awards style.
@@ -2835,6 +2835,11 @@ ATFA_EXPO27_PAGE_CSS;
 
   var mqSide = window.matchMedia ? window.matchMedia('(orientation: landscape) and (max-height: 520px)') : { matches: false };
   var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null, hintTimer = null;
+  var scrollMode = null, backPending = 0;
+  try { scrollMode = 'scrollRestoration' in history ? history.scrollRestoration : null; } catch (e) { scrollMode = null; }
+  // Back on a page whose last history step was the open plan (after the enquiry form, say): the
+  // plan isn't open now, so that step is spent; opening the plan again adds a fresh one.
+  try { if (history.state && history.state.xpPlan) { history.replaceState(null, ''); } } catch (e) { /* ignore */ }
   var view = { x: CROP.x, y: CROP.y, w: CROP.w, h: CROP.h };   // the camera, in metres
   var drawn = null;                                             // where the plan was last drawn
   var box = { w: 390, h: 664, top: 108, bottom: 0, right: 0 };
@@ -3298,7 +3303,11 @@ ATFA_EXPO27_PAGE_CSS;
     if (!exOpen) {
       lastFocus = opts.opener || document.activeElement;
       // Add the history step before pinning the page, so the browser remembers where the page was.
+      // The page puts itself back where it was when the plan closes; while the plan is open the
+      // browser is asked not to do the same on the way back, as it can use a place it noted
+      // earlier and undo that.
       try {
+        if (scrollMode !== null) { history.scrollRestoration = 'manual'; }
         if (!history.state || !history.state.xpPlan) { history.pushState({ xpPlan: true }, ''); pushed = true; }
       } catch (e) { pushed = false; }
       ex.hidden = false;
@@ -3322,11 +3331,11 @@ ATFA_EXPO27_PAGE_CSS;
   function closeEx(fromHistory) {
     if (!exOpen) { return; }
     if (!fromHistory && pushed) {
-      pushed = false;
-      try { history.back(); } catch (e) { /* ignore */ }
-      // If the browser didn't report the step back, close anyway.
-      setTimeout(function () { if (exOpen) { closeEx(true); } }, 450);
-      return;
+      // Take the plan's step off the history too, so the phone's back button then leaves the
+      // page as usual. The plan closes straight away; the step back the browser reports a
+      // moment later is this one, not the visitor's.
+      backPending = Date.now();
+      try { history.back(); } catch (e) { backPending = 0; }
     }
     pushed = false;
     stopMotion();
@@ -3337,12 +3346,24 @@ ATFA_EXPO27_PAGE_CSS;
     ex.hidden = true;
     exOpen = false;
     lockScroll(false);
+    if (scrollMode !== null) {
+      setTimeout(function () { try { if (!exOpen) { history.scrollRestoration = scrollMode; } } catch (e) { /* ignore */ } }, 120);
+    }
     if (selId && !mqNarrow.matches) { setRoving(selId); }
     if (lastFocus && document.contains(lastFocus) && lastFocus.offsetParent !== null) { focusNoScroll(lastFocus); }
     lastFocus = null;
   }
 
-  window.addEventListener('popstate', function () { if (exOpen) { closeEx(true); } });
+  window.addEventListener('popstate', function () {
+    if (backPending && Date.now() - backPending < 1500) {
+      backPending = 0;
+      // The plan was opened again before the browser had taken that step back: add it again.
+      if (exOpen && !pushed) { try { history.pushState({ xpPlan: true }, ''); pushed = true; } catch (e) { /* ignore */ } }
+      return;
+    }
+    backPending = 0;
+    if (exOpen) { closeEx(true); }
+  });
 
   exClose.addEventListener('click', function () { closeEx(false); });
   exList.addEventListener('click', function () {
@@ -3485,6 +3506,9 @@ ATFA_EXPO27_PAGE_CSS;
   exMap.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) { return; }
     hintDone();
+    // The first finger down can't share the screen with any other: anything still listed is
+    // left over from a touch whose end never arrived, and would make every tap read as a pinch.
+    if (e.isPrimary) { pointers = {}; }
     if (!Object.keys(pointers).length) { var mr = exMap.getBoundingClientRect(); mapAt = { left: mr.left, top: mr.top }; }
     var p = local(e);
     // A touch that stops the plan sliding after a flick just stops it, like a phone's scrolling.
@@ -3536,13 +3560,21 @@ ATFA_EXPO27_PAGE_CSS;
     mapAt = null;
     exMap.classList.remove('is-grab');
     if (!g) { settle(); return; }
-    if (g.multi && pxNow() < fitPx() * 0.99) { glide(wholeView(), 300); return; }
+    // Pinched out past the whole hall, or a touch cut short the way back there: back to the
+    // whole hall (after a tap has done its job).
+    var under = pxNow() < fitPx() * 0.99;
+    if (under && (g.multi || g.moved || e.type !== 'pointerup')) { glide(wholeView(), 300); return; }
     if (e.type === 'pointercancel' || e.type === 'lostpointercapture') { settle(); return; }
     if (g.kind === 'pan' && g.moved) {
       if (g.multi) { settle(); } else { coast(trail); }
       return;
     }
-    if (g.kind === 'pan' && !g.multi && !g.stopped && Date.now() - g.t0 < 600) { tap(pt, g, e); return; }
+    if (g.kind === 'pan' && !g.multi && !g.stopped && Date.now() - g.t0 < 600) {
+      tap(pt, g, e);
+      if (!anim && pxNow() < fitPx() * 0.99) { glide(wholeView(), 300); }
+      return;
+    }
+    if (under) { glide(wholeView(), 300); return; }
     settle();
   }
   exMap.addEventListener('pointerup', endPointer);
@@ -3584,8 +3616,9 @@ ATFA_EXPO27_PAGE_CSS;
         var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() }), whole = px <= fitPx() * 1.03;
         measure();
         // At the whole hall before (the phone turned, say)? Then the whole hall again, sized to
-        // the new screen; otherwise keep the zoom and the middle of the view.
-        view = whole && !selId ? wholeView() : clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
+        // the new screen; otherwise keep the zoom (within the new screen's limits) and the middle
+        // of the view.
+        view = whole && !selId ? wholeView() : clampView(viewAt(clamp(px, fitPx(), maxPx()), c.x, c.y, bandCx(), bandCy()));
         commit();
         if (selId && exMode !== 'list') { exCameraForSel(); }
       }
@@ -3814,7 +3847,7 @@ ATFA_EXPO27_PAGE_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27Page = {
-    version: CFG.version || '3.3.0',
+    version: CFG.version || '3.3.1',
     reload: function () { load(false); },
     open: function (id) { if (id && BY_ID[id]) { selId = id; } openEx({}); },
     close: function () { closeEx(false); },
@@ -3910,7 +3943,7 @@ ATFA_EXPO27_HTML;
 
 	function atfa_expo27_css() {
 		return <<<'ATFA_EXPO27_CSS'
-/* ATFA Expo 2027 Hall 5 floor plan, v3.3.0.
+/* ATFA Expo 2027 Hall 5 floor plan, v3.3.1.
    Every rule is scoped to #atfa-expo27 (the plan) or #atfa-expo27-modal (the popup),
    so the theme and Elementor can't restyle the buttons, headings or links inside. */
 
@@ -4366,7 +4399,7 @@ ATFA_EXPO27_CSS;
 		return <<<'ATFA_EXPO27_JS'
 /*!
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
- * Version 3.3.0
+ * Version 3.3.1
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below (stands, stage, seating, exits).
@@ -5749,7 +5782,7 @@ ATFA_EXPO27_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27 = {
-    version: CFG.version || '3.3.0',
+    version: CFG.version || '3.3.1',
     reload: function () { load(false); },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });

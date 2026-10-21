@@ -2,7 +2,7 @@
 
 Source for the floor plan at https://www.atfa.com.au/expo-2027-hall-5-interactive-floor-plan/
 
-Version 3.3.0, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
+Version 3.3.1, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
 ATFA Flooring Awards 2027 plugin; the repo's README.md says how to release a change.
 
 ## What's where on the website
@@ -138,9 +138,17 @@ Nothing changed for visitors.
 
 v3.3.0 (awards plugin 1.8.1, 20 October 2026): Phil's 58-booth layout; open sides count rear walls;
 the PDF ships in the plugin. Phones: choosing the stand next door no longer moves the plan, and a
-partly hidden stand slides only far enough to be seen; a tap on a stand low on the screen can't also
-press the card that slides in under the finger (it could open the enquiry form); tapping a stand in
+partly hidden stand slides only far enough to be seen; a tap or double tap on a stand where the card
+slides in can't also press the card (it could open the enquiry form); tapping a stand in
 the page's picture opens the plan on that stand; turning the phone at the whole hall fits the whole
 hall again; the "Tap a stand" hint goes once the plan is touched; the whole-hall button stays on small
 phones with a card open; an expanded card always leaves 120 px of plan showing; the chosen stand is
 drawn above its neighbours. Staff can share the private page for 24 hours, 3 days or 7 days.
+
+v3.3.1 (awards plugin 1.8.2, 21 October 2026): phones: after turning the phone, the zoom stays
+within what the new screen allows; pinching out past the whole hall and dragging straight away still
+ends at the whole hall; a touch whose end never arrived can't leave the plan reading every tap as a
+pinch; X (or Escape) closes the plan at once and takes its history step away, so the back button then
+leaves the page as usual, and the browser is kept from putting back an older place on the page after
+the plan closes. The phone stress test taps buttons the way a person would (scrolled into view, not
+covered), waits for the card to finish sliding in, and prints the last few touches with each problem.

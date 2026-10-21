@@ -1072,6 +1072,11 @@
 
   var mqSide = window.matchMedia ? window.matchMedia('(orientation: landscape) and (max-height: 520px)') : { matches: false };
   var exOpen = false, exMode = 'peek', exMore = false, pushed = false, lastFocus = null, saved = null, hintTimer = null;
+  var scrollMode = null, backPending = 0;
+  try { scrollMode = 'scrollRestoration' in history ? history.scrollRestoration : null; } catch (e) { scrollMode = null; }
+  // Back on a page whose last history step was the open plan (after the enquiry form, say): the
+  // plan isn't open now, so that step is spent; opening the plan again adds a fresh one.
+  try { if (history.state && history.state.xpPlan) { history.replaceState(null, ''); } } catch (e) { /* ignore */ }
   var view = { x: CROP.x, y: CROP.y, w: CROP.w, h: CROP.h };   // the camera, in metres
   var drawn = null;                                             // where the plan was last drawn
   var box = { w: 390, h: 664, top: 108, bottom: 0, right: 0 };
@@ -1535,7 +1540,11 @@
     if (!exOpen) {
       lastFocus = opts.opener || document.activeElement;
       // Add the history step before pinning the page, so the browser remembers where the page was.
+      // The page puts itself back where it was when the plan closes; while the plan is open the
+      // browser is asked not to do the same on the way back, as it can use a place it noted
+      // earlier and undo that.
       try {
+        if (scrollMode !== null) { history.scrollRestoration = 'manual'; }
         if (!history.state || !history.state.xpPlan) { history.pushState({ xpPlan: true }, ''); pushed = true; }
       } catch (e) { pushed = false; }
       ex.hidden = false;
@@ -1559,11 +1568,11 @@
   function closeEx(fromHistory) {
     if (!exOpen) { return; }
     if (!fromHistory && pushed) {
-      pushed = false;
-      try { history.back(); } catch (e) { /* ignore */ }
-      // If the browser didn't report the step back, close anyway.
-      setTimeout(function () { if (exOpen) { closeEx(true); } }, 450);
-      return;
+      // Take the plan's step off the history too, so the phone's back button then leaves the
+      // page as usual. The plan closes straight away; the step back the browser reports a
+      // moment later is this one, not the visitor's.
+      backPending = Date.now();
+      try { history.back(); } catch (e) { backPending = 0; }
     }
     pushed = false;
     stopMotion();
@@ -1574,12 +1583,24 @@
     ex.hidden = true;
     exOpen = false;
     lockScroll(false);
+    if (scrollMode !== null) {
+      setTimeout(function () { try { if (!exOpen) { history.scrollRestoration = scrollMode; } } catch (e) { /* ignore */ } }, 120);
+    }
     if (selId && !mqNarrow.matches) { setRoving(selId); }
     if (lastFocus && document.contains(lastFocus) && lastFocus.offsetParent !== null) { focusNoScroll(lastFocus); }
     lastFocus = null;
   }
 
-  window.addEventListener('popstate', function () { if (exOpen) { closeEx(true); } });
+  window.addEventListener('popstate', function () {
+    if (backPending && Date.now() - backPending < 1500) {
+      backPending = 0;
+      // The plan was opened again before the browser had taken that step back: add it again.
+      if (exOpen && !pushed) { try { history.pushState({ xpPlan: true }, ''); pushed = true; } catch (e) { /* ignore */ } }
+      return;
+    }
+    backPending = 0;
+    if (exOpen) { closeEx(true); }
+  });
 
   exClose.addEventListener('click', function () { closeEx(false); });
   exList.addEventListener('click', function () {
@@ -1722,6 +1743,9 @@
   exMap.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) { return; }
     hintDone();
+    // The first finger down can't share the screen with any other: anything still listed is
+    // left over from a touch whose end never arrived, and would make every tap read as a pinch.
+    if (e.isPrimary) { pointers = {}; }
     if (!Object.keys(pointers).length) { var mr = exMap.getBoundingClientRect(); mapAt = { left: mr.left, top: mr.top }; }
     var p = local(e);
     // A touch that stops the plan sliding after a flick just stops it, like a phone's scrolling.
@@ -1773,13 +1797,21 @@
     mapAt = null;
     exMap.classList.remove('is-grab');
     if (!g) { settle(); return; }
-    if (g.multi && pxNow() < fitPx() * 0.99) { glide(wholeView(), 300); return; }
+    // Pinched out past the whole hall, or a touch cut short the way back there: back to the
+    // whole hall (after a tap has done its job).
+    var under = pxNow() < fitPx() * 0.99;
+    if (under && (g.multi || g.moved || e.type !== 'pointerup')) { glide(wholeView(), 300); return; }
     if (e.type === 'pointercancel' || e.type === 'lostpointercapture') { settle(); return; }
     if (g.kind === 'pan' && g.moved) {
       if (g.multi) { settle(); } else { coast(trail); }
       return;
     }
-    if (g.kind === 'pan' && !g.multi && !g.stopped && Date.now() - g.t0 < 600) { tap(pt, g, e); return; }
+    if (g.kind === 'pan' && !g.multi && !g.stopped && Date.now() - g.t0 < 600) {
+      tap(pt, g, e);
+      if (!anim && pxNow() < fitPx() * 0.99) { glide(wholeView(), 300); }
+      return;
+    }
+    if (under) { glide(wholeView(), 300); return; }
     settle();
   }
   exMap.addEventListener('pointerup', endPointer);
@@ -1821,8 +1853,9 @@
         var px = pxNow(), c = toM({ x: bandCx(), y: bandCy() }), whole = px <= fitPx() * 1.03;
         measure();
         // At the whole hall before (the phone turned, say)? Then the whole hall again, sized to
-        // the new screen; otherwise keep the zoom and the middle of the view.
-        view = whole && !selId ? wholeView() : clampView(viewAt(Math.max(px, fitPx()), c.x, c.y, bandCx(), bandCy()));
+        // the new screen; otherwise keep the zoom (within the new screen's limits) and the middle
+        // of the view.
+        view = whole && !selId ? wholeView() : clampView(viewAt(clamp(px, fitPx(), maxPx()), c.x, c.y, bandCx(), bandCy()));
         commit();
         if (selId && exMode !== 'list') { exCameraForSel(); }
       }

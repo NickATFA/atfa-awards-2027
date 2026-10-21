@@ -668,6 +668,85 @@ def main():
               page.url == url0 and vd["sel"] == cand["id"] and under == "card", (page.url, under, vd, cand))
         ctx.close()
 
+        # Zoomed right in on a big phone, then turned sideways: how close the plan can zoom
+        # depends on the screen, and the zoom stays within what the new screen allows.
+        ctx = browser.new_context(viewport={"width": 430, "height": 740}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        page = ctx.new_page()
+        page.route("**/*", router(shell(visitor), rest=REST_REAL))
+        page.goto("https://test.local/expo-2027/")
+        page.wait_for_timeout(800)
+        page.evaluate("() => window.ATFAExpo27Page.open('B15')")
+        page.wait_for_timeout(900)
+        for _ in range(10):
+            if page.get_attribute("[data-role='exin']", "aria-disabled") == "true":
+                break
+            page.tap("[data-role='exin']")
+            page.wait_for_timeout(500)
+        vz = page.evaluate("() => window.ATFAExpo27Page.view()")
+        page.set_viewport_size({"width": 800, "height": 400})
+        page.wait_for_timeout(900)
+        vs = page.evaluate("() => window.ATFAExpo27Page.view()")
+        page.set_viewport_size({"width": 430, "height": 740})
+        page.wait_for_timeout(900)
+        vb = page.evaluate("() => window.ATFAExpo27Page.view()")
+        check("big phone: zoomed right in and turned sideways, the zoom stays within what the screen allows",
+              vz["px"] >= vz["max"] * 0.98 and vz["max"] > vs["max"] + 0.5 and vs["fit"] - 0.01 <= vs["px"] <= vs["max"] + 0.01
+              and vb["px"] <= vb["max"] + 0.01 and vs["sel"] == "B15" and vb["sel"] == "B15", (vz, vs, vb))
+        ctx.close()
+
+        # Pinched out past the whole hall and dragged straight away, before the plan has sprung
+        # back: it still ends at the whole hall, not smaller.
+        ctx = browser.new_context(viewport={"width": 390, "height": 664}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        page = ctx.new_page()
+        page.route("**/*", router(shell(visitor), rest=REST_REAL))
+        page.goto("https://test.local/expo-2027/")
+        page.wait_for_timeout(800)
+        page.evaluate("() => window.ATFAExpo27Page.open()")
+        page.wait_for_timeout(900)
+        cdp = ctx.new_cdp_session(page)
+        def touch(kind, pts):
+            cdp.send("Input.dispatchTouchEvent", {"type": kind, "touchPoints": [{"x": x, "y": y, "id": i} for i, (x, y) in enumerate(pts)]})
+        cx, cy = 195, 380
+        touch("touchStart", [(cx - 90, cy), (cx + 90, cy)])
+        for k in range(1, 9):
+            touch("touchMove", [(cx - 90 + k * 7, cy), (cx + 90 - k * 7, cy)])
+            page.wait_for_timeout(16)
+        touch("touchEnd", [])
+        page.wait_for_timeout(40)
+        touch("touchStart", [(150, 300)])
+        for k in range(1, 6):
+            touch("touchMove", [(150 + k * 25, 300 - k * 30)])
+            page.wait_for_timeout(8)
+        touch("touchEnd", [])
+        page.wait_for_function("() => !window.ATFAExpo27Page.view().busy", timeout=4000)
+        vp = page.evaluate("() => window.ATFAExpo27Page.view()")
+        check("iphone: pinched out past the whole hall and dragged at once, the plan still ends at the whole hall",
+              vp["px"] >= vp["fit"] * 0.99, vp)
+        ctx.close()
+
+        # Closing with X takes the plan's history step away too: the plan shuts at once, the page
+        # is back where it was, and the phone's back button then leaves the page as usual.
+        ctx = browser.new_context(viewport={"width": 390, "height": 664}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        page = ctx.new_page()
+        page.route("**/*", router(shell(visitor), rest=REST_REAL))
+        page.goto("https://test.local/expo-2027/")
+        page.wait_for_timeout(800)
+        page.locator("#floor-plan").scroll_into_view_if_needed()
+        page.wait_for_timeout(300)
+        y0 = page.evaluate("() => scrollY")
+        page.tap(".xp-open")
+        page.wait_for_timeout(700)
+        page.tap("[data-role='exclose']")
+        shut = page.evaluate("() => !window.ATFAExpo27Page.view().open")
+        page.wait_for_timeout(500)
+        y1 = page.evaluate("() => scrollY")
+        state = page.evaluate("() => JSON.stringify(history.state)")
+        page.go_back()
+        page.wait_for_timeout(500)
+        check("iphone: X shuts the plan at once, the page is where it was, and back then leaves the page",
+              shut and abs(y1 - y0) <= 2 and state == "null" and "expo-2027" not in page.url, (shut, y0, y1, state, page.url))
+        ctx.close()
+
         # Tablet: narrow plan card, full-screen plan
         ctx = browser.new_context(viewport={"width": 820, "height": 1180}, is_mobile=True, has_touch=True)
         page = ctx.new_page()

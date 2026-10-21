@@ -12,7 +12,11 @@ nothing is stuck, half-drawn, out of bounds or out of step:
   - a stand that's just been chosen is in view, clear of the header and the card
   - every stand number fits inside its stand
   - the page behind is pinned while the plan is open, and back where it was afterwards
+  - a button that's in view isn't covered by something else
   - no script errors
+
+Each problem is printed with the steps before it and the last few touches as the plan read
+them (the test adds a few lines to the page's code, in memory, to record those).
 
     AWARDS_DIR=... python3 tests/e2e_monkey.py [steps per phone] [seed]
 """
@@ -101,6 +105,13 @@ class Run:
         self.problems = []
         self.history = []
 
+    def problem(self, what, v):
+        try:
+            log = self.page.evaluate("() => (window.__xpLog || []).slice(-12)")
+        except Exception:  # noqa: BLE001 (the page may have gone)
+            log = []
+        self.problems.append((self.history[-6:], what, v, log))
+
     # ---------------------------------------------------------------- input
     def touch(self, kind, pts):
         self.cdp.send("Input.dispatchTouchEvent",
@@ -118,7 +129,13 @@ class Run:
         try:
             self.page.wait_for_function("() => !window.ATFAExpo27Page.view().busy", timeout=ms)
         except Exception:
-            self.problems.append((self.history[-6:], "still busy after %d ms" % ms, self.view()))
+            self.problem("still busy after %d ms" % ms, self.view())
+        # Let the card finish sliding in, as a person would see it before tapping near it.
+        try:
+            self.page.wait_for_function("""() => [...document.querySelectorAll('[data-role="exsheet"], [data-role="exsin"]')]
+                .every(n => !n.getAnimations || n.getAnimations().every(a => a.playState !== 'running'))""", timeout=1500)
+        except Exception:
+            pass
         self.page.wait_for_timeout(60)
 
     def band(self, v):
@@ -133,14 +150,42 @@ class Run:
             return {x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height}; }""", sid)
 
     def tap_sel(self, selector):
+        p = self.find_sel(selector)
+        if p:
+            self.tap_at(*p)
+            return True
+        return False
+
+    def find_sel(self, selector):
+        """Where to tap a control the way a person would: scrolled into view (within the card,
+        or the page) if it's out of sight, and only if it's what's under the finger. None if it
+        can't be tapped. A control that's in view but covered by something else is a problem."""
         b = self.page.locator(selector).first
         if not b.count() or not b.is_visible():
-            return False
-        bb = b.bounding_box()
-        if not bb:
-            return False
-        self.tap_at(bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2)
-        return True
+            return None
+        b.evaluate("(n) => n.scrollIntoView({block: 'nearest', inline: 'nearest'})")
+        self.page.wait_for_timeout(60)
+        for attempt in range(2):
+            bb = b.bounding_box()
+            if not bb:
+                return None
+            x, y = bb["x"] + bb["width"] / 2, bb["y"] + bb["height"] / 2
+            what = b.evaluate("""(n, [x, y]) => {
+                if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) { return 'off'; }
+                const e = document.elementFromPoint(x, y);
+                if (!e) { return 'off'; }
+                if (e === n || n.contains(e)) { return 'ok'; }
+                const scroller = n.closest('[data-role="exsin"]');
+                if (scroller && !scroller.contains(e) && e.closest('[data-role="exsheet"]')) { return 'off'; }
+                return (e.closest('[data-role]') || e).getAttribute('data-role') || e.tagName;
+              }""", [x, y])
+            if what == "ok":
+                return (x, y)
+            if what == "off":
+                return None
+            self.page.wait_for_timeout(300)
+        self.problem("%s is in view but covered by %s" % (selector, what), self.view())
+        return None
 
     # ---------------------------------------------------------------- actions
     def a_open(self):
@@ -154,10 +199,15 @@ class Run:
             return "open via api"
         self.page.locator("#floor-plan").scroll_into_view_if_needed()
         self.page.wait_for_timeout(150)
-        self.saved_y = self.page.evaluate("() => window.scrollY")
         if how == "button":
-            self.tap_sel(".xp-open") or self.tap_sel(".xp-ctas .btn-primary")
+            # (finding the button can scroll the page to it; the place to come back to is where
+            # the page is when it's tapped)
+            p = self.find_sel(".xp-open") or self.find_sel(".xp-ctas .btn-primary")
+            self.saved_y = self.page.evaluate("() => window.scrollY")
+            if p:
+                self.tap_at(*p)
             return "open via button"
+        self.saved_y = self.page.evaluate("() => window.scrollY")
         sid = self.rng.choice(["B10", "S02", "O07", "G03", "B30"])
         r = self.page.evaluate("""(sid) => { const g = document.querySelector('[data-role="map"] .xs[data-id="' + sid + '"] rect.st');
             const r = g.getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height / 2}; }""", sid)
@@ -385,7 +435,7 @@ class Run:
                 bad.append("page scrolls sideways (%s)" % o["docW"])
         self.expect = None
         for b in bad:
-            self.problems.append((self.history[-6:], b, v))
+            self.problem(b, v)
         return not bad
 
     # ---------------------------------------------------------------- run
@@ -439,17 +489,44 @@ class Run:
             try:
                 self.step(i)
             except Exception as e:  # noqa: BLE001
-                self.problems.append((self.history[-6:], "test step failed: %s" % str(e).split("\n")[0][:200], {}))
+                self.problem("test step failed: %s" % str(e).split("\n")[0][:200], {})
             if self.navs and any(not u.startswith("https://test.local/expo-2027/") for u in self.navs):
-                self.problems.append((self.history[-6:], "left the page: %s" % self.navs, {}))
+                self.problem("left the page: %s" % self.navs, {})
                 self.reload()
             self.navs = []
         self.ctx.close()
         return self.problems
 
 
+# Lines added to the page's code (in memory, for this test only) to record how each touch on
+# the plan was read, so that a problem comes with the last few touches.
+LOG_PATCHES = [
+    ("    if (!g) { settle(); return; }\n",
+     "    (window.__xpLog = window.__xpLog || []).push({ev: e.type, kind: g && g.kind, moved: g && g.moved, multi: g && g.multi, "
+     "stopped: g && g.stopped, ms: g ? Date.now() - g.t0 : null, left: Object.keys(pointers).length, anim: animKind});\n"
+     "    if (window.__xpLog.length > 40) { window.__xpLog.shift(); }\n"
+     "    if (!g) { settle(); return; }\n"),
+    ("    var hitId = hit.stand ? hit.stand.id : '';\n",
+     "    var hitId = hit.stand ? hit.stand.id : '';\n"
+     "    window.__xpLog.push({tap: hitId, crowd: !!hit.crowd, at: [Math.round(p.x), Math.round(p.y)], was: selId});\n"),
+    ("  exMap.addEventListener('pointerdown', function (e) {\n",
+     "  exMap.addEventListener('pointerdown', function (e) {\n"
+     "    (window.__xpLog = window.__xpLog || []).push({down: e.pointerId, primary: e.isPrimary, at: [Math.round(e.clientX), Math.round(e.clientY)], "
+     "fingers: Object.keys(pointers).length, anim: animKind, on: e.target.closest && e.target.closest('.xs') ? e.target.closest('.xs').getAttribute('data-id') : e.target.tagName});\n"),
+]
+
+
+def with_log(html):
+    for old, new in LOG_PATCHES:
+        if html.count(old) != 1:
+            print("(touch log not added: the page's code has changed)")
+            return html
+        html = html.replace(old, new)
+    return html
+
+
 def main():
-    visitor = (T.OUT / "page-visitor-real.html").read_text()
+    visitor = with_log((T.OUT / "page-visitor-real.html").read_text())
     total = 0
     found = []
     with sync_playwright() as pw:
@@ -459,10 +536,12 @@ def main():
             probs = r.run(STEPS)
             total += STEPS
             print("%s: %d steps, %d problems" % (name, STEPS, len(probs)))
-            for hist, what, v in probs[:12]:
+            for hist, what, v, log in probs[:12]:
                 print("  PROBLEM:", what)
                 print("    after:", " | ".join(hist))
                 print("    view:", json.dumps({k2: (round(val, 2) if isinstance(val, float) else val) for k2, val in v.items()}))
+                for entry in log[-8:]:
+                    print("    touch:", json.dumps(entry))
             found += [(name,) + p for p in probs]
         browser.close()
     print("\n%d steps on %d phones, %d problems" % (total, len(PHONES), len(found)))
