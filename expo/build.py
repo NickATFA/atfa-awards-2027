@@ -162,7 +162,8 @@ def main():
         if re.search(r"^\s*" + marker + r"\b", body, re.M):
             fail("page content contains the heredoc marker " + marker)
     for token in ("{{VERSION}}", "{{LOGO}}", "{{WORDMARK}}", "{{HERO_IMGS}}", "{{HERO_CAPS}}", "{{GALLERY}}", "{{DINNER_IMG}}",
-                  "{{DINNER_CAP}}", "{{AWARDS_URL}}", "{{PDF_URL}}", "{{EMAIL}}", "{{MAILTO}}", "{{ENQUIRY_NAME}}", "{{STAFF}}"):
+                  "{{DINNER_CAP}}", "{{AWARDS_URL}}", "{{PDF_URL}}", "{{EMAIL}}", "{{MAILTO}}", "{{ENQUIRY_NAME}}", "{{STAFF}}",
+                  "{{PARTNER_HERO}}", "{{PARTNER_FEATURE}}", "{{PARTNER_DINNER}}"):
         if token not in page_markup:
             fail("page markup is missing " + token)
     # Copy rules: no em dashes in anything a visitor reads.

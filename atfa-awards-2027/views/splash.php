@@ -7,6 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 $winners = atfa_awards_winners();
 $logo    = atfa_awards_img( 'atfa-logo-white.png' );
+$partner = atfa_awards_partner();
 ?>
 <style>
 html{background:#050505 !important}body{background:#050505 !important;margin:0 !important;padding:0 !important}
@@ -57,11 +58,21 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
 .aw .msg{font-size:13px;color:#B4A99A;min-height:18px;margin-top:10px}
 .aw .sponsor{display:flex;align-items:center;justify-content:center;height:64px;border:1px dashed #3A332D;border-radius:4px;color:#7D7368;font-size:11px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none}
 .aw .sponsor.has-logo{border:1px solid #2B2622;background:#0C0B0A;padding:10px 14px}.aw .sponsor img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;margin:0;border:0}
+/* Principal Partner: "Presented by" and the logo under the headline, and a wider tile ahead of the category sponsors. */
+.aw .pp{display:inline-flex;align-items:center;gap:16px;align-self:flex-start;margin:24px 0 0;text-decoration:none}
+.aw .pp-l{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:#B4A99A;white-space:nowrap;padding-right:16px;border-right:1px solid #3A332D;line-height:30px;transition:color .2s}
+.aw a.pp:hover .pp-l{color:#F4EFE7}
+.aw .pp img{display:block;height:36px;width:auto;max-width:none;margin:0;border:0}
+.aw .sp-row{display:flex;gap:16px 24px;align-items:flex-end;flex-wrap:wrap}
+.aw .sp-pp{display:flex;flex-direction:column;gap:14px;flex:0 0 250px;min-width:0}
+.aw .sp-cat{display:flex;flex-direction:column;gap:14px;flex:1 1 520px;max-width:900px;min-width:0}
+.aw .sponsor.pp-tile{border-color:#4A4038;padding:12px 26px}
+.aw a.sponsor.pp-tile:hover{border-color:#F4EFE7}
 .aw .msg.ok{color:#F8931F}
 .aw .msg.err{color:#FFB4A0}
 @media (prefers-reduced-motion:reduce){.aw .ld,.aw .bgwrap,.aw .track{animation:none}.aw .bg,.aw .cap{animation-play-state:paused}.aw .ticker{overflow-x:auto;-webkit-mask-image:none;mask-image:none}.aw .track [aria-hidden="true"]{display:none}}
 @media (max-width:900px){.aw .big{font-size:120px}.aw .bg{width:100%}.aw .bgwrap{--o:.35}.aw .track .new{width:260px;flex-basis:260px}.aw .track{--loop:1632px;padding-left:40px}.aw .sponsors{grid-template-columns:repeat(3,minmax(0,1fr)) !important}}
-@media (max-width:560px){.aw .big{font-size:76px}.aw .track .new{width:240px;flex-basis:240px}.aw .track{--loop:1512px;padding-left:24px}.aw .sponsors{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .caps{height:auto}.aw .cap{position:static;display:none}.aw .cap.lead{display:block}}
+@media (max-width:560px){.aw .big{font-size:76px}.aw .track .new{width:240px;flex-basis:240px}.aw .track{--loop:1512px;padding-left:24px}.aw .sponsors{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.aw .caps{height:auto}.aw .cap{position:static;display:none}.aw .cap.lead{display:block}.aw .pp{gap:12px;margin-top:18px}.aw .pp-l{font-size:10px;padding-right:12px;line-height:26px}.aw .pp img{height:28px}.aw .sp-pp{flex:1 1 100%}}
 </style>
 <div class="aw" id="aw-splash">
   <div class="bgwrap" aria-hidden="true">
@@ -83,6 +94,9 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
       <div style="display:flex;flex-direction:column;padding:56px 0 40px;max-width:760px;flex:1 1 560px;min-width:0">
         <span class="eyebrow ld d2" style="color:#F8931F">Coming soon · Sydney · 22 May 2027</span>
         <h1 class="disp big ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.svg' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
+<?php if ( $partner ) : ?>
+        <?php echo atfa_awards_partner_lockup( $partner, 'ld d4' ); ?>
+<?php endif; ?>
         <p class="ld d4" style="font-size:20px;line-height:1.45;color:#B4A99A;margin:26px 0 0;max-width:40ch">The biggest change to the awards in years. Entries open Monday 1 February.</p>
         <div class="ld d5" style="display:flex;align-items:baseline;gap:12px;margin-top:24px">
           <span class="disp" id="aw-days" style="font-size:64px;font-weight:700;color:#F8931F;font-variant-numeric:tabular-nums">111</span>
@@ -128,11 +142,21 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
     </div>
 
     <div class="ld d9" style="padding:0 0 32px;display:flex;flex-direction:column;gap:14px">
-      <span class="eyebrow">Category sponsors</span>
-      <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;max-width:900px">
+      <div class="sp-row">
+<?php if ( $partner ) : ?>
+        <div class="sp-pp">
+          <span class="eyebrow">Principal Partner</span>
+          <a class="sponsor has-logo pp-tile" href="<?php echo esc_url( $partner['url'] ); ?>" target="_blank" rel="noopener sponsored"><?php echo atfa_awards_partner_img( $partner ); ?></a>
+        </div>
+<?php endif; ?>
+        <div class="sp-cat">
+          <span class="eyebrow">Category sponsors</span>
+          <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
 <?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
-        <?php echo atfa_awards_sponsor_tile( $sp ); ?>
+            <?php echo atfa_awards_sponsor_tile( $sp ); ?>
 <?php endforeach; ?>
+          </div>
+        </div>
       </div>
       <span style="font-size:12px;color:#7D7368">Pictured: ATFA award winners from 2025 · AU 1300 361 693 · NZ 0800 453 715 · © Australasian Timber Flooring Association</span>
     </div>

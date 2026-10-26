@@ -22,6 +22,8 @@ python3 - <<'PY'
 import json
 r = {m: json.load(open('tests/out/page-%s.json' % m)) for m in ('VISITOR', 'VISITOR_COLD', 'STAFF', 'NOAWARDS', 'FORWARD', 'SHARE')}
 v, c, s, n, f, sh = r['VISITOR'], r['VISITOR_COLD'], r['STAFF'], r['NOAWARDS'], r['FORWARD'], r['SHARE']
+import os, re
+PARTNER_PUBLIC = bool(re.search(r"'public'\s*=>\s*true", open(os.environ['AWARDS_DIR'] + '/data/partner.php').read()))
 OLD = 'https://test.local/expo-2027-hall-5-interactive-floor-plan/?from=expo-2027'
 checks = [
  ("page: shortcodes registered", v['page_shortcode'] and v['floorplan_shortcode']),
@@ -34,6 +36,9 @@ checks = [
  ("page: photos, logo and dinner photo", v['photos'] > 10 and v['logo'] and v['dinner']),
  ("page: works without the awards plugin's images", not n['logo'] and n['photos'] > 10),
  ("page: no em dashes in the copy", not v['em_dash'] and not s['em_dash']),
+ ("page: Principal Partner under the headline, in its feature and on the dinner band, all linked (staff)", s['partner'] == 4 and s['partner_parts'] == [True, True, True]),
+ ("page: visitors see the partner only when data/partner.php says public", v['partner'] == (4 if PARTNER_PUBLIC else 0)),
+ ("page: no partner without the awards plugin", n['partner'] == 0 and n['partner_parts'] == [False, False, False]),
  ("page: nothing private (contact emails, hold names)", not v['private'] and not s['private']),
  ("forward: old page goes to the plan once the Expo page is published", f['old_page_published'] == ['https://test.local/expo-2027/#floor-plan', 302]),
  ("forward: not while the Expo page is a draft, nor from other pages or Elementor", f['old_page_draft'] is None and f['other_page'] is None and f['elementor_preview'] is None),

@@ -271,6 +271,8 @@ $result['photos']       = substr_count( $html, 'https://test.local/media/' );
 $result['logo']         = false !== strpos( $html, 'awards-plugin/assets/img/atfa-logo-white.png?v=1.7.0' );
 $result['dinner']       = false !== strpos( $html, 'beaver-commercial.jpg' );
 $result['em_dash']      = false !== strpos( $html, "\u{2014}" );
+$result['partner']      = substr_count( $html, 'rel="noopener sponsored"' );
+$result['partner_parts'] = array( false !== strpos( $html, 'class="xp-pp ld d4"' ), false !== strpos( $html, 'id="xp-ppf-h"' ), false !== strpos( $html, 'xp-pp xp-pp-dn' ) );
 $result['private']      = (bool) preg_match( '/@(?!atfa\.com\.au)[a-z0-9.-]+\.[a-z]+/i', strip_tags( $html ) ) || false !== strpos( $html, 'Secret Prospect' );
 $result['bytes']        = strlen( $html );
 file_put_contents( $GLOBALS['__out'] . '/page-' . strtolower( $mode ) . '.html', $html );

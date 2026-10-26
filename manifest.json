@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.8.2",
-  "last_updated": "2026-10-20",
-  "changelog": "<p><strong>1.8.2</strong> (2026-10-20): Phones: the Expo floor plan keeps its zoom within limits when the phone is turned, always springs back to the whole hall after pinching out too far, and closes at once with X, taking its back-button step with it, so the page stays where it was.</p>"
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.9.0",
+  "last_updated": "2026-10-26",
+  "changelog": "<p><strong>1.9.0</strong> (2026-10-26): Crosbe as 2027 Principal Partner, visible to logged-in staff only until the agreement is signed: Presented by Crosbe under the headline on the awards splash, the entries page and the Expo page, a Principal Partner tile on the splash, a Principal Partner feature on the entries and Expo pages, and on the awards dinner bands. Switch it on for everyone in data/partner.php. The awards page's Expo card now says fifty-eight stands.</p>"
 }

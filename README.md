@@ -38,3 +38,11 @@ Tests (optional): `bash expo/tests/run_all.sh` for the PHP checks and the older 
 `bash expo/tests/run_page.sh` for the Expo page (PHP checks including share links, browser tests, then a
 random-tapping stress test on five phone sizes). Both need PHP 8 and Python Playwright; set FONT_PKG to an
 npm folder with @fontsource/barlow-condensed and @fontsource/montserrat for true-to-life screenshots.
+
+## Principal Partner (since 1.9.0)
+
+Crosbe is the 2027 Principal Partner. `atfa-awards-2027/data/partner.php` holds the name, logo, link and the
+short line about them, and the splash, the entries page and the Expo page all read it: a "Presented by" lockup
+under each headline, a Principal Partner tile on the splash, a feature on the entries and Expo pages, and the
+awards dinner bands. Set `'public' => false` to show the partner to logged-in staff only; return `null` to take
+it off every page.

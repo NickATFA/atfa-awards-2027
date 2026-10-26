@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, and the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan.
- * Version: 1.8.2
+ * Version: 1.9.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.8.2' );
+define( 'ATFA_AWARDS_VERSION', '1.9.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -155,6 +155,40 @@ function atfa_awards_sponsor_tile( $sp ) {
 }
 
 /**
+ * The Principal Partner (data/partner.php), or null when there isn't one, or when it is set to staff only and the
+ * visitor isn't logged in as staff.
+ */
+function atfa_awards_partner() {
+	static $p = false;
+	if ( false === $p ) {
+		$file = ATFA_AWARDS_DIR . 'data/partner.php';
+		$p    = file_exists( $file ) ? include $file : null;
+		if ( ! is_array( $p ) || empty( $p['name'] ) || empty( $p['logo'] ) ) {
+			$p = null;
+		}
+	}
+	if ( ! $p || ( empty( $p['public'] ) && ! current_user_can( 'edit_pages' ) ) ) {
+		return null;
+	}
+	return $p;
+}
+
+/**
+ * The partner's logo as an <img>, sized by CSS (the width and height only give the browser the shape).
+ */
+function atfa_awards_partner_img( $p, $lazy = false ) {
+	return '<img src="' . esc_url( atfa_awards_img( $p['logo'] ) ) . '" alt="' . esc_attr( $p['name'] ) . '" width="' . (int) $p['width'] . '" height="' . (int) $p['height'] . '"' . ( $lazy ? ' loading="lazy"' : '' ) . '>';
+}
+
+/**
+ * "Presented by" and the partner's logo, linked to their site. $class adds to the "pp" class (pp-sm for the dinner band).
+ */
+function atfa_awards_partner_lockup( $p, $class = '' ) {
+	return '<a class="pp' . ( $class ? ' ' . esc_attr( $class ) : '' ) . '" href="' . esc_url( $p['url'] ) . '" target="_blank" rel="noopener sponsored">'
+		. '<span class="pp-l">Presented by</span>' . atfa_awards_partner_img( $p ) . '</a>';
+}
+
+/**
  * A category row in the lists: the name, with the whole row a button that opens the category's info panel.
  */
 function atfa_awards_cat_row( $c ) {
@@ -196,7 +230,7 @@ function atfa_awards_weekend() {
 			'day'    => 'Fri 21',
 			'when'   => 'Friday 21 May',
 			'title'  => 'Expo & Conference',
-			'text'   => 'Sydney Showground, Hall 5. Twenty-eight exhibitor stands, demonstrations on the stage and breakout space.',
+			'text'   => 'Sydney Showground, Hall 5. Fifty-eight exhibitor stands, demonstrations on the stage and breakout space.',
 			'cta'    => 'See the Expo and floor plan',
 			'footer' => 'Expo & Conference 2027',
 			'url'    => 'https://www.atfa.com.au/expo-2027/',

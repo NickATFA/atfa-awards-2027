@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 $winners = atfa_awards_winners();
 $logo    = atfa_awards_img( 'atfa-logo-white.png' );
 $cats    = atfa_awards_categories();
+$partner = atfa_awards_partner();
 $streams = array( 'member' => array(), 'panel' => array(), 'excellence' => array() );
 foreach ( $cats as $c ) {
 	if ( isset( $streams[ $c['stream'] ] ) ) {
@@ -153,6 +154,25 @@ html.aw-lock{overflow:hidden}
 .aw .wk-go{display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:#F8931F}
 .aw a.wk:hover .wk-go{color:#FFA640}
 .aw .wk-soon{margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:#8F857A}
+/* Principal Partner: "Presented by" and the logo under the headline and on the dinner band, and a feature that
+   leads the sponsors band (atfa_awards_partner(), data/partner.php). */
+.aw .pp{display:inline-flex;align-items:center;gap:16px;align-self:flex-start;margin:26px 0 0;text-decoration:none}
+.aw .pp-l{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:#B4A99A;white-space:nowrap;padding-right:16px;border-right:1px solid #3A332D;line-height:30px;transition:color .2s}
+.aw a.pp:hover .pp-l{color:#F4EFE7}
+.aw .pp img{display:block;height:36px;width:auto;max-width:none;margin:0;border:0}
+.aw .pp.pp-dn{margin-top:14px}.aw .pp.pp-dn .pp-l{border-right-color:#463D35}
+.aw .ppf{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;border:1px solid #3B332C;border-radius:6px;overflow:hidden;background:#221D19}
+.aw .ppf-logo{display:flex;align-items:center;justify-content:center;padding:48px 40px;background:#0C0B0A;border-right:1px solid #3B332C;text-decoration:none;min-height:220px}
+.aw .ppf-logo img{display:block;width:100%;max-width:320px;height:auto;margin:0;border:0;transition:transform .5s cubic-bezier(.2,.6,.2,1)}
+.aw .ppf-logo:hover img{transform:scale(1.03)}
+.aw .ppf-t{display:flex;flex-direction:column;gap:14px;padding:36px 40px;min-width:0;justify-content:center}
+.aw .ppf-t .disp{font-size:48px;font-weight:700;color:#F4EFE7}
+.aw .ppf-t p{font-size:15px;line-height:1.6;color:#C9BFB2;max-width:56ch}
+.aw a.ppf-go{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:4px;font-size:14px;font-weight:600;color:#F8931F}
+.aw a.ppf-go:hover{color:#FFA640}
+.aw .sp-h{margin:56px 0 16px}
+@media (max-width:900px){.aw .ppf{grid-template-columns:1fr}.aw .ppf-logo{border-right:0;border-bottom:1px solid #3B332C;min-height:0;padding:40px 32px}.aw .ppf-logo img{max-width:280px}.aw .ppf-t{padding:28px}.aw .ppf-t .disp{font-size:40px}}
+@media (max-width:560px){.aw .pp{gap:12px;margin-top:20px}.aw .pp-l{font-size:10px;padding-right:12px;line-height:26px}.aw .pp img{height:28px}.aw .ppf-logo{padding:32px 24px}.aw .ppf-logo img{max-width:230px}.aw .ppf-t{padding:24px 20px}.aw .ppf-t .disp{font-size:34px}.aw .sp-h{margin-top:44px}}
 @media (max-width:900px){.aw .band{margin-top:80px;padding:64px 0}.aw .band-tight{padding:52px 0}}
 @media (max-width:900px){.aw .weekend-grid{grid-template-columns:1fr}}
 @media (max-width:560px){.aw .band{margin-top:64px;padding:56px 0}.aw .band-tight{padding:48px 0 56px}.aw .wk{padding:20px}.aw .wk-day{font-size:56px}.aw .wk-t{font-size:32px}}
@@ -188,6 +208,9 @@ html.aw-lock{overflow:hidden}
   <div style="grid-column:span 7;min-width:0;display:flex;flex-direction:column">
     <div class="eyebrow ld d2">ATFA Flooring Awards · Sydney · Saturday 22 May 2027</div>
     <h1 class="disp hero-h1 ld d3"><img class="wm" src="<?php echo esc_url( atfa_awards_img( 'atfa-wordmark.svg' ) ); ?>" alt="ATFA">Awards <span style="color:#F8931F">2027</span></h1>
+<?php if ( $partner ) : ?>
+    <?php echo atfa_awards_partner_lockup( $partner, 'ld d4' ); ?>
+<?php endif; ?>
     <p class="ld d4" style="font-size:22px;max-width:34ch;line-height:1.4;color:#B4A99A;margin:28px 0 0">Celebrating outstanding floors and the people behind them. Twenty awards, three ways to win.</p>
     <div class="ld d5" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:32px">
       <a class="btn btn-primary" href="#how-it-works">Enter now</a>
@@ -284,7 +307,18 @@ html.aw-lock{overflow:hidden}
 
 <section class="band">
 <div class="wrap sr">
-<div class="eyebrow" style="margin-bottom:16px">Category sponsors</div>
+<?php if ( $partner ) : ?>
+<div class="ppf">
+  <a class="ppf-logo" href="<?php echo esc_url( $partner['url'] ); ?>" target="_blank" rel="noopener sponsored"><?php echo atfa_awards_partner_img( $partner, true ); ?></a>
+  <div class="ppf-t">
+    <span class="eyebrow" style="color:#F8931F"><?php echo esc_html( $partner['role'] ); ?> · ATFA Awards and Expo 2027</span>
+    <span class="disp">The 2027 awards are presented by <?php echo esc_html( $partner['name'] ); ?></span>
+    <p><?php echo esc_html( $partner['about'] ); ?></p>
+    <a class="ppf-go" href="<?php echo esc_url( $partner['url'] ); ?>" target="_blank" rel="noopener sponsored">Visit <?php echo esc_html( preg_replace( '#^https?://(www\.)?|/$#', '', $partner['url'] ) ); ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>
+  </div>
+</div>
+<?php endif; ?>
+<div class="eyebrow<?php echo $partner ? ' sp-h' : ''; ?>" style="<?php echo $partner ? '' : 'margin-bottom:16px'; ?>">Category sponsors</div>
 <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
 <?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
   <?php echo atfa_awards_sponsor_tile( $sp ); ?>
@@ -372,6 +406,9 @@ html.aw-lock{overflow:hidden}
     <span class="eyebrow" style="color:#F8931F">Awards dinner</span>
     <div class="disp" style="font-size:80px;font-weight:700">Saturday 22 May 2027</div>
     <div style="font-size:18px;color:#B4A99A">Novotel Sydney Olympic Park · held with the ATFA Expo &amp; Conference 2027</div>
+<?php if ( $partner ) : ?>
+    <?php echo atfa_awards_partner_lockup( $partner, 'pp-dn' ); ?>
+<?php endif; ?>
   </div>
   <div style="grid-column:span 4;min-width:0;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
     <a class="btn btn-ghost" href="https://www.atfa.com.au/events/">Tickets on sale soon</a>

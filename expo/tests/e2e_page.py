@@ -72,7 +72,7 @@ def router(html, rest=None, rest_status=200, static=None, csv=None):
             if not f.exists():
                 return route.fulfill(status=200, content_type="image/png", body=PLACEHOLDER)
             return route.fulfill(status=200, content_type="image/jpeg", body=f.read_bytes())
-        m = re.match(r"https://test.local/awards-plugin/assets/img/([a-z\-.]+?)(\?.*)?$", url)
+        m = re.match(r"https://test.local/awards-plugin/assets/img/([a-z0-9\-./]+?)(\?.*)?$", url)
         if m:
             f = AWARDS / "assets" / "img" / m.group(1)
             ctype = "image/svg+xml" if f.suffix == ".svg" else ("image/png" if f.suffix == ".png" else "image/jpeg")

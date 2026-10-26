@@ -823,6 +823,54 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	}
 
 	/**
+	 * The Principal Partner from the awards plugin (data/partner.php, shared with the awards pages), or null when
+	 * there isn't one, the awards plugin or the logo isn't there, or the partner is set to staff only and this
+	 * visitor isn't staff. Share links show what visitors see, so they follow the same rule.
+	 */
+	function atfa_expo27_partner() {
+		if ( ! defined( 'ATFA_AWARDS_DIR' ) || ! file_exists( ATFA_AWARDS_DIR . 'data/partner.php' ) ) {
+			return null;
+		}
+		$p = include ATFA_AWARDS_DIR . 'data/partner.php';
+		if ( ! is_array( $p ) || empty( $p['name'] ) || empty( $p['logo'] ) || empty( $p['url'] ) ) {
+			return null;
+		}
+		if ( empty( $p['public'] ) && ! current_user_can( 'edit_pages' ) ) {
+			return null;
+		}
+		$p['src'] = atfa_expo27_awards_img( $p['logo'] );
+		return $p['src'] ? $p : null;
+	}
+
+	/**
+	 * The partner's pieces of the page: "Presented by" under the headline and on the dinner band, and the
+	 * Principal Partner feature after the 2025 photos. Empty strings when there's no partner to show.
+	 */
+	function atfa_expo27_partner_html() {
+		$out = array( 'hero' => '', 'feature' => '', 'dinner' => '' );
+		$p   = atfa_expo27_partner();
+		if ( ! $p ) {
+			return $out;
+		}
+		$img   = '<img src="' . esc_url( $p['src'] ) . '" alt="' . esc_attr( $p['name'] ) . '" width="' . (int) $p['width'] . '" height="' . (int) $p['height'] . '" decoding="async" data-no-lazy="1">';
+		$link  = ' href="' . esc_url( $p['url'] ) . '" target="_blank" rel="noopener sponsored"';
+		$arrow = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>';
+		$site  = preg_replace( '#^https?://(www\.)?|/$#', '', $p['url'] );
+		$role  = ! empty( $p['role'] ) ? $p['role'] : 'Principal Partner';
+
+		$out['hero']    = '<a class="xp-pp ld d4"' . $link . '><span class="xp-pp-l">Presented by</span>' . $img . '</a>';
+		$out['dinner']  = '<a class="xp-pp xp-pp-dn"' . $link . '><span class="xp-pp-l">Presented by</span>' . $img . '</a>';
+		$out['feature'] = '<section class="wrap sr xp-ppf-w" aria-labelledby="xp-ppf-h"><div class="xp-ppf">'
+			. '<a class="xp-ppf-logo"' . $link . ' aria-label="' . esc_attr( $p['name'] ) . ' website">' . $img . '</a>'
+			. '<div class="xp-ppf-t"><span class="eyebrow or">' . esc_html( $role ) . ' · ATFA Expo and Awards 2027</span>'
+			. '<h2 class="disp" id="xp-ppf-h">The 2027 Expo is presented by ' . esc_html( $p['name'] ) . '</h2>'
+			. ( ! empty( $p['about'] ) ? '<p>' . esc_html( $p['about'] ) . '</p>' : '' )
+			. '<a class="xp-ppf-go"' . $link . '>Visit ' . esc_html( $site ) . $arrow . '</a>'
+			. '</div></div></section>';
+		return $out;
+	}
+
+	/**
 	 * <img> for one of the 2025 photos, with sizes for phones and big screens. '' if missing.
 	 */
 	function atfa_expo27_photo( $key, $args ) {
@@ -934,8 +982,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		$dinner_cap = $dinner ? '<div class="xp-dn-cap">2025 Commercial / Industrial Solid Timber Floor of the Year<br><strong>Beaver Flooring</strong></div>' : '';
 		$dinner     = $dinner ? '<img src="' . esc_url( $dinner ) . '" alt="" loading="lazy" decoding="async" data-no-lazy="1">' : '';
 
-		$awards = home_url( '/awards/' );
-		$html   = strtr( atfa_expo27_page_markup(), array(
+		$awards  = home_url( '/awards/' );
+		$partner = atfa_expo27_partner_html();
+		$html    = strtr( atfa_expo27_page_markup(), array(
 			'{{VERSION}}'      => esc_attr( $version ),
 			'{{LOGO}}'         => $logo,
 			'{{WORDMARK}}'     => $mark,
@@ -950,6 +999,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{MAILTO}}'       => esc_attr( 'mailto:' . $settings['enquiry_email'] ),
 			'{{ENQUIRY_NAME}}' => esc_html( $settings['enquiry_name'] ),
 			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed, atfa_expo27_share_tools() ),
+			'{{PARTNER_HERO}}'    => $partner['hero'],
+			'{{PARTNER_FEATURE}}' => $partner['feature'],
+			'{{PARTNER_DINNER}}'  => $partner['dinner'],
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'

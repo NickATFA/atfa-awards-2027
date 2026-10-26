@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
  * ---------------------------------------------------------------------------
- * Version 3.3.1 · 20 October 2026 · Prepared for ATFA (Nick Warren)
+ * Version 3.4.0 · 26 October 2026 · Prepared for ATFA (Nick Warren)
  *
  * WHAT THIS ADDS
  *   [atfa_expo27_page]               The ATFA Expo 2027 page at /expo-2027/: the dark awards-style
@@ -476,7 +476,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.3.1';
+		$version  = '3.4.0';
 
 		// Staff: "Refresh from the sheet" in the staff bar (the page with ?refresh=1 on the end)
 		// pulls the latest from the sheet straight away, skipping the 2-minute cache.
@@ -828,6 +828,54 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	}
 
 	/**
+	 * The Principal Partner from the awards plugin (data/partner.php, shared with the awards pages), or null when
+	 * there isn't one, the awards plugin or the logo isn't there, or the partner is set to staff only and this
+	 * visitor isn't staff. Share links show what visitors see, so they follow the same rule.
+	 */
+	function atfa_expo27_partner() {
+		if ( ! defined( 'ATFA_AWARDS_DIR' ) || ! file_exists( ATFA_AWARDS_DIR . 'data/partner.php' ) ) {
+			return null;
+		}
+		$p = include ATFA_AWARDS_DIR . 'data/partner.php';
+		if ( ! is_array( $p ) || empty( $p['name'] ) || empty( $p['logo'] ) || empty( $p['url'] ) ) {
+			return null;
+		}
+		if ( empty( $p['public'] ) && ! current_user_can( 'edit_pages' ) ) {
+			return null;
+		}
+		$p['src'] = atfa_expo27_awards_img( $p['logo'] );
+		return $p['src'] ? $p : null;
+	}
+
+	/**
+	 * The partner's pieces of the page: "Presented by" under the headline and on the dinner band, and the
+	 * Principal Partner feature after the 2025 photos. Empty strings when there's no partner to show.
+	 */
+	function atfa_expo27_partner_html() {
+		$out = array( 'hero' => '', 'feature' => '', 'dinner' => '' );
+		$p   = atfa_expo27_partner();
+		if ( ! $p ) {
+			return $out;
+		}
+		$img   = '<img src="' . esc_url( $p['src'] ) . '" alt="' . esc_attr( $p['name'] ) . '" width="' . (int) $p['width'] . '" height="' . (int) $p['height'] . '" decoding="async" data-no-lazy="1">';
+		$link  = ' href="' . esc_url( $p['url'] ) . '" target="_blank" rel="noopener sponsored"';
+		$arrow = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>';
+		$site  = preg_replace( '#^https?://(www\.)?|/$#', '', $p['url'] );
+		$role  = ! empty( $p['role'] ) ? $p['role'] : 'Principal Partner';
+
+		$out['hero']    = '<a class="xp-pp ld d4"' . $link . '><span class="xp-pp-l">Presented by</span>' . $img . '</a>';
+		$out['dinner']  = '<a class="xp-pp xp-pp-dn"' . $link . '><span class="xp-pp-l">Presented by</span>' . $img . '</a>';
+		$out['feature'] = '<section class="wrap sr xp-ppf-w" aria-labelledby="xp-ppf-h"><div class="xp-ppf">'
+			. '<a class="xp-ppf-logo"' . $link . ' aria-label="' . esc_attr( $p['name'] ) . ' website">' . $img . '</a>'
+			. '<div class="xp-ppf-t"><span class="eyebrow or">' . esc_html( $role ) . ' · ATFA Expo and Awards 2027</span>'
+			. '<h2 class="disp" id="xp-ppf-h">The 2027 Expo is presented by ' . esc_html( $p['name'] ) . '</h2>'
+			. ( ! empty( $p['about'] ) ? '<p>' . esc_html( $p['about'] ) . '</p>' : '' )
+			. '<a class="xp-ppf-go"' . $link . '>Visit ' . esc_html( $site ) . $arrow . '</a>'
+			. '</div></div></section>';
+		return $out;
+	}
+
+	/**
 	 * <img> for one of the 2025 photos, with sizes for phones and big screens. '' if missing.
 	 */
 	function atfa_expo27_photo( $key, $args ) {
@@ -876,7 +924,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.3.1';
+		$version  = '3.4.0';
 		$photos   = atfa_expo27_page_photos();
 
 		// Staff: "Refresh from the sheet" reads the sheet straight away, skipping the cache.
@@ -939,8 +987,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		$dinner_cap = $dinner ? '<div class="xp-dn-cap">2025 Commercial / Industrial Solid Timber Floor of the Year<br><strong>Beaver Flooring</strong></div>' : '';
 		$dinner     = $dinner ? '<img src="' . esc_url( $dinner ) . '" alt="" loading="lazy" decoding="async" data-no-lazy="1">' : '';
 
-		$awards = home_url( '/awards/' );
-		$html   = strtr( atfa_expo27_page_markup(), array(
+		$awards  = home_url( '/awards/' );
+		$partner = atfa_expo27_partner_html();
+		$html    = strtr( atfa_expo27_page_markup(), array(
 			'{{VERSION}}'      => esc_attr( $version ),
 			'{{LOGO}}'         => $logo,
 			'{{WORDMARK}}'     => $mark,
@@ -955,6 +1004,9 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{MAILTO}}'       => esc_attr( 'mailto:' . $settings['enquiry_email'] ),
 			'{{ENQUIRY_NAME}}' => esc_html( $settings['enquiry_name'] ),
 			'{{STAFF}}'        => atfa_expo27_staff_bar( $settings, $refreshed, atfa_expo27_share_tools() ),
+			'{{PARTNER_HERO}}'    => $partner['hero'],
+			'{{PARTNER_FEATURE}}' => $partner['feature'],
+			'{{PARTNER_DINNER}}'  => $partner['dinner'],
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'
@@ -1002,6 +1054,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <div class="xp-hero-t">
         <span class="eyebrow ld d2">ATFA Expo &amp; Conference · Sydney Showground · Friday 21 May 2027</span>
         <h1 class="disp xp-h1 ld d3">{{WORDMARK}}Expo <span class="or">2027</span></h1>
+        {{PARTNER_HERO}}
         <p class="xp-lead ld d4">The timber flooring industry in one hall for a day. Fifty-eight stands, a live demonstration stage, and the awards dinner the next night.</p>
         <div class="xp-ctas ld d5">
           <a class="btn btn-primary" href="#floor-plan" data-plan="open">Pick your stand</a>
@@ -1091,6 +1144,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
   </div>
   <div class="xp-gal">{{GALLERY}}</div>
 </section>
+
+{{PARTNER_FEATURE}}
 
 <section class="band band-tight sec" id="weekend" aria-labelledby="xp-wk-h">
 <div class="wrap sr">
@@ -1182,6 +1237,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
         <span class="eyebrow or">The night after the Expo</span>
         <h2 class="disp t" id="xp-dn-h">ATFA Awards dinner</h2>
         <p class="w">Saturday 22 May 2027 · Novotel Sydney Olympic Park · twenty awards, three ways to win</p>
+        {{PARTNER_DINNER}}
       </div>
       <div class="b">
         <a class="btn btn-primary" href="{{AWARDS_URL}}">See the awards</a>
@@ -1227,7 +1283,7 @@ ATFA_EXPO27_PAGE_HTML;
 
 	function atfa_expo27_page_css() {
 		return <<<'ATFA_EXPO27_PAGE_CSS'
-/* ATFA Expo 2027 page (v3.3.1). Same family as the awards page: black, Barlow Condensed and
+/* ATFA Expo 2027 page (v3.4.0). Same family as the awards page: black, Barlow Condensed and
    Montserrat, the orange, and warm charcoal bands for the chapters. Everything is scoped to .xp. */
 html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !important;padding:0 !important}
 .xp{position:relative;min-height:100vh;box-sizing:border-box;background:#0C0B0A;color:#F4EFE7;font-family:'Montserrat',system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;line-height:1.4;overflow-x:clip;text-align:left}
@@ -1756,6 +1812,28 @@ html.xp-ex-on .xp > :not(.xp-ex),html.xp-ex-on .xp > :not(.xp-ex) *{animation-pl
 .xp-gi{flex-basis:250px}
 }
 
+/* Principal Partner (data/partner.php in the awards plugin, shared with the awards pages): "Presented by" and the
+   logo under the headline and on the dinner band, and a feature after the 2025 photos. */
+.xp a.xp-pp{display:inline-flex;align-items:center;gap:16px;align-self:flex-start;margin:26px 0 0;text-decoration:none}
+.xp-pp-l{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:#B4A99A;white-space:nowrap;padding-right:16px;border-right:1px solid #3A332D;line-height:30px;transition:color .2s}
+.xp a.xp-pp:hover .xp-pp-l{color:#F4EFE7}
+.xp-pp img{display:block;height:36px;width:auto;max-width:none;margin:0;border:0}
+.xp-hero-t a.xp-pp{margin-bottom:28px}
+.xp a.xp-pp.xp-pp-dn{margin-top:14px}
+.xp-dn .xp-pp-l{border-right-color:#463D35}
+.xp-ppf-w{margin-top:96px}
+.xp-ppf{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);border:1px solid #332C26;border-radius:6px;overflow:hidden;background:#1A1613}
+.xp a.xp-ppf-logo{display:flex;align-items:center;justify-content:center;padding:48px 40px;background:#080706;border-right:1px solid #332C26;min-height:220px}
+.xp-ppf-logo img{display:block;width:100%;max-width:320px;height:auto;margin:0;border:0;transition:transform .5s cubic-bezier(.2,.6,.2,1)}
+.xp a.xp-ppf-logo:hover img{transform:scale(1.03)}
+.xp-ppf-t{display:flex;flex-direction:column;gap:14px;padding:36px 40px;min-width:0;justify-content:center}
+.xp-ppf-t .disp{font-size:48px}
+.xp-ppf-t p{font-size:15px;line-height:1.6;color:#C9BFB2;max-width:56ch}
+.xp a.xp-ppf-go{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:4px;min-height:40px;font-size:14px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.xp-ppf-logo img{transition:none}}
+@media (max-width:900px){.xp-ppf{grid-template-columns:1fr}.xp a.xp-ppf-logo{border-right:0;border-bottom:1px solid #332C26;min-height:0;padding:40px 32px}.xp-ppf-logo img{max-width:280px}.xp-ppf-t{padding:28px}.xp-ppf-t .disp{font-size:40px}.xp-ppf-w{margin-top:80px}}
+@media (max-width:700px){.xp a.xp-pp{gap:12px;margin-top:18px}.xp-hero-t a.xp-pp{margin-bottom:20px}.xp-pp-l{font-size:10px;padding-right:12px;line-height:26px;text-shadow:0 1px 10px rgba(0,0,0,.75)}.xp-pp img{height:28px}.xp-ppf-w{margin-top:64px}.xp a.xp-ppf-logo{padding:32px 24px}.xp-ppf-logo img{max-width:230px}.xp-ppf-t{padding:24px 20px}.xp-ppf-t .disp{font-size:34px}.xp-ppf-t p{font-size:15px;font-weight:500;color:#D2C8BA}}
+
 ATFA_EXPO27_PAGE_CSS;
 	}
 
@@ -1763,7 +1841,7 @@ ATFA_EXPO27_PAGE_CSS;
 		return <<<'ATFA_EXPO27_PAGE_JS'
 /*!
  * ATFA Expo & Conference 2027 page: Hall 5 floor plan (dark), live stand data and the
- * full-screen plan for phones. Version 3.3.1
+ * full-screen plan for phones. Version 3.4.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below, in the dark awards style.
@@ -3847,7 +3925,7 @@ ATFA_EXPO27_PAGE_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27Page = {
-    version: CFG.version || '3.3.1',
+    version: CFG.version || '3.4.0',
     reload: function () { load(false); },
     open: function (id) { if (id && BY_ID[id]) { selId = id; } openEx({}); },
     close: function () { closeEx(false); },
@@ -3943,7 +4021,7 @@ ATFA_EXPO27_HTML;
 
 	function atfa_expo27_css() {
 		return <<<'ATFA_EXPO27_CSS'
-/* ATFA Expo 2027 Hall 5 floor plan, v3.3.1.
+/* ATFA Expo 2027 Hall 5 floor plan, v3.4.0.
    Every rule is scoped to #atfa-expo27 (the plan) or #atfa-expo27-modal (the popup),
    so the theme and Elementor can't restyle the buttons, headings or links inside. */
 
@@ -4399,7 +4477,7 @@ ATFA_EXPO27_CSS;
 		return <<<'ATFA_EXPO27_JS'
 /*!
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
- * Version 3.3.1
+ * Version 3.4.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below (stands, stage, seating, exits).
@@ -5782,7 +5860,7 @@ ATFA_EXPO27_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27 = {
-    version: CFG.version || '3.3.1',
+    version: CFG.version || '3.4.0',
     reload: function () { load(false); },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });

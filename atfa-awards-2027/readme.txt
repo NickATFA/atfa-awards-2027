@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.8.2
+Stable tag: 1.9.0
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -28,6 +28,7 @@ This code used to be the Code Snippet "ATFA Expo 2027 page and Hall 5 floor plan
 * Page copy and layout: views/splash.php and views/entries.php. Winner photos and captions: atfa_awards_winners() in the main plugin file.
 * The award categories (what goes in, rules, example photos) and which stream each one sits in: data/categories.php. Example photos live in assets/img/examples/.
 * Category sponsors: add a 'sponsor' (name, logo file, url) to the award in data/categories.php and drop the logo in assets/img/sponsors/. It then shows in that award's panel and in the sponsors strip on both pages. Floor of the Year is sponsored by ATFA.
+* Principal Partner (Crosbe for 2027): data/partner.php holds the name, logo, link and wording, shared by the splash, the entries page and the Expo page. Set 'public' to false there to show the partner to logged-in staff only. Logo files are in assets/img/sponsors/.
 
 == Updating ==
 

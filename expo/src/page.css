@@ -526,3 +526,25 @@ html.xp-ex-on .xp > :not(.xp-ex),html.xp-ex-on .xp > :not(.xp-ex) *{animation-pl
 .xp-key,.xp-pkey{grid-template-columns:repeat(2,minmax(0,1fr))}
 .xp-gi{flex-basis:250px}
 }
+
+/* Principal Partner (data/partner.php in the awards plugin, shared with the awards pages): "Presented by" and the
+   logo under the headline and on the dinner band, and a feature after the 2025 photos. */
+.xp a.xp-pp{display:inline-flex;align-items:center;gap:16px;align-self:flex-start;margin:26px 0 0;text-decoration:none}
+.xp-pp-l{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:#B4A99A;white-space:nowrap;padding-right:16px;border-right:1px solid #3A332D;line-height:30px;transition:color .2s}
+.xp a.xp-pp:hover .xp-pp-l{color:#F4EFE7}
+.xp-pp img{display:block;height:36px;width:auto;max-width:none;margin:0;border:0}
+.xp-hero-t a.xp-pp{margin-bottom:28px}
+.xp a.xp-pp.xp-pp-dn{margin-top:14px}
+.xp-dn .xp-pp-l{border-right-color:#463D35}
+.xp-ppf-w{margin-top:96px}
+.xp-ppf{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);border:1px solid #332C26;border-radius:6px;overflow:hidden;background:#1A1613}
+.xp a.xp-ppf-logo{display:flex;align-items:center;justify-content:center;padding:48px 40px;background:#080706;border-right:1px solid #332C26;min-height:220px}
+.xp-ppf-logo img{display:block;width:100%;max-width:320px;height:auto;margin:0;border:0;transition:transform .5s cubic-bezier(.2,.6,.2,1)}
+.xp a.xp-ppf-logo:hover img{transform:scale(1.03)}
+.xp-ppf-t{display:flex;flex-direction:column;gap:14px;padding:36px 40px;min-width:0;justify-content:center}
+.xp-ppf-t .disp{font-size:48px}
+.xp-ppf-t p{font-size:15px;line-height:1.6;color:#C9BFB2;max-width:56ch}
+.xp a.xp-ppf-go{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:4px;min-height:40px;font-size:14px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.xp-ppf-logo img{transition:none}}
+@media (max-width:900px){.xp-ppf{grid-template-columns:1fr}.xp a.xp-ppf-logo{border-right:0;border-bottom:1px solid #332C26;min-height:0;padding:40px 32px}.xp-ppf-logo img{max-width:280px}.xp-ppf-t{padding:28px}.xp-ppf-t .disp{font-size:40px}.xp-ppf-w{margin-top:80px}}
+@media (max-width:700px){.xp a.xp-pp{gap:12px;margin-top:18px}.xp-hero-t a.xp-pp{margin-bottom:20px}.xp-pp-l{font-size:10px;padding-right:12px;line-height:26px;text-shadow:0 1px 10px rgba(0,0,0,.75)}.xp-pp img{height:28px}.xp-ppf-w{margin-top:64px}.xp a.xp-ppf-logo{padding:32px 24px}.xp-ppf-logo img{max-width:230px}.xp-ppf-t{padding:24px 20px}.xp-ppf-t .disp{font-size:34px}.xp-ppf-t p{font-size:15px;font-weight:500;color:#D2C8BA}}
