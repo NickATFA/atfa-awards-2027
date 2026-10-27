@@ -1,5 +1,5 @@
 {
-  "version": "3.4.0",
+  "version": "3.4.1",
   "csv_url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTuJXu-a9RAP28kcj5nPO5u02YpzG_u3QlyLrd-xDKOrj_X6U2V3LzoEcONHTPRdH2T_Bs8srzV_PIe/pub?gid=408445275&single=true&output=csv",
   "enquiry_url": "https://www.atfa.com.au/expo-2027-stand-enquiry/",
   "pdf_url": "plugin:assets/expo/ATFA-Expo-2027-Hall-5-Floor-Plan.pdf",

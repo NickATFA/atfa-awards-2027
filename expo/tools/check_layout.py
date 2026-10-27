@@ -58,6 +58,12 @@ def validate(geo):
             errors.append("size %s: %s x %s is not %s m2" % (key, z["w"], z["d"], z["sqm"]))
         if abs(z["price"] / z["sqm"] - z["rate"]) > 0.006:
             errors.append("size %s: rate %.2f doesn't match price / area" % (key, z["rate"]))
+        base = sizes.get("3x3")
+        if base and z.get("disc", 0) > 0:
+            # The saving the site shows (against the same area in 3 x 3 m stands) must not overstate the real one.
+            real = 1 - z["price"] / (base["price"] / base["sqm"] * z["sqm"])
+            if z["disc"] > real + 1e-9 or z["disc"] < real - 0.01:
+                errors.append("size %s: saving %.0f%% doesn't match the prices (really %.1f%%)" % (key, z["disc"] * 100, real * 100))
         for k in ("label", "fill", "line"):
             if not z.get(k):
                 errors.append("size %s has no %s" % (key, k))

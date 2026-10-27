@@ -167,7 +167,7 @@ def main():
         check("a11y: svg is a group, not an image", page.evaluate("() => document.querySelector('.afpx-svg').getAttribute('role')") == "group")
         lbl = stand_state(page, "G01")["label"]
         check("a11y: stand label includes size, open sides, status and price",
-              "available" in lbl and "$2,280" in lbl and "open on 2 sides" in lbl and "3 by 6 metres" in lbl, lbl)
+              "available" in lbl and "$2,500" in lbl and "open on 2 sides" in lbl and "3 by 6 metres" in lbl, lbl)
 
         # layout
         geo = page.evaluate("""() => { const st=document.querySelector('.afpx-stage').getBoundingClientRect();
@@ -257,10 +257,10 @@ def main():
             const a=m.querySelector('a.afpx-btn'); return {price:m.querySelector('.afpx-price').textContent, note:m.querySelector('.afpx-price-note').textContent,
             btn:a.textContent, href:a.getAttribute('href'), alt:(m.querySelector('.afpx-alt')||{}).textContent,
             open:(m.querySelector('.afpx-open')||{}).textContent, mail:(m.querySelector('.afpx-alt a')||{}).href}; }""")
-        check("popup: available stand shows price and enquiry", p202["price"] == "$2,280" and p202["btn"] == "Enquire about stand G01", p202)
+        check("popup: available stand shows price and enquiry", p202["price"] == "$2,500" and p202["btn"] == "Enquire about stand G01", p202)
         check("popup: says how many sides are open", p202["open"] == "Open on 2 sides", p202["open"])
         check("popup: email link has the stand in the subject", "Stand%20G01" in (p202["mail"] or ""), p202["mail"])
-        check("popup: price note shows $/m2 and the size saving", "$126.67 per m²" in p202["note"] and "5% size saving" in p202["note"], p202["note"])
+        check("popup: price note shows $/m2 and the size saving", "$138.89 per m²" in p202["note"] and "10% size saving" in p202["note"], p202["note"])
         check("popup: email fallback shown", "cherie@atfa.com.au" in (p202["alt"] or ""), p202)
         check("popup: Enquire goes to the form with the stand filled in", p202["href"] == "https://www.atfa.com.au/expo-2027-stand-enquiry/?stand=G01", p202["href"])
         pdf = page.evaluate("() => { const a=document.querySelector('#atfa-expo27 .afpx-legend a.afpx-btn'); return a ? a.getAttribute('href') : null; }")
@@ -379,7 +379,7 @@ def main():
         check("offline: clear notice, stands 'not confirmed', nothing invented", "couldn" in note and "is-unknown" in st["cls"], (note, st))
         page.click(".afpx-stand[data-id='S01']")
         txt = page.evaluate("() => document.getElementById('atfa-expo27-modal').innerText")
-        check("offline: popup still offers price and enquiry", "$4,080" in txt and "Enquire about stand S01" in txt and "couldn" in txt, txt[:200])
+        check("offline: popup still offers price and enquiry", "$4,200" in txt and "Enquire about stand S01" in txt and "couldn" in txt, txt[:200])
         page.screenshot(path=str(SHOTS / "offline.png"))
         ctx.close()
 

@@ -2,7 +2,7 @@
 
 Source for the floor plan at https://www.atfa.com.au/expo-2027-hall-5-interactive-floor-plan/
 
-Version 3.3.1, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
+Version 3.4.1, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
 ATFA Flooring Awards 2027 plugin; the repo's README.md says how to release a change.
 
 ## What's where on the website
@@ -24,10 +24,10 @@ this plan's own hall geometry, so every booth sits on whole metres (`tools/layou
 
 | Stands | Size | Price (excl. GST) |
 |---|---|---|
-| B01 to B32 | 3 × 3 m | $1,200 |
-| G01 to G04 | 3 × 6 m | $2,280 |
-| O01 to O18 | 6 × 3 m | $2,280 |
-| S01 to S04 | 6 × 6 m | $4,080 |
+| B01 to B32 | 3 × 3 m | $1,400 |
+| G01 to G04 | 3 × 6 m | $2,500 |
+| O01 to O18 | 6 × 3 m | $2,500 |
+| S01 to S04 | 6 × 6 m | $4,200 |
 
 Rows of 12 × 6 m blocks with nominal 3 m cross lanes between them; each 6 × 6 m booth backs onto
 two 6 × 3 m booths. Black lines on the plan are rear walls; a side against a rear wall or
@@ -152,3 +152,8 @@ pinch; X (or Escape) closes the plan at once and takes its history step away, so
 leaves the page as usual, and the browser is kept from putting back an older place on the page after
 the plan closes. The phone stress test taps buttons the way a person would (scrolled into view, not
 covered), waits for the card to finish sliding in, and prints the last few touches with each problem.
+
+v3.4.1 (awards plugin 1.9.1, 28 October 2026): new stand prices, excl. GST: 3 × 3 m $1,400, 3 × 6 m and
+6 × 3 m $2,500, 6 × 6 m $4,200 ($116,600 if every stand sells). The savings shown against the same area in
+3 × 3 m stands are rounded down so they never overstate: 10% on the 18 m² stands (really 10.7%) and 25% on
+6 × 6 m. `tools/check_layout.py` now refuses a build whose saving doesn't match the prices.

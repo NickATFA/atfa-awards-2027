@@ -160,7 +160,7 @@ def main():
         det = page.inner_text("[data-role='details']")
         href = page.get_attribute("[data-role='details'] a.btn-primary", "href")
         check("desktop: choosing a stand shows its price and enquiry link",
-              "O01" in det and "$2,280" in det and href and href.endswith("?stand=O01"), (det[:120], href))
+              "O01" in det and "$2,500" in det and href and href.endswith("?stand=O01"), (det[:120], href))
         check("desktop: open sides diagram has a spoken description",
               page.get_attribute("[data-role='details'] .xp-sides", "aria-label") == "Open to the aisle on the north and east sides",
               page.get_attribute("[data-role='details'] .xp-sides", "aria-label"))
@@ -330,7 +330,7 @@ def main():
                 check(name + ": sold stand card shows the exhibitor", "TARKETT" in sheet.upper(), sheet[:120])
             else:
                 go = page.locator("[data-role='exsin'] a.btn-primary")
-                check(name + ": card shows S04, price and Enquire", "S04" in sheet and "$4,080" in sheet and "Enquire" in sheet
+                check(name + ": card shows S04, price and Enquire", "S04" in sheet and "$4,200" in sheet and "Enquire" in sheet
                       and go.get_attribute("aria-label") == "Enquire about stand S04", sheet[:160])
                 check(name + ": enquiry link carries the stand", go.get_attribute("href").endswith("?stand=S04"))
                 hd = page.evaluate("""() => { const h = document.querySelector('[data-role="exsin"] .xp-card-id');
@@ -789,7 +789,7 @@ def main():
         page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
         page.wait_for_timeout(200)
         det = page.inner_text("[data-role='details']")
-        check("failure: price and enquiry still offered", "$4,080" in det and "Enquire about S02" in det, det[:160])
+        check("failure: price and enquiry still offered", "$4,200" in det and "Enquire about S02" in det, det[:160])
         ctx.close()
 
         ctx = browser.new_context(viewport={"width": 1280, "height": 900})
