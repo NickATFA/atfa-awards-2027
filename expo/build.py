@@ -163,7 +163,8 @@ def main():
             fail("page content contains the heredoc marker " + marker)
     for token in ("{{VERSION}}", "{{LOGO}}", "{{WORDMARK}}", "{{HERO_IMGS}}", "{{HERO_CAPS}}", "{{GALLERY}}", "{{DINNER_IMG}}",
                   "{{DINNER_CAP}}", "{{AWARDS_URL}}", "{{PDF_URL}}", "{{EMAIL}}", "{{MAILTO}}", "{{ENQUIRY_NAME}}", "{{STAFF}}",
-                  "{{PARTNER_HERO}}", "{{PARTNER_FEATURE}}", "{{PARTNER_DINNER}}", "{{BREAKFAST_URL}}", "{{BREAKFAST_CARD}}"):
+                  "{{PARTNER_HERO}}", "{{PARTNER_FEATURE}}", "{{PARTNER_DINNER}}", "{{BREAKFAST_URL}}", "{{BREAKFAST_CARD}}",
+                  "{{WEEKEND_LABEL}}"):
         if token not in page_markup:
             fail("page markup is missing " + token)
     # Copy rules: no em dashes in anything a visitor reads.
@@ -184,6 +185,8 @@ def main():
         "__SHEET_URL__": php_single(settings.get("sheet_url", "")),
         "__PAGE_SLUG__": php_single(settings.get("page_slug", "expo-2027")),
         "__OLD_PAGE_ID__": str(int(settings.get("old_page_id", 0))),
+        "__STAND_TOTAL__": str(len(stands)),
+        "__STAND_FROM__": str(int(min_price)),
     }
     photos = settings.get("photos", {})
     for key in ("procoat", "cfs", "bona", "lagler", "norton", "podcast", "woody"):
@@ -198,7 +201,7 @@ def main():
     php = php.replace("__MARKUP__", markup, 1).replace("__CSS__", css, 1).replace("__JS__", js, 1)
     if "__" + "GEOMETRY__" in php:
         fail("geometry token left in output")
-    leftover = re.findall(r"__(?:PHOTO_[A-Z]+|PAGE_SLUG|OLD_PAGE_ID|XP_[A-Z]+)__", php)
+    leftover = re.findall(r"__(?:PHOTO_[A-Z]+|PAGE_SLUG|OLD_PAGE_ID|XP_[A-Z]+|STAND_[A-Z]+)__", php)
     if leftover:
         fail("tokens left in output: " + ", ".join(sorted(set(leftover))))
 

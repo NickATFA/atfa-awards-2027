@@ -12,7 +12,7 @@ $venue   = $info['venue'];
 $rsvp    = $info['rsvp'];
 $logo    = atfa_awards_img( 'atfa-logo-white.png' );
 $mark    = atfa_awards_img( 'atfa-wordmark.svg' );
-$awards  = home_url( '/awards/' );
+$awards  = function_exists( 'atfa_wk_awards_url' ) ? atfa_wk_awards_url() : home_url( '/awards/' );
 $expo    = home_url( '/expo-2027/' );
 $sets    = atfa_bk_photos();
 $tbc     = empty( $venue['confirmed'] );
@@ -126,6 +126,11 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .bk-top > .wrap{position:relative;z-index:2}
 .bk-wk{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid rgba(255,238,246,.12)}
 .bk-wk-l{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
+/* The label links to the weekend page once that page can be seen (atfa_wk_label()). */
+.bk a.bk-wk-l.wkl{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 12px;color:var(--mut)}
+.bk a.bk-wk-l.wkl .wkl-a{color:var(--pk)}
+.bk a.bk-wk-l.wkl .wkl-go{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid #3F3238;border-radius:999px;color:#F7F1F4;letter-spacing:.08em}
+.bk a.bk-wk-l.wkl:hover .wkl-go{border-color:#F7F1F4}
 .bk-wk-links{display:flex;gap:8px;flex-wrap:wrap}
 .bk a.bk-wk-a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border:1px solid #3F3238;border-radius:999px;background:rgba(12,11,10,.55);color:#F7F1F4;font-size:14px;font-weight:600;white-space:nowrap}
 .bk a.bk-wk-a:hover{color:#FFFFFF;border-color:#F7F1F4}
@@ -343,6 +348,7 @@ html.bk-lock{overflow:hidden}
 .bk-hero-w{order:3;margin-top:-70px}
 .bk-wk{border-bottom:0;padding:14px 0 16px}
 .bk-wk-l{font-size:11px;color:var(--dim);font-weight:700}
+.bk a.bk-wk-l.wkl{display:inline}.bk a.bk-wk-l.wkl .wkl-go{display:none}
 .bk-wk-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
 .bk a.bk-wk-a{flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-height:74px;padding:11px 12px;border-radius:10px;background:#15120F;white-space:normal;font-size:14px;font-weight:700;line-height:1.15}
 .bk-wk-a .d{font-size:10.5px;letter-spacing:.12em;font-weight:700}
@@ -457,7 +463,7 @@ foreach ( $hero as $p ) {
   </div>
   <div class="wrap bk-wk-w">
     <nav class="bk-wk ld d2" aria-label="The ATFA weekend">
-      <span class="bk-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>
+      <?php echo function_exists( 'atfa_wk_label' ) ? atfa_wk_label( 'bk-wk-l' ) : '<span class="bk-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
       <div class="bk-wk-links">
         <a class="bk-wk-a" href="<?php echo esc_url( $expo ); ?>"><span class="d">Fri 21 May</span>Expo &amp; Conference</a>
         <a class="bk-wk-a on" href="#rsvp" aria-current="page"><span class="d">Sat 22 May</span>Ladies Breakfast</a>

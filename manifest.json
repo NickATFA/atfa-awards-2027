@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.11.7",
+  "version": "1.12.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.7",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.12.0",
   "last_updated": "2026-11-03",
-  "changelog": "<p><strong>1.11.7</strong> (2026-11-03): Platinum first look is now for Platinum Members with their access code, and administrators only: staff without a code get the code screen like any visitor, and the Awards sponsorship screen stays with administrators until the page is open to everyone.</p>"
+  "changelog": "<p><strong>1.12.0</strong> (2026-11-03): The ATFA Flooring Industry Weekend 2027 landing page at /weekend-2027/ (administrators only until published): the Expo & Conference, the Ladies Breakfast and the Awards Dinner on one page, with the program, the awards, the dinner, sponsorship, venues, an updates sign-up and an Add to my calendar file. Once published, /awards forwards to it while /awards still shows the coming-soon page. The Expo, breakfast and awards pages link their weekend label to it.</p>"
 }

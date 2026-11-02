@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: ATFA Flooring Awards 2027
- * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship), and the Ladies Breakfast 2027 page at /ladies-breakfast-2027/ with its seat reservations under Breakfast RSVPs.
- * Version: 1.11.7
+ * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship), the Ladies Breakfast 2027 page at /ladies-breakfast-2027/ with its seat reservations under Breakfast RSVPs, and the ATFA Flooring Industry Weekend 2027 landing page at /weekend-2027/ that brings the Expo, the breakfast and the awards dinner together.
+ * Version: 1.12.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.11.7' );
+define( 'ATFA_AWARDS_VERSION', '1.12.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -49,6 +49,11 @@ if ( is_admin() ) {
 // Ladies Breakfast 2027: the page at /ladies-breakfast-2027/ (staff only until it is published) and the seat
 // reservations it takes, listed under Breakfast RSVPs in wp-admin. Details in data/breakfast.php.
 require_once ATFA_AWARDS_DIR . 'includes/breakfast.php';
+
+// The ATFA Flooring Industry Weekend 2027: the landing page at /weekend-2027/ for the whole weekend (Expo & Conference,
+// Ladies Breakfast, Awards Dinner). Private until published; once published, /awards forwards to it while /awards still
+// shows the coming-soon page. Details in data/weekend.php.
+require_once ATFA_AWARDS_DIR . 'includes/weekend.php';
 
 /* ---------------------------------------------------------------------------
  * Data shared by the views
@@ -381,6 +386,7 @@ add_action( 'rest_api_init', function () {
 		'args'                => array(
 			'email'   => array( 'type' => 'string', 'required' => true ),
 			'page'    => array( 'type' => 'string' ),
+			'topic'   => array( 'type' => 'string' ),
 			'website' => array( 'type' => 'string' ),
 		),
 	) );
@@ -391,8 +397,19 @@ function atfa_awards_client_ip() {
 	return $ip ? $ip : 'unknown';
 }
 
+/**
+ * What a signup asked for: 'awards' (tell me when entries open, the awards pages) or 'weekend' (updates on the whole
+ * weekend, from the weekend page). Both go on the one list, Awards signups.
+ */
+function atfa_awards_notify_topic( $raw ) {
+	return 'weekend' === $raw ? 'weekend' : 'awards';
+}
+
 function atfa_awards_rest_notify( WP_REST_Request $request ) {
-	$thanks = 'Thanks, you are on the list. We will email you the moment entries open.';
+	$topic  = atfa_awards_notify_topic( (string) $request->get_param( 'topic' ) );
+	$thanks = 'weekend' === $topic
+		? 'Thanks, you are on the list. We will email you as the weekend comes together.'
+		: 'Thanks, you are on the list. We will email you the moment entries open.';
 
 	// Honeypot: real people never fill the hidden "website" field.
 	if ( '' !== trim( (string) $request->get_param( 'website' ) ) ) {
@@ -432,8 +449,9 @@ function atfa_awards_rest_notify( WP_REST_Request $request ) {
 		'post_status' => 'publish',
 		'post_title'  => $email,
 		'meta_input'  => array(
-			'page' => $page,
-			'ip'   => $ip,
+			'page'  => $page,
+			'topic' => $topic,
+			'ip'    => $ip,
 			'ua'   => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 200 ) : '',
 		),
 	), true );
@@ -442,25 +460,35 @@ function atfa_awards_rest_notify( WP_REST_Request $request ) {
 		return new WP_REST_Response( array( 'ok' => false, 'message' => 'Something went wrong. Email ' . ATFA_AWARDS_REPLY_TO . ' and we will add you.' ), 500 );
 	}
 
-	atfa_awards_send_signup_emails( $email, $page, $id );
+	atfa_awards_send_signup_emails( $email, $page, $id, $topic );
 
 	return new WP_REST_Response( array( 'ok' => true, 'message' => $thanks ), 200 );
 }
 
-function atfa_awards_send_signup_emails( $email, $page, $post_id ) {
+function atfa_awards_send_signup_emails( $email, $page, $post_id, $topic = 'awards' ) {
 	$when  = wp_date( 'l j F Y, g:i a' );
 	$list  = admin_url( 'edit.php?post_type=atfa_notify' );
 	$count = (int) wp_count_posts( 'atfa_notify' )->publish;
+	$wk    = 'weekend' === $topic;
 
 	// To ATFA.
-	$body = "$email asked to be told when Flooring Awards 2027 entries open.\n\n"
+	$body = ( $wk ? "$email signed up for updates on the ATFA Flooring Industry Weekend 2027.\n\n" : "$email asked to be told when Flooring Awards 2027 entries open.\n\n" )
 		. "When: $when\n"
 		. ( $page ? "Page: $page\n" : '' )
 		. "Signups so far: $count\n\n"
 		. "All signups (export to CSV from here): $list\n";
-	wp_mail( ATFA_AWARDS_NOTIFY_TO, "Awards 2027 notify me: $email", $body, array( 'Reply-To: ' . $email ) );
+	wp_mail( ATFA_AWARDS_NOTIFY_TO, ( $wk ? 'Weekend 2027 updates: ' : 'Awards 2027 notify me: ' ) . $email, $body, array( 'Reply-To: ' . $email ) );
 
 	// To the subscriber.
+	if ( $wk ) {
+		$confirm = "Thanks for your interest in the ATFA Flooring Industry Weekend 2027.\n\n"
+			. "The Expo & Conference is on Friday 21 May 2027 at Sydney Showground, with the Ladies Breakfast and the Awards Dinner on Saturday 22 May at Sydney Olympic Park. "
+			. "We will email you when awards entries open (Monday 1 February), when dinner tickets go on sale and when the times and program are confirmed.\n\n"
+			. "Expo stands are on sale now: https://www.atfa.com.au/expo-2027/\n\n"
+			. "Regards,\nThe ATFA team\nAU 1300 361 693 · NZ 0800 453 715\nhttps://www.atfa.com.au/";
+		wp_mail( $email, 'You are on the list for the ATFA Flooring Industry Weekend 2027', $confirm, array( 'Reply-To: ' . ATFA_AWARDS_REPLY_TO ) );
+		return;
+	}
 	$confirm = "Thanks for your interest in the ATFA Flooring Awards 2027.\n\n"
 		. "Entries open Monday 1 February 2027 and we will email you the moment they do. "
 		. "The awards dinner is on Saturday 22 May 2027 in Sydney, alongside the ATFA Expo and Conference.\n\n"
@@ -473,6 +501,7 @@ add_filter( 'manage_atfa_notify_posts_columns', function ( $columns ) {
 	return array(
 		'cb'    => isset( $columns['cb'] ) ? $columns['cb'] : '',
 		'title' => 'Email',
+		'topic' => 'Signed up for',
 		'page'  => 'Signed up from',
 		'date'  => 'Date',
 	);
@@ -481,6 +510,9 @@ add_filter( 'manage_atfa_notify_posts_columns', function ( $columns ) {
 add_action( 'manage_atfa_notify_posts_custom_column', function ( $column, $post_id ) {
 	if ( 'page' === $column ) {
 		echo esc_html( (string) get_post_meta( $post_id, 'page', true ) );
+	}
+	if ( 'topic' === $column ) {
+		echo 'weekend' === get_post_meta( $post_id, 'topic', true ) ? 'Weekend updates' : 'Awards entries';
 	}
 }, 10, 2 );
 
@@ -499,9 +531,9 @@ add_action( 'admin_post_atfa_notify_export', function () {
 	header( 'Content-Type: text/csv; charset=utf-8' );
 	header( 'Content-Disposition: attachment; filename="awards-2027-notify-signups-' . wp_date( 'Y-m-d' ) . '.csv"' );
 	$out = fopen( 'php://output', 'w' );
-	fputcsv( $out, array( 'Email', 'Signed up', 'Page' ) );
+	fputcsv( $out, array( 'Email', 'Signed up', 'Signed up for', 'Page' ) );
 	foreach ( $rows as $row ) {
-		fputcsv( $out, array( $row->post_title, get_date_from_gmt( $row->post_date_gmt, 'Y-m-d H:i' ), (string) get_post_meta( $row->ID, 'page', true ) ) );
+		fputcsv( $out, array( $row->post_title, get_date_from_gmt( $row->post_date_gmt, 'Y-m-d H:i' ), 'weekend' === get_post_meta( $row->ID, 'topic', true ) ? 'Weekend updates' : 'Awards entries', (string) get_post_meta( $row->ID, 'page', true ) ) );
 	}
 	fclose( $out );
 	exit;
@@ -609,6 +641,11 @@ function atfa_awards_share_texts() {
 			'title'       => 'ATFA Flooring Awards 2027: category sponsorship',
 			'description' => 'Put your brand behind the best in the industry. Sponsor a 2027 ATFA Flooring Awards category, with two tickets to the Awards Dinner on Saturday 22 May 2027 in Sydney.',
 		),
+		'weekend' => array(
+			'title'       => 'ATFA Flooring Industry Weekend 2027',
+			'description' => 'The Expo & Conference, the Ladies Breakfast and the Awards Dinner: one weekend at Sydney Olympic Park, 21 and 22 May 2027. Stands on sale now, awards entries open Monday 1 February.',
+			'card'        => 'share-card-weekend.jpg',
+		),
 		'breakfast' => array(
 			'title'       => 'ATFA Ladies Breakfast 2027',
 			'description' => 'Breakfast and bubbles for the ladies of ATFA on Saturday 22 May 2027 at Sydney Olympic Park, the morning of the awards dinner. Complimentary, places limited. Reserve your seat.',
@@ -636,7 +673,7 @@ function atfa_awards_seo_plugin_active() {
 /**
  * Puts the bundled share cards in the Media Library (once per card version) and sets each as the featured image
  * of its page, with the description as the excerpt. Runs after activation and after each update. The awards
- * pages share one card; the breakfast page has its own (atfa_awards_share_card_file()).
+ * pages share one card; the breakfast and weekend pages have their own (atfa_awards_share_card_file()).
  */
 function atfa_awards_sync_share_card() {
 	if ( get_option( 'atfa_awards_share_synced' ) === ATFA_AWARDS_VERSION ) {
@@ -658,7 +695,7 @@ function atfa_awards_sync_share_card() {
 	if ( is_array( $first ) && ! empty( $first['id'] ) && empty( $cards['share-card.jpg'] ) ) {
 		$cards['share-card.jpg'] = $first;
 	}
-	$titles = array( 'share-card.jpg' => 'ATFA Flooring Awards 2027 share card', 'share-card-breakfast.jpg' => 'ATFA Ladies Breakfast 2027 share card' );
+	$titles = array( 'share-card.jpg' => 'ATFA Flooring Awards 2027 share card', 'share-card-breakfast.jpg' => 'ATFA Ladies Breakfast 2027 share card', 'share-card-weekend.jpg' => 'ATFA Flooring Industry Weekend 2027 share card' );
 	$texts  = atfa_awards_share_texts();
 	foreach ( $pages as $key => $page_id ) {
 		if ( ! $page_id || ! get_post( $page_id ) ) {

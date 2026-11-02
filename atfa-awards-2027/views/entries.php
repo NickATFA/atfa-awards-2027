@@ -419,7 +419,7 @@ html.aw-lock{overflow:hidden}
   </div>
 </div>
 <div class="weekend">
-  <div class="eyebrow">Also on the ATFA weekend</div>
+  <div class="eyebrow">Also on the ATFA weekend<?php if ( function_exists( 'atfa_wk_visible' ) && atfa_wk_visible() ) : ?> · <a href="<?php echo esc_url( atfa_wk_page_url() ); ?>" style="color:#F8931F;letter-spacing:.1em">See the whole weekend</a><?php endif; ?></div>
   <div class="weekend-grid">
 <?php foreach ( atfa_awards_weekend() as $ev ) : ?>
     <?php echo atfa_awards_weekend_card( $ev ); ?>

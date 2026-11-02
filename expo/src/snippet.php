@@ -118,6 +118,14 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		);
 	}
 
+	/**
+	 * The stand count and the lowest stand price, written by build.py from geometry.json, for the other pages
+	 * that talk about the Expo (the weekend page), so they always match the floor plan.
+	 */
+	function atfa_expo27_summary() {
+		return array( 'stands' => __STAND_TOTAL__, 'from' => __STAND_FROM__, 'note' => 'excl. GST' );
+	}
+
 	add_shortcode( 'atfa_expo27_floorplan', 'atfa_expo27_shortcode' );
 	add_shortcode( 'atfa_expo27_page', 'atfa_expo27_page_shortcode' );
 	add_action( 'template_redirect', 'atfa_expo27_forward_old_page' );
@@ -982,7 +990,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		$dinner_cap = $dinner ? '<div class="xp-dn-cap">2025 Commercial / Industrial Solid Timber Floor of the Year<br><strong>Beaver Flooring</strong></div>' : '';
 		$dinner     = $dinner ? '<img src="' . esc_url( $dinner ) . '" alt="" loading="lazy" decoding="async" data-no-lazy="1">' : '';
 
-		$awards  = home_url( '/awards/' );
+		// The awards: the weekend page's awards section while /awards forwards there, otherwise /awards.
+		$awards  = function_exists( 'atfa_wk_awards_url' ) ? atfa_wk_awards_url() : home_url( '/awards/' );
 		$partner = atfa_expo27_partner_html();
 		// The Ladies Breakfast page, once it is published (staff see the link as soon as the page exists).
 		$bk_url  = function_exists( 'atfa_awards_breakfast_url' ) ? atfa_awards_breakfast_url() : '';
@@ -1009,6 +1018,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{PARTNER_DINNER}}'  => $partner['dinner'],
 			'{{BREAKFAST_URL}}'   => $bk_url ? esc_url( $bk_url ) : '#weekend',
 			'{{BREAKFAST_CARD}}'  => $bk_card,
+			// "The ATFA weekend" label: a link to the weekend page for anyone who can open it.
+			'{{WEEKEND_LABEL}}'   => function_exists( 'atfa_wk_label' ) ? atfa_wk_label( 'xp-wk-l' ) : '<span class="xp-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>',
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'

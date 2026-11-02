@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
  * ---------------------------------------------------------------------------
- * Version 3.4.1 · 2 November 2026 · Prepared for ATFA (Nick Warren)
+ * Version 3.5.0 · 3 November 2026 · Prepared for ATFA (Nick Warren)
  *
  * WHAT THIS ADDS
  *   [atfa_expo27_page]               The ATFA Expo 2027 page at /expo-2027/: the dark awards-style
@@ -121,6 +121,14 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'podcast' => array( 'id' => 19729, 'name' => 'Clever Choice', 'note' => 'The Underlay podcast, Expo 2025', 'alt' => 'The Underlay podcast corner at ATFA Expo 2025', 'pos' => '50% 50%' ),
 			'woody'   => array( 'id' => 19730, 'name' => 'Woody', 'note' => 'ATFA\'s mascot, Expo 2025', 'alt' => 'Woody, the ATFA mascot, at ATFA Expo 2025', 'pos' => '50% 28%' ),
 		);
+	}
+
+	/**
+	 * The stand count and the lowest stand price, written by build.py from geometry.json, for the other pages
+	 * that talk about the Expo (the weekend page), so they always match the floor plan.
+	 */
+	function atfa_expo27_summary() {
+		return array( 'stands' => 58, 'from' => 1400, 'note' => 'excl. GST' );
 	}
 
 	add_shortcode( 'atfa_expo27_floorplan', 'atfa_expo27_shortcode' );
@@ -476,7 +484,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.4.1';
+		$version  = '3.5.0';
 
 		// Staff: "Refresh from the sheet" in the staff bar (the page with ?refresh=1 on the end)
 		// pulls the latest from the sheet straight away, skipping the 2-minute cache.
@@ -924,7 +932,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		}
 		$done     = true;
 		$settings = atfa_expo27_settings();
-		$version  = '3.4.1';
+		$version  = '3.5.0';
 		$photos   = atfa_expo27_page_photos();
 
 		// Staff: "Refresh from the sheet" reads the sheet straight away, skipping the cache.
@@ -987,7 +995,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		$dinner_cap = $dinner ? '<div class="xp-dn-cap">2025 Commercial / Industrial Solid Timber Floor of the Year<br><strong>Beaver Flooring</strong></div>' : '';
 		$dinner     = $dinner ? '<img src="' . esc_url( $dinner ) . '" alt="" loading="lazy" decoding="async" data-no-lazy="1">' : '';
 
-		$awards  = home_url( '/awards/' );
+		// The awards: the weekend page's awards section while /awards forwards there, otherwise /awards.
+		$awards  = function_exists( 'atfa_wk_awards_url' ) ? atfa_wk_awards_url() : home_url( '/awards/' );
 		$partner = atfa_expo27_partner_html();
 		// The Ladies Breakfast page, once it is published (staff see the link as soon as the page exists).
 		$bk_url  = function_exists( 'atfa_awards_breakfast_url' ) ? atfa_awards_breakfast_url() : '';
@@ -1014,6 +1023,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{PARTNER_DINNER}}'  => $partner['dinner'],
 			'{{BREAKFAST_URL}}'   => $bk_url ? esc_url( $bk_url ) : '#weekend',
 			'{{BREAKFAST_CARD}}'  => $bk_card,
+			// "The ATFA weekend" label: a link to the weekend page for anyone who can open it.
+			'{{WEEKEND_LABEL}}'   => function_exists( 'atfa_wk_label' ) ? atfa_wk_label( 'xp-wk-l' ) : '<span class="xp-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>',
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'
@@ -1048,7 +1059,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
   </div>
   <div class="wrap xp-wk-w">
     <nav class="xp-wk ld d2" aria-label="The ATFA weekend">
-      <span class="xp-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>
+      {{WEEKEND_LABEL}}
       <div class="xp-wk-links">
         <a class="xp-wk-a on" href="#floor-plan" aria-current="page" data-plan="open"><span class="d">Fri 21 May</span>Expo &amp; Conference</a>
         <a class="xp-wk-a" href="{{BREAKFAST_URL}}"><span class="d">Sat 22 May</span>Ladies Breakfast</a>
@@ -1290,7 +1301,7 @@ ATFA_EXPO27_PAGE_HTML;
 
 	function atfa_expo27_page_css() {
 		return <<<'ATFA_EXPO27_PAGE_CSS'
-/* ATFA Expo 2027 page (v3.4.1). Same family as the awards page: black, Barlow Condensed and
+/* ATFA Expo 2027 page (v3.5.0). Same family as the awards page: black, Barlow Condensed and
    Montserrat, the orange, and warm charcoal bands for the chapters. Everything is scoped to .xp. */
 html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !important;padding:0 !important}
 .xp{position:relative;min-height:100vh;box-sizing:border-box;background:#0C0B0A;color:#F4EFE7;font-family:'Montserrat',system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;line-height:1.4;overflow-x:clip;text-align:left}
@@ -1357,6 +1368,11 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .xp-top > .wrap{position:relative;z-index:2}
 .xp-wk{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid rgba(244,239,231,.12)}
 .xp-wk-l{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#B4A99A;font-weight:600}
+/* The label links to the weekend page once that page can be seen (atfa_wk_label() in the awards plugin). */
+.xp a.xp-wk-l.wkl{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 12px;color:#B4A99A;text-decoration:none}
+.xp a.xp-wk-l.wkl .wkl-a{color:#F8931F}
+.xp a.xp-wk-l.wkl .wkl-go{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid #3A332D;border-radius:999px;color:#F4EFE7;letter-spacing:.08em}
+.xp a.xp-wk-l.wkl:hover .wkl-go{border-color:#F4EFE7}
 .xp-wk-links{display:flex;gap:8px;flex-wrap:wrap}
 .xp a.xp-wk-a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border:1px solid #3A332D;border-radius:999px;background:rgba(12,11,10,.55);color:#F4EFE7;font-size:14px;font-weight:600;white-space:nowrap}
 .xp a.xp-wk-a:hover{color:#FFFFFF;border-color:#F4EFE7}
@@ -1734,6 +1750,7 @@ html.xp-ex-on .xp > :not(.xp-ex),html.xp-ex-on .xp > :not(.xp-ex) *{animation-pl
 .xp-hero-w{order:3;margin-top:-66px}
 .xp-wk{border-bottom:0;padding:14px 0 16px}
 .xp-wk-l{font-size:11px;color:#8F857A;font-weight:700}
+.xp a.xp-wk-l.wkl{display:inline}.xp a.xp-wk-l.wkl .wkl-go{display:none}
 .xp-wk-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
 .xp a.xp-wk-a{flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-height:74px;padding:11px 12px;border-radius:10px;background:#15120F;white-space:normal;font-size:14px;font-weight:700;line-height:1.15}
 .xp-wk-a .d{font-size:10.5px;letter-spacing:.12em;font-weight:700}
@@ -1848,7 +1865,7 @@ ATFA_EXPO27_PAGE_CSS;
 		return <<<'ATFA_EXPO27_PAGE_JS'
 /*!
  * ATFA Expo & Conference 2027 page: Hall 5 floor plan (dark), live stand data and the
- * full-screen plan for phones. Version 3.4.1
+ * full-screen plan for phones. Version 3.5.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below, in the dark awards style.
@@ -3932,7 +3949,7 @@ ATFA_EXPO27_PAGE_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27Page = {
-    version: CFG.version || '3.4.1',
+    version: CFG.version || '3.5.0',
     reload: function () { load(false); },
     open: function (id) { if (id && BY_ID[id]) { selId = id; } openEx({}); },
     close: function () { closeEx(false); },
@@ -4028,7 +4045,7 @@ ATFA_EXPO27_HTML;
 
 	function atfa_expo27_css() {
 		return <<<'ATFA_EXPO27_CSS'
-/* ATFA Expo 2027 Hall 5 floor plan, v3.4.1.
+/* ATFA Expo 2027 Hall 5 floor plan, v3.5.0.
    Every rule is scoped to #atfa-expo27 (the plan) or #atfa-expo27-modal (the popup),
    so the theme and Elementor can't restyle the buttons, headings or links inside. */
 
@@ -4484,7 +4501,7 @@ ATFA_EXPO27_CSS;
 		return <<<'ATFA_EXPO27_JS'
 /*!
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
- * Version 3.4.1
+ * Version 3.5.0
  *
  * How it works
  *   1. Draws Hall 5 from the geometry below (stands, stage, seating, exits).
@@ -5867,7 +5884,7 @@ ATFA_EXPO27_CSS;
 
   // Small hook for testing and for staff checking the plan from the console.
   window.ATFAExpo27 = {
-    version: CFG.version || '3.4.1',
+    version: CFG.version || '3.5.0',
     reload: function () { load(false); },
     stands: function () {
       return STANDS.map(function (s) { return { id: s.id, status: s.status, name: s.name, url: s.url, open: s.open }; });

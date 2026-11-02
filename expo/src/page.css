@@ -65,6 +65,11 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .xp-top > .wrap{position:relative;z-index:2}
 .xp-wk{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid rgba(244,239,231,.12)}
 .xp-wk-l{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#B4A99A;font-weight:600}
+/* The label links to the weekend page once that page can be seen (atfa_wk_label() in the awards plugin). */
+.xp a.xp-wk-l.wkl{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px 12px;color:#B4A99A;text-decoration:none}
+.xp a.xp-wk-l.wkl .wkl-a{color:#F8931F}
+.xp a.xp-wk-l.wkl .wkl-go{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid #3A332D;border-radius:999px;color:#F4EFE7;letter-spacing:.08em}
+.xp a.xp-wk-l.wkl:hover .wkl-go{border-color:#F4EFE7}
 .xp-wk-links{display:flex;gap:8px;flex-wrap:wrap}
 .xp a.xp-wk-a{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border:1px solid #3A332D;border-radius:999px;background:rgba(12,11,10,.55);color:#F4EFE7;font-size:14px;font-weight:600;white-space:nowrap}
 .xp a.xp-wk-a:hover{color:#FFFFFF;border-color:#F4EFE7}
@@ -442,6 +447,7 @@ html.xp-ex-on .xp > :not(.xp-ex),html.xp-ex-on .xp > :not(.xp-ex) *{animation-pl
 .xp-hero-w{order:3;margin-top:-66px}
 .xp-wk{border-bottom:0;padding:14px 0 16px}
 .xp-wk-l{font-size:11px;color:#8F857A;font-weight:700}
+.xp a.xp-wk-l.wkl{display:inline}.xp a.xp-wk-l.wkl .wkl-go{display:none}
 .xp-wk-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
 .xp a.xp-wk-a{flex-direction:column;align-items:flex-start;justify-content:space-between;gap:8px;min-height:74px;padding:11px 12px;border-radius:10px;background:#15120F;white-space:normal;font-size:14px;font-weight:700;line-height:1.15}
 .xp-wk-a .d{font-size:10.5px;letter-spacing:.12em;font-weight:700}

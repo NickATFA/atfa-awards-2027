@@ -96,3 +96,25 @@ people see the links straight away).
 The photos live in the Media Library (titles "Women in Flooring Lunch 2026, Rippon Lea (…)" and "Women in Flooring
 Luncheon 2025 (…)"); add or reorder IDs in the data file to change the gallery, and `hero` picks the four behind the
 headline.
+
+## The weekend page (since 1.12.0)
+
+The ATFA Flooring Industry Weekend 2027 landing page at /weekend-2027/: the Expo & Conference, the Ladies Breakfast and the
+Awards Dinner together, in the same blackout family as the other pages. It replaces the "awards coming soon" page as the front
+door: once it is published, /awards forwards to it for as long as /awards still shows the coming-soon page.
+
+- `atfa-awards-2027/data/weekend.php` holds what the page says about the weekend as a whole: the events (dates, parts of
+  the day, venues, wording, and which page each links to), whether /awards forwards here, the dinner ticket link, when entries
+  open, the season dates and the dinner photos. Each event's own details come from its own data: the breakfast's from
+  `data/breakfast.php`, the Expo's stand count and lowest price from the Expo build (`atfa_expo27_summary()`, written by
+  `expo/build.py` from `geometry.json`), the awards from `data/categories.php`, Crosbe from `data/partner.php`.
+- `atfa-awards-2027/includes/weekend.php` makes the page (private, administrators only, until it is published), forwards /awards,
+  hides menu links while private, works out which events this visitor sees (`atfa_wk_events()`), the calendar file
+  (REST: `atfa-awards/v1/weekend/calendar`), the "The ATFA weekend" label the other pages use (`atfa_wk_label()`) and the
+  staff bar.
+- `atfa-awards-2027/views/weekend.php` is the page; `assets/img/share-card-weekend.jpg` its link preview card;
+  `assets/img/weekend/` the 2025 awards dinner photos (2025Awards SharePoint site, Photographer > For mag).
+
+Crosbe's Thursday open afternoon shows to staff only, marked Proposed, until Crosbe is public and the afternoon is confirmed
+in the data file. Sign-ups from the page join the awards notify-me list (Awards signups), with a "Signed up for" column.
+
