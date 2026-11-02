@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.11.3",
+  "version": "1.11.4",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.3",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.4",
   "last_updated": "2026-11-02",
-  "changelog": "<p><strong>1.11.3</strong> (2026-11-02): Ladies Breakfast page: Gold and Silver sponsorship packages like the Rippon Lea lunch, with an enquiry form</p>"
+  "changelog": "<p><strong>1.11.4</strong> (2026-11-02): Ladies Breakfast page: the whole headline in the serif (Ladies, Breakfast and the pink 2027)</p>"
 }

@@ -56,7 +56,8 @@ $mailto   = 'mailto:' . $rsvp['email'] . '?subject=' . rawurlencode( $info['titl
 <style>
 /* Ladies Breakfast 2027. Same family as the awards and Expo pages (black, Barlow Condensed and Montserrat), with the
    pink of the Women's Lunch instead of the orange: the blush of the 2026 invitation (#FFEEF6) and the magenta of the
-   2025 luncheon banner (#9C2A7A, sampled from the photos). Two typefaces only, like the other pages. */
+   2025 luncheon banner (#9C2A7A, sampled from the photos). The headline alone is set in Playfair Display, the way the
+   2026 invitation sets LUNCH in a serif; everything else is the two typefaces of the other pages. */
 html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !important;padding:0 !important}
 .bk{position:relative;min-height:100vh;box-sizing:border-box;background:#0C0B0A;color:#F7F1F4;font-family:'Montserrat',system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;line-height:1.4;overflow-x:clip;text-align:left;--pk:#FF9FC7;--pk2:#FFB9D7;--pki:#2B0F1D;--mg:#9C2A7A;--mg2:#C8328A;--blush:#FFEEF6;--mut:#B9ABB3;--dim:#8E8188;--card:#1A1316;--line:#352830;--band:#1A1316;--bcard:#221A1E;--bline:#3B2E35}
 .bk *,.bk *:before,.bk *:after{box-sizing:border-box}
@@ -68,6 +69,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .bk img{max-width:100%}
 .bk button,.bk input,.bk textarea{font:inherit;color:inherit;text-transform:none;letter-spacing:0;box-shadow:none;margin:0;line-height:inherit;border-radius:0}
 .bk .disp{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.01em;line-height:.92;text-wrap:balance}
+.bk .fancy{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:700;text-transform:uppercase;letter-spacing:.01em;line-height:.95;font-variant-numeric:lining-nums}
 .bk .eyebrow{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600;line-height:1.35}
 .bk .pk{color:var(--pk)}
 .bk .small{color:var(--dim)}
@@ -131,10 +133,11 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .bk a.bk-wk-a.on{background:var(--pk);border-color:var(--pk);color:var(--pki)}.bk-wk-a.on .d{color:#6B2F4C}
 .bk-hero{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:end;padding:72px 0 64px}
 .bk-hero-t{grid-column:span 9;min-width:0;display:flex;flex-direction:column}
-.bk-h1{margin:16px 0 0;font-size:128px}
-.bk-h1 .a{display:flex;align-items:flex-end;gap:.18em;line-height:.9}
-.bk-h1 .wm{display:block;height:.9em;width:auto;margin:0 0 .04em}
-.bk-h1 .b{display:block;color:var(--blush)}
+/* The headline is sized to its longest line, BREAKFAST 2027 (8.45em in Playfair), in the 9-column hero */
+.bk-h1{margin:16px 0 0;font-size:min(105px,calc(8.8vw - 8px))}
+.bk-h1 .a{display:flex;align-items:flex-end;gap:.2em;white-space:nowrap}
+.bk-h1 .wm{display:block;height:.82em;width:auto;margin:0 0 .06em}
+.bk-h1 .b{display:block;padding-bottom:.08em;color:var(--blush);white-space:nowrap;text-shadow:0 0 70px rgba(200,50,138,.45)}
 .bk-h1 .yr{color:var(--pk)}
 .bk-lead{font-size:22px;max-width:40ch;line-height:1.4;color:var(--mut);margin:36px 0 0}
 .bk-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
@@ -304,10 +307,9 @@ html.bk-lock{overflow:hidden}
 
 @media (prefers-reduced-motion:reduce){.bk .ld,.bk .sr,.bk-bg{animation:none}.bk-bg img,.bk-cap{animation-play-state:paused}.bk .bk-gi img{transition:none}}
 
-@media (max-width:1099px){.bk-h1{font-size:112px}}
 @media (max-width:900px){
 .bk .wrap{padding:0 32px}
-.bk-h1{font-size:96px}.bk-bg img{width:100%}.bk-bg{--o:.5}
+.bk-h1{font-size:min(96px,calc(11.8vw - 8px))}.bk-bg img{width:100%}.bk-bg{--o:.5}
 .bk-hero{grid-template-columns:repeat(1,minmax(0,1fr))}.bk-hero-t{grid-column:span 1}
 .bk-caps{right:32px;max-width:calc(100% - 64px)}
 .bk-cards > *{grid-column:span 12 !important}
@@ -346,8 +348,9 @@ html.bk-lock{overflow:hidden}
 .bk-wk-a .d{font-size:10.5px;letter-spacing:.12em;font-weight:700}
 .bk-hero{padding:0 0 8px;gap:0}
 .bk-hero .eyebrow{text-shadow:0 1px 10px rgba(0,0,0,.75)}
-.bk-h1{font-size:clamp(44px,13vw,68px);margin-top:10px}
-.bk-h1 .wm{height:.72em}.bk-ey-area{display:none}
+.bk-h1{font-size:min(64px,calc(15.3vw - 6px));margin-top:10px}
+.bk-h1 .wm{height:.78em}.bk-h1 .yr{display:block}.bk-ey-area{display:none}
+.bk-h1 .b{text-shadow:0 1px 10px rgba(0,0,0,.6),0 0 40px rgba(255,159,199,.25)}
 .bk-lead{font-size:17px;font-weight:500;line-height:1.55;color:#D9CDD3;margin-top:22px}
 .bk-ctas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
 .bk-ctas .btn{min-height:56px;padding:0 10px;font-size:16px;font-weight:700;border-radius:6px}
@@ -407,7 +410,6 @@ html.bk-lock{overflow:hidden}
 .bk-foot nav a{display:flex;align-items:center;min-height:40px;font-weight:600;color:#C9BCC3}
 }
 @media (max-width:380px){
-.bk-h1{font-size:clamp(40px,12.5vw,58px)}
 .bk a.bk-wk-a{font-size:13px;padding:10px}
 .bk-ctas .btn{font-size:15px}
 }
@@ -467,7 +469,7 @@ foreach ( $hero as $p ) {
     <div class="bk-hero">
       <div class="bk-hero-t">
         <span class="eyebrow ld d2">Ladies of ATFA · <?php echo esc_html( $info['day_text'] ); ?><?php echo '' !== $venue['area'] ? '<span class="bk-ey-area"> · ' . esc_html( $venue['area'] ) . '</span>' : ''; ?></span>
-        <h1 class="disp bk-h1 ld d3"><span class="a"><?php echo $mark ? '<img class="wm" src="' . esc_url( $mark ) . '" alt="ATFA" data-no-lazy="1">' : 'ATFA '; ?>Ladies</span><span class="b">Breakfast <span class="yr">2027</span></span></h1>
+        <h1 class="fancy bk-h1 ld d3"><span class="a"><?php echo $mark ? '<img class="wm" src="' . esc_url( $mark ) . '" alt="ATFA" data-no-lazy="1">' : 'ATFA '; ?>Ladies</span><span class="b">Breakfast <span class="yr">2027</span></span></h1>
         <p class="bk-lead ld d4">A relaxed Saturday morning for the women of the timber flooring industry: a full breakfast, a glass of bubbles and good company, before the awards dinner that night.</p>
         <div class="bk-ctas ld d5">
           <a class="btn btn-primary" href="#rsvp">Reserve my seat</a>

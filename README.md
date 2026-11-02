@@ -74,7 +74,7 @@ to take it off every page.
 ## Ladies Breakfast page (since 1.11.0)
 
 The Ladies Breakfast 2027 page at /ladies-breakfast-2027/: the same blackout family as the awards and Expo pages, in
-the pink of the Women's Lunch (same two typefaces), with the photos from Rippon Lea (2026) and Melbourne (2025) and a
+the pink of the Women's Lunch (the headline in Playfair Display, everything else in the two typefaces of the other pages), with the photos from Rippon Lea (2026) and Melbourne (2025) and a
 seat reservation form. The page is created private (staff only) the first time the version runs; publish it in wp-admin when it is
 ready, and the awards and Expo pages link to it from then on (staff see the links straight away).
 
