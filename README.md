@@ -66,5 +66,7 @@ category with a sponsor logo set in `data/categories.php` always shows as secure
 Crosbe is the 2027 Principal Partner. `atfa-awards-2027/data/partner.php` holds the name, logo, link and the
 short line about them, and the splash, the entries page and the Expo page all read it: a "Presented by" lockup
 under each headline, a Principal Partner tile on the splash, a feature on the entries and Expo pages, and the
-awards dinner bands. Set `'public' => false` to show the partner to logged-in staff only; return `null` to take
-it off every page.
+awards dinner bands. Crosbe also sponsors Floor of the Year (`'partner' => true` on that award in
+`data/categories.php`): its logo is on the award's panel and card. Set `'public' => false` to show the partner (and
+its Floor of the Year sponsorship) to logged-in staff only, with ATFA on Floor of the Year for visitors; return `null`
+to take it off every page.

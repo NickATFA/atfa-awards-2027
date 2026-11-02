@@ -382,6 +382,9 @@ html.aw-lock{overflow:hidden}
   <div class="card" style="padding:32px;display:flex;flex-direction:column;gap:12px;min-width:0">
     <span class="eyebrow" style="color:#F8931F">Major award</span>
     <div class="disp" style="font-size:56px;font-weight:700">Floor of the Year</div>
+<?php if ( $partner && ! empty( $cats['foty']['sponsor']['partner'] ) ) : ?>
+    <a class="pp pp-dn" href="<?php echo esc_url( $partner['url'] ); ?>" target="_blank" rel="noopener sponsored" style="margin-top:2px"><span class="pp-l">Proudly sponsored by</span><?php echo atfa_awards_partner_img( $partner, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></a>
+<?php endif; ?>
     <p style="font-size:15px;line-height:1.5;color:#B4A99A;max-width:52ch">The overall winner and overall runner-up, chosen from the project category winners and runners-up. No separate entry required.</p>
     <button type="button" class="btn btn-ghost" data-cat="foty" style="align-self:flex-start;margin-top:6px">More info</button>
   </div>

@@ -6,7 +6,7 @@
  * (atfa_expo27_partner() in expo/src/snippet.php), so the name, logo and wording live in one place.
  * Where it shows: a "Presented by" lockup in the hero of the splash, the entries page and the Expo page, the
  * Principal Partner tile in the splash's sponsor row, a Principal Partner feature on the entries and Expo pages,
- * and on the awards dinner bands.
+ * on the awards dinner bands, and as the Floor of the Year sponsor (its award panel and card, and the sponsorship page).
  *
  * Crosbe, agreed 26 October 2026 (Phil's emails with Nathan Wood and Adam Giles, and the agreement in
  * ATFA Files > 2027 > 2027 Expo > Crosbe_ATFA_2027_Sponsorship_Agreement_Final.docx).

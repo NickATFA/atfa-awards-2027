@@ -685,7 +685,12 @@ foreach ( $heads as $s => $h ) :
 	<div class="card foty">
 		<div class="stream-top"><span class="eyebrow o">Major award</span><span class="st st-taken">Secured</span></div>
 		<div class="disp stream-h">Floor of the Year</div>
+<?php if ( $partner && ! empty( $all['foty']['sponsor']['partner'] ) ) : ?>
+		<a class="pp pp-dn" href="<?php echo esc_url( $partner['url'] ); ?>" target="_blank" rel="noopener sponsored" style="margin-top:0"><span class="pp-l">Proudly sponsored by</span><?php echo atfa_awards_partner_img( $partner, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></a>
+		<p style="color:#B4A99A;font-size:14px;line-height:1.5">Floor of the Year is sponsored by <?php echo esc_html( $partner['name'] ); ?>, the 2027 <?php echo esc_html( $partner['role'] ); ?>, and is not available for individual category sponsorship.</p>
+<?php else : ?>
 		<p style="color:#B4A99A;font-size:14px;line-height:1.5"><?php echo esc_html( $offer['major_note'] ); ?></p>
+<?php endif; ?>
 		<p style="color:#8F857A;font-size:13px;line-height:1.5">The overall winner and runner-up are chosen from the project category winners and runners-up, so every project category sponsor is part of the night's biggest moment.</p>
 	</div>
 </div>

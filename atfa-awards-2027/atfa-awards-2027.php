@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, and the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship).
- * Version: 1.10.0
+ * Version: 1.10.1
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.10.0' );
+define( 'ATFA_AWARDS_VERSION', '1.10.1' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -123,19 +123,27 @@ function atfa_awards_categories() {
 		if ( empty( $c['sponsor'] ) ) {
 			$c['sponsor'] = array( 'name' => '', 'img' => '', 'url' => '' );
 		}
+		// Floor of the Year: the Principal Partner's award, wherever the partner shows (staff only until it's public).
+		if ( ! empty( $c['partner'] ) ) {
+			$p = atfa_awards_partner();
+			if ( $p ) {
+				$c['sponsor'] = array( 'name' => $p['name'], 'img' => $p['logo'], 'url' => $p['url'], 'partner' => true );
+			}
+		}
 	}
 	unset( $c );
 	return $cats;
 }
 
 /**
- * The confirmed category sponsors (set per award in data/categories.php, ATFA's own Floor of the Year sponsorship
- * left out), padded with placeholders to fill the strip on the splash and entries pages.
+ * The confirmed category sponsors (set per award in data/categories.php), padded with placeholders to fill the strip
+ * on the splash and entries pages. Floor of the Year is left out: it is ATFA's own, or the Principal Partner's, and
+ * the partner has its own tile and feature next to the strip.
  */
 function atfa_awards_sponsors() {
 	$list = array();
 	foreach ( atfa_awards_categories() as $c ) {
-		if ( empty( $c['sponsor']['img'] ) || ! empty( $c['sponsor']['atfa'] ) ) {
+		if ( empty( $c['sponsor']['img'] ) || ! empty( $c['sponsor']['atfa'] ) || ! empty( $c['sponsor']['partner'] ) ) {
 			continue;
 		}
 		$list[ $c['sponsor']['name'] ] = $c['sponsor'];

@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.10.0",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.10.1",
   "last_updated": "2026-11-02",
-  "changelog": "<p><strong>1.10.0</strong> (2026-11-02): New category sponsorship page at /awards/sponsorship/ (Phil's 2027 Awards Category Sponsorship flyer, online): Platinum Members see it first with their own access code, live availability of every category, a request form that emails Phil and puts categories on hold, and a staff screen under Awards sponsorship for codes, categories, requests and settings. Staff see a Sponsor a category link on the awards pages.</p>"
+  "changelog": "<p><strong>1.10.1</strong> (2026-11-02): Crosbe is now the Floor of the Year sponsor: Proudly sponsored by Crosbe on the Floor of the Year card and panel of the awards page, and on the sponsorship page. Follows the Principal Partner's public setting, so staff see it now and visitors once Crosbe is made public (visitors see ATFA until then).</p>"
 }
