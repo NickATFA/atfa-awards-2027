@@ -131,7 +131,7 @@ html{background:#0C0B0A !important}body{background:#0C0B0A !important;margin:0 !
 .bk-h1{margin:14px 0 0;font-size:136px}
 .bk-h1 .a{display:flex;align-items:flex-end;gap:.18em;line-height:.9}
 .bk-h1 .wm{display:block;height:.9em;width:auto;margin:0 0 .04em}
-.bk-h1 .b{display:block;margin-top:.06em;color:var(--blush);font-size:1em;line-height:.95;text-transform:uppercase;letter-spacing:0;text-shadow:0 0 70px rgba(200,50,138,.45)}
+.bk-h1 .b{display:block;margin-top:.06em;padding-bottom:.1em;color:var(--blush);font-size:1em;line-height:.95;text-transform:uppercase;letter-spacing:0;text-shadow:0 0 70px rgba(200,50,138,.45)}
 .bk-h1 .yr{display:inline-block;margin-left:.16em;font-size:.42em;color:var(--pk);line-height:1;letter-spacing:.02em;align-self:flex-end;padding-bottom:.06em}
 .bk-lead{font-size:22px;max-width:40ch;line-height:1.4;color:var(--mut);margin:36px 0 0}
 .bk-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-top:32px}
@@ -538,7 +538,7 @@ foreach ( $all as $p ) {
       </dl>
     </div>
 <?php if ( $open ) : ?>
-    <form class="bk-form" id="bk-rsvp-form" novalidate data-endpoint="<?php echo esc_url( rest_url( 'atfa-awards/v1/breakfast/rsvp' ) ); ?>">
+    <form class="bk-form" id="bk-rsvp-form" novalidate data-endpoint="<?php echo esc_url( rest_url( 'atfa-awards/v1/breakfast/rsvp' ) ); ?>" data-nonce="<?php echo esc_attr( is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '' ); ?>">
       <label><span class="lt">Your name</span><input type="text" name="name" autocomplete="name" required maxlength="100" placeholder="First and last name"></label>
       <label><span class="lt">Business</span><input type="text" name="business" autocomplete="organization" required maxlength="120" placeholder="Your business"></label>
       <label><span class="lt">Email</span><input type="email" name="email" autocomplete="email" required maxlength="120" placeholder="you@business.com.au"></label>
@@ -703,7 +703,8 @@ foreach ( $all as $p ) {
     if(!d.business){ say('Please add your business.','is-err'); f.business.focus(); return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){ say('Please add a valid email address.','is-err'); f.email.focus(); return; }
     btn.disabled=true; btn.textContent='Reserving...'; say('');
-    fetch(f.getAttribute('data-endpoint'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)})
+    var hdr={'Content-Type':'application/json'}, nonce=f.getAttribute('data-nonce'); if(nonce) hdr['X-WP-Nonce']=nonce;
+    fetch(f.getAttribute('data-endpoint'),{method:'POST',headers:hdr,credentials:'same-origin',body:JSON.stringify(d)})
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(x){
         if(x.ok&&x.j&&x.j.ok){
