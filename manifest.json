@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.12.0",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.12.1",
   "last_updated": "2026-11-03",
-  "changelog": "<p><strong>1.12.0</strong> (2026-11-03): The ATFA Flooring Industry Weekend 2027 landing page at /weekend-2027/ (administrators only until published): the Expo & Conference, the Ladies Breakfast and the Awards Dinner on one page, with the program, the awards, the dinner, sponsorship, venues, an updates sign-up and an Add to my calendar file. Once published, /awards forwards to it while /awards still shows the coming-soon page. The Expo, breakfast and awards pages link their weekend label to it.</p>"
+  "changelog": "<p><strong>1.12.1</strong> (2026-11-03): Publishing the weekend page (or taking it back to private) now clears the whole WP Rocket cache, so /awards, the weekend labels on the Expo, breakfast and awards pages, and any menu link change straight away. Publishing the breakfast page does the same, so the weekend page shows its seats as open.</p>"
 }

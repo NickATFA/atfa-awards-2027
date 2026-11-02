@@ -231,14 +231,28 @@ function atfa_wk_forward_awards() {
 add_action( 'template_redirect', 'atfa_wk_forward_awards', 4 );
 
 /**
- * When the page is published or taken back to private, clear WP Rocket's cached copy of /awards (and of this page),
- * so visitors get the forward (or the coming-soon page back) straight away rather than an old cached copy.
+ * When the page is published or taken back to private, clear WP Rocket's cache, so visitors get the change straight
+ * away rather than an old cached copy: /awards forwards here (or shows the coming-soon page again), and the weekend
+ * labels on the Expo, breakfast and awards pages, and any menu link to this page, appear (or go). The whole cache, as
+ * the sponsorship page does when it opens, since the menus are on every page. The same when the breakfast page is
+ * published or taken back, since this page links to it and shows whether its seats are open. Other changes to this
+ * page clear this page and /awards.
  */
 add_action( 'transition_post_status', function ( $new, $old, $post ) {
-	if ( $new === $old || ! $post || (int) $post->ID !== atfa_wk_page_id() ) {
+	if ( $new === $old || ! $post ) {
 		return;
 	}
-	if ( ! function_exists( 'rocket_clean_post' ) ) {
+	$id      = (int) $post->ID;
+	$weekend = atfa_wk_page_id();
+	$watched = array_filter( array( $weekend, function_exists( 'atfa_bk_page_id' ) ? atfa_bk_page_id() : 0 ) );
+	if ( ! $weekend || ! in_array( $id, $watched, true ) ) {
+		return;
+	}
+	if ( ( 'publish' === $new || 'publish' === $old ) && function_exists( 'rocket_clean_domain' ) ) {
+		rocket_clean_domain();
+		return;
+	}
+	if ( $id !== $weekend || ! function_exists( 'rocket_clean_post' ) ) {
 		return;
 	}
 	$pages = get_option( 'atfa_awards_pages' );

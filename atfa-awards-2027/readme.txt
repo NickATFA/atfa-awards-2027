@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.12.0
+Stable tag: 1.12.1
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -36,7 +36,7 @@ Since 1.10.0 the plugin also runs /awards/sponsorship/, the 2027 awards category
 Since 1.12.0 the plugin also runs /weekend-2027/, the ATFA Flooring Industry Weekend 2027 landing page: the Expo & Conference, the Ladies Breakfast and the Awards Dinner on one page, with a day-by-day program, the awards (what's new, a reminder sign-up, the road to the dinner, category sponsors), the dinner, sponsorship, the venues and an updates sign-up. "Add to my calendar" gives a calendar file of the weekend (/wp-json/atfa-awards/v1/weekend/calendar).
 
 * It is made private the first time 1.12.0 runs. While private, only administrators can open it ('preview' in data/weekend.php); everyone else is sent to the awards page.
-* Publish it in wp-admin when it is ready. From then on atfa.com.au/awards (the coming-soon page) forwards to it, until /awards shows the entries page ('forward_awards' in data/weekend.php turns this off). Staff can still see the old page at /awards/?splash=1. Publishing clears WP Rocket's cached copy of /awards.
+* Publish it in wp-admin when it is ready. From then on atfa.com.au/awards (the coming-soon page) forwards to it, until /awards shows the entries page ('forward_awards' in data/weekend.php turns this off). Staff can still see the old page at /awards/?splash=1. Publishing (or taking it back to private) clears WP Rocket's cache, so /awards, the weekend labels on the Expo, breakfast and awards pages, and any menu link change straight away. Publishing the breakfast page does the same, so the weekend page shows its seats as open.
 * The Expo, breakfast and awards pages link their "The ATFA weekend" label to it for anyone who can open it.
 * Crosbe's open afternoon on Thursday 20 May shows to logged-in staff only, marked Proposed, until Crosbe is public (data/partner.php) and the afternoon is confirmed ('confirmed' in data/weekend.php). With it the page reads "four events over three days"; without it, "three events over two days".
 * Sign-ups from the page go on the same list as the awards notify-me (Awards signups), marked "Weekend updates" or "Awards entries".
