@@ -318,7 +318,7 @@ html.aw-lock{overflow:hidden}
   </div>
 </div>
 <?php endif; ?>
-<div class="eyebrow<?php echo $partner ? ' sp-h' : ''; ?>" style="<?php echo $partner ? '' : 'margin-bottom:16px'; ?>">Category sponsors</div>
+<div class="eyebrow<?php echo $partner ? ' sp-h' : ''; ?>" style="<?php echo $partner ? '' : 'margin-bottom:16px'; ?>">Category sponsors<?php echo function_exists( 'atfa_aws_awards_link' ) ? atfa_aws_awards_link() : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
 <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
 <?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
   <?php echo atfa_awards_sponsor_tile( $sp ); ?>

@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: ATFA Flooring Awards 2027
- * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, and the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan.
- * Version: 1.9.1
+ * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, and the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship).
+ * Version: 1.10.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.9.1' );
+define( 'ATFA_AWARDS_VERSION', '1.10.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -38,6 +38,13 @@ if ( ! defined( 'ATFA_AWARDS_REDIRECT_OLD_PAGE' ) ) {
 // (see expo/README.md). It used to run as a Code Snippet: if that snippet is still switched on, whichever copy
 // loads first runs and the other does nothing, so nothing clashes; switch the snippet off once this is installed.
 require_once ATFA_AWARDS_DIR . 'includes/expo-2027.php';
+
+// 2027 Awards category sponsorship: the page at /awards/sponsorship/ (Platinum Members first, each with their own
+// access code), and its staff screen under Awards sponsorship in wp-admin.
+require_once ATFA_AWARDS_DIR . 'includes/sponsorship.php';
+if ( is_admin() ) {
+	require_once ATFA_AWARDS_DIR . 'includes/sponsorship-admin.php';
+}
 
 /* ---------------------------------------------------------------------------
  * Data shared by the views
@@ -574,6 +581,10 @@ function atfa_awards_share_texts() {
 		'entries' => array(
 			'title'       => 'ATFA Flooring Awards 2027: entries open',
 			'description' => 'Twenty awards, three ways to win. Enter from your phone in about ten minutes with photos straight from your camera roll. Entries close Wednesday 31 March 2027.',
+		),
+		'sponsorship' => array(
+			'title'       => 'ATFA Flooring Awards 2027: category sponsorship',
+			'description' => 'Put your brand behind the best in the industry. Sponsor a 2027 ATFA Flooring Awards category, with two tickets to the Awards Dinner on Saturday 22 May 2027 in Sydney.',
 		),
 	);
 }

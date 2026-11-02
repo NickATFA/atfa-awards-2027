@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.9.1
+Stable tag: 1.10.0
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -20,6 +20,16 @@ Notify-me signups are stored under Awards signups in the WordPress menu (export 
 Since 1.8.0 the plugin also runs the ATFA Expo & Conference 2027 page at /expo-2027/ (the [atfa_expo27_page] shortcode on that page) and the older floor plan shortcode [atfa_expo27_floorplan]. Stand availability comes from the published Website tab of the 2027 Exhibitor List Google Sheet, through /wp-json/atfa/v1/expo27/stands. Logged-in staff see a bar with the stand sheet link and Refresh. While the page is private, visitors who go to it are sent to the old floor plan page and menu links to it only show for staff. Staff can still let someone without a login see it for 24 hours, 3 days or 7 days: staff bar on the page, "Share this page with someone who doesn't have a login". Each link can be stopped there at any time. The stand PDF ships in the plugin (assets/expo/).
 
 This code used to be the Code Snippet "ATFA Expo 2027 page and Hall 5 floor plan". After updating to 1.8.0, switch that snippet off in Snippets (it does nothing while the plugin has the page, so it's safe either way). The source, build and tests are in expo/ in the GitHub repo.
+
+== Category sponsorship ==
+
+Since 1.10.0 the plugin also runs /awards/sponsorship/, the 2027 awards category sponsorship page (Phil's flyer, online, with live availability). It is made the first time 1.10.0 runs, as a private page under /awards/.
+
+* Who sees it: logged-in staff always; Platinum Members with their own access code; everyone else gets the code screen. Settings can open it to everyone (no code needed), which also adds a "Sponsor a category" link to the awards pages.
+* Access codes: wp-admin > Awards sponsorship > Access codes. Add members one per line (Company, contact name, email), then send each one their personal link or the invitation text. A code lets one device in for 90 days. Stop or replace a code at any time.
+* Requests: members pick up to two categories (Settings can change the number) and send the form. That emails Phil (copy to Nick), puts the categories on hold and sends the member a confirmation. Confirm or release each request under Requests, or set any category's status by hand under Categories. Requests sent from a staff login are tests: nothing is held and only the sender gets the emails.
+* EPOXY: once the categories are on EPOXY, put the link under Settings and the page sends people there instead of the form.
+* The offer itself (price, inclusions, dinner, contact) is in data/sponsorship.php.
 
 == Changing things ==
 

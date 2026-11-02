@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.9.1",
+  "version": "1.10.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.9.1",
-  "last_updated": "2026-10-28",
-  "changelog": "<p><strong>1.9.1</strong> (2026-10-28): New Expo stand prices (excl. GST): 3 × 3 m $1,400, 3 × 6 m and 6 × 3 m $2,500, 6 × 6 m $4,200, on the Expo page, the Hall 5 floor plan page and the stand PDF. Savings shown against the same area in 3 × 3 m stands are now 10% and 25%.</p>"
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.10.0",
+  "last_updated": "2026-11-02",
+  "changelog": "<p><strong>1.10.0</strong> (2026-11-02): New category sponsorship page at /awards/sponsorship/ (Phil's 2027 Awards Category Sponsorship flyer, online): Platinum Members see it first with their own access code, live availability of every category, a request form that emails Phil and puts categories on hold, and a staff screen under Awards sponsorship for codes, categories, requests and settings. Staff see a Sponsor a category link on the awards pages.</p>"
 }

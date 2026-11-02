@@ -150,7 +150,7 @@ html{background:#050505 !important}body{background:#050505 !important;margin:0 !
         </div>
 <?php endif; ?>
         <div class="sp-cat">
-          <span class="eyebrow">Category sponsors</span>
+          <span class="eyebrow">Category sponsors<?php echo function_exists( 'atfa_aws_awards_link' ) ? atfa_aws_awards_link() : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
           <div class="sponsors" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
 <?php foreach ( atfa_awards_sponsors() as $sp ) : ?>
             <?php echo atfa_awards_sponsor_tile( $sp ); ?>
