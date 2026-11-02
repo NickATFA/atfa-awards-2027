@@ -8,10 +8,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Who can use this screen: administrators while the page is hidden, Editors and Administrators otherwise.
+ * Who can use this screen: administrators, until the page is open to everyone (then Editors too). It shows the codes,
+ * so it stays with the people who can see the page.
  */
 function atfa_aws_admin_cap() {
-	return atfa_aws_hidden() ? 'manage_options' : 'edit_pages';
+	return 'public' === atfa_aws_settings()['access'] ? 'edit_pages' : 'manage_options';
 }
 
 add_action( 'admin_menu', function () {
@@ -70,7 +71,7 @@ function atfa_aws_admin_page() {
 			<?php elseif ( 'admin' === $settings['access'] ) : ?>
 				<strong>Hidden for now:</strong> only administrators can see it, and this screen. Everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Settings when you're ready.
 			<?php else : ?>
-				<strong>Platinum first look:</strong> only staff and people with an access code can see it. Everyone else gets the code screen.
+				<strong>Platinum first look:</strong> only Platinum Members with their access code, and administrators, can see it. Everyone else, staff included, gets the code screen.
 			<?php endif; ?>
 			<?php echo '' !== $settings['book_url'] ? 'Bookings go to EPOXY.' : 'Requests come to ' . esc_html( $settings['to'] ) . ' and are booked by hand.'; ?>
 		</p>
@@ -574,7 +575,7 @@ function atfa_aws_admin_settings( $s ) {
 				<th scope="row">Who can see the page</th>
 				<td>
 					<label><input type="radio" name="access" value="admin" <?php checked( $s['access'], 'admin' ); ?>> Hidden for now: administrators only. Staff, members with a code and visitors are sent to the awards page.</label><br>
-					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: staff, and members with an access code</label><br>
+					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: Platinum Members with their access code, and administrators. Staff and visitors get the code screen.</label><br>
 					<label><input type="radio" name="access" value="public" <?php checked( $s['access'], 'public' ); ?>> Everyone (no code needed). Also puts a "Sponsor a category" link on the awards pages.</label>
 				</td>
 			</tr>
@@ -637,10 +638,10 @@ add_action( 'admin_post_atfa_aws_save_settings', function () {
 	}
 	$said = array(
 		'admin'  => ' The page is hidden: administrators only.',
-		'codes'  => ' The page is open for the Platinum first look: staff, and members with their code.',
+		'codes'  => ' The page is live for the Platinum first look: Platinum Members with their code, and administrators.',
 		'public' => ' The page is now open to everyone.',
 	);
-	if ( 'admin' === $new['access'] && ! current_user_can( 'manage_options' ) ) {
+	if ( 'public' !== $new['access'] && ! current_user_can( 'manage_options' ) ) {
 		wp_safe_redirect( admin_url() );
 		exit;
 	}

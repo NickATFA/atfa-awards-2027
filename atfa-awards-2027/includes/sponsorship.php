@@ -7,9 +7,10 @@
  *   The page is a private WordPress page, so it stays out of menus, site search, feeds and sitemaps.
  *   - Hidden (the default, and the setting from 2 November 2026): administrators only. Everyone else, staff and
  *     Platinum Members with a code included, is sent to the awards page, as with the Ladies Breakfast page.
- *   - Platinum first look: staff (Editors and Administrators) see the whole page with a staff bar; a visitor with a
- *     live access code sees the whole page, greeted by company name; anyone else gets the code screen.
- *   - Everyone: nobody needs a code.
+ *   - Platinum first look (from 3 November 2026): Platinum Members with a live access code see the whole page,
+ *     greeted by company name; administrators see it with a staff bar; anyone else, Editors included, gets the code
+ *     screen (an Editor with a code sees what members see).
+ *   - Everyone: nobody needs a code, and Editors get the staff bar too.
  *
  * ACCESS CODES
  *   One per Platinum Member, made in wp-admin (Awards sponsorship > Access codes). Typing the code on the code screen,
@@ -217,10 +218,11 @@ function atfa_aws_hidden() {
 }
 
 /**
- * Who gets the staff view: administrators while the page is hidden, Editors and Administrators otherwise.
+ * Who gets the staff view: administrators while the page is hidden or Platinum Members only, Editors and
+ * Administrators once it is open to everyone.
  */
 function atfa_aws_can_preview() {
-	return atfa_aws_hidden() ? atfa_aws_is_admin() : atfa_aws_is_staff();
+	return 'public' === atfa_aws_settings()['access'] ? atfa_aws_is_staff() : atfa_aws_is_admin();
 }
 
 /**
@@ -544,7 +546,7 @@ function atfa_aws_rest_request( WP_REST_Request $request ) {
 	$settings = atfa_aws_settings();
 	$offer    = atfa_aws_offer();
 	$member   = atfa_aws_member();
-	$staff    = atfa_aws_is_staff();
+	$staff    = atfa_aws_can_preview();
 	$fail     = function ( $message, $status = 400, $extra = array() ) {
 		return new WP_REST_Response( array_merge( array( 'ok' => false, 'message' => $message ), $extra ), $status );
 	};
@@ -747,7 +749,7 @@ function atfa_aws_send_request_emails( $post_id, $test = false ) {
 
 /**
  * "Sponsor a category" beside the category sponsors on the awards pages: for everyone once the page is open to
- * all, for staff during the Platinum first look and administrators while it is hidden (the awards pages are cached
+ * all, for administrators before that (the awards pages are cached
  * for visitors, so code holders don't get it there).
  */
 function atfa_aws_awards_link() {

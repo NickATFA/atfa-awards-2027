@@ -1,7 +1,7 @@
 === ATFA Flooring Awards 2027 ===
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.11.6
+Stable tag: 1.11.7
 License: GPL-2.0-or-later
 
 The 2027 awards season pages for atfa.com.au.
@@ -25,7 +25,7 @@ This code used to be the Code Snippet "ATFA Expo 2027 page and Hall 5 floor plan
 
 Since 1.10.0 the plugin also runs /awards/sponsorship/, the 2027 awards category sponsorship page (Phil's flyer, online, with live availability). It is made the first time 1.10.0 runs, as a private page under /awards/.
 
-* Who sees it (Awards sponsorship > Settings): Hidden (the default, set 2 November 2026): administrators only, and everyone else, staff and code holders included, is sent to the awards page. Platinum first look: logged-in staff, and Platinum Members with their own access code; everyone else gets the code screen. Everyone: no code needed, and a "Sponsor a category" link goes on the awards pages. While hidden, the Awards sponsorship screen is for administrators only too.
+* Who sees it (Awards sponsorship > Settings): Hidden (the default, set 2 November 2026): administrators only, and everyone else, staff and code holders included, is sent to the awards page. Platinum first look (live from 3 November 2026): Platinum Members with their own access code, and administrators; everyone else, staff included, gets the code screen. Everyone: no code needed, and a "Sponsor a category" link goes on the awards pages. The Awards sponsorship screen is for administrators until the page is open to everyone.
 * Access codes: wp-admin > Awards sponsorship > Access codes. Add members one per line (Company, contact name, email), then send each one their personal link or the invitation text. A code lets one device in for 90 days. Stop or replace a code at any time.
 * Requests: members pick up to two categories (Settings can change the number) and send the form. That emails Phil (copy to Nick), puts the categories on hold and sends the member a confirmation. Confirm or release each request under Requests, or set any category's status by hand under Categories. Requests sent from a staff login are tests: nothing is held and only the sender gets the emails.
 * EPOXY: once the categories are on EPOXY, put the link under Settings and the page sends people there instead of the form.
