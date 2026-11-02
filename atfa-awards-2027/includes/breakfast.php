@@ -204,13 +204,6 @@ add_filter( 'wp_get_nav_menu_items', function ( $items ) {
 	return is_array( $out ) ? array_values( $out ) : $out;
 } );
 
-// The serif for the word Breakfast (Playfair Display), on this page only. The other two fonts come from the template.
-add_action( 'wp_head', function () {
-	if ( atfa_bk_is_page() ) {
-		echo '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap">' . "\n";
-	}
-}, 2 );
-
 add_shortcode( 'atfa_awards_breakfast', function () {
 	ob_start();
 	include ATFA_AWARDS_DIR . 'views/breakfast.php';

@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.1",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.2",
   "last_updated": "2026-11-02",
-  "changelog": "<p><strong>1.11.1</strong> (2026-11-02): Ladies Breakfast page: a reservation sent from a staff login while the page is private is now treated as a test (the form sends the REST nonce, so WordPress knows who is sending it), and a little more room under the headline.</p>"
+  "changelog": "<p><strong>1.11.2</strong> (2026-11-02): Ladies Breakfast page: one type family like the other pages, calmer headline</p>"
 }
