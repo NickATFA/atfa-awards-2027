@@ -32,6 +32,7 @@ function atfa_bk_info() {
 	$info = is_array( $info ) ? $info : array();
 	$info = array_merge( array(
 		'title'           => 'Ladies Breakfast 2027',
+		'preview'         => 'manage_options',
 		'date'            => '2027-05-22',
 		'date_text'       => 'Saturday 22 May 2027',
 		'day_text'        => 'Saturday morning, 22 May 2027',
@@ -110,8 +111,13 @@ function atfa_bk_page_url() {
 	return home_url( '?page_id=' . $id );
 }
 
+/**
+ * Whether this person may open the page while it is private: 'preview' in data/breakfast.php names the capability
+ * (administrators only by default).
+ */
 function atfa_bk_is_staff() {
-	return is_user_logged_in() && current_user_can( 'edit_pages' );
+	$cap = (string) atfa_bk_info()['preview'];
+	return is_user_logged_in() && current_user_can( '' !== $cap ? $cap : 'manage_options' );
 }
 
 /**
@@ -124,11 +130,11 @@ function atfa_bk_is_public() {
 }
 
 /**
- * Whether this visitor can open the page: everyone once it is published, staff before that.
+ * Whether this visitor can open the page: everyone once it is published, the preview people before that.
  */
 function atfa_bk_visible() {
 	$id = atfa_bk_page_id();
-	return $id && ( 'publish' === get_post_status( $id ) || current_user_can( 'read_post', $id ) );
+	return $id && ( 'publish' === get_post_status( $id ) || atfa_bk_is_staff() );
 }
 
 /**
@@ -183,19 +189,21 @@ function atfa_bk_is_page() {
 }
 
 /**
- * While the page is private, anyone who can't open it and goes to its address is sent to the awards page rather
- * than a "page not found". Temporary (302), so browsers forget it once the page is published.
+ * While the page is private, anyone outside the preview group who goes to its address is sent to the awards page
+ * rather than a "page not found": visitors (WordPress gives them a 404) and logged-in staff who could otherwise read
+ * a private page. Temporary (302), so browsers forget it once the page is published.
  */
 function atfa_bk_hidden_redirect() {
 	global $wp;
-	if ( is_admin() || ! is_404() || ! isset( $wp->request ) ) {
-		return;
-	}
-	if ( trim( (string) $wp->request, '/' ) !== ATFA_BK_SLUG ) {
+	if ( is_admin() ) {
 		return;
 	}
 	$id = atfa_bk_page_id();
 	if ( ! $id || 'publish' === get_post_status( $id ) ) {
+		return;
+	}
+	$here = is_page( $id ) || ( is_404() && isset( $wp->request ) && trim( (string) $wp->request, '/' ) === ATFA_BK_SLUG );
+	if ( ! $here || atfa_bk_is_staff() ) {
 		return;
 	}
 	$pages = get_option( 'atfa_awards_pages' );
@@ -848,9 +856,10 @@ function atfa_bk_staff_bar() {
 	$public = atfa_bk_is_public();
 	$seats  = atfa_bk_rsvp_count();
 	$id     = atfa_bk_page_id();
+	$admins = 'manage_options' === (string) $info['preview'];
 	$status = $public
 		? 'This page is live. Visitors can see it and reserve a seat.'
-		: 'Staff only for now. Visitors are sent to the awards page until this page is published in wp-admin. Reservations you send from here are tests and only email you.';
+		: ( $admins ? 'Administrators only for now. Everyone else, staff included, is sent to the awards page' : 'Staff only for now. Visitors are sent to the awards page' ) . ' until this page is published in wp-admin. Reservations and sponsorship enquiries you send from here are tests and only email you.';
 	$notes  = array();
 	if ( empty( $info['venue']['confirmed'] ) ) {
 		$notes[] = 'venue and times show as "to be confirmed"';
@@ -871,7 +880,7 @@ function atfa_bk_staff_bar() {
 	$notes[]   = 'cost shows as "' . $info['price']['text'] . '"';
 	$enquiries = atfa_bk_sponsor_count();
 	return '<div class="bk-staff" role="region" aria-label="Staff tools">'
-		. '<span class="bk-staff-tag">Staff only</span>'
+		. '<span class="bk-staff-tag">' . ( $admins && ! $public ? 'Admins only' : 'Staff only' ) . '</span>'
 		. '<div class="bk-staff-text"><span class="bk-staff-status' . ( $public ? '' : ' is-warn' ) . '">' . esc_html( $status ) . '</span> '
 		. '<span class="bk-staff-note">' . esc_html( $seats . ' ' . ( 1 === $seats ? 'seat' : 'seats' ) . ' reserved' . ( $info['places'] ? ' of ' . (int) $info['places'] : '' ) . ', ' . $enquiries . ' sponsorship ' . ( 1 === $enquiries ? 'enquiry' : 'enquiries' ) . '. ' . ucfirst( implode( ', ', $notes ) ) . ' (data/breakfast.php).' ) . '</span></div>'
 		. '<div class="bk-staff-btns">'
