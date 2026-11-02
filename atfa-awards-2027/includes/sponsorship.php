@@ -3,13 +3,13 @@
  * 2027 Awards category sponsorship: the page at /awards/sponsorship/ (views/sponsorship.php), who can see it, which
  * categories are still available, and requests.
  *
- * WHO SEES WHAT
- *   The page is a private WordPress page, so it stays out of menus, site search, feeds and sitemaps. Its address
- *   still opens for everyone, and this file decides what each visitor gets:
- *   - Staff (Editors and Administrators, logged in): the whole page, with a staff bar.
- *   - A visitor with a live access code: the whole page, greeted by company name.
- *   - Anyone else: the code screen.
- *   Once the page is opened to everyone (Awards sponsorship > Settings), nobody needs a code.
+ * WHO SEES WHAT (Awards sponsorship > Settings)
+ *   The page is a private WordPress page, so it stays out of menus, site search, feeds and sitemaps.
+ *   - Hidden (the default, and the setting from 2 November 2026): administrators only. Everyone else, staff and
+ *     Platinum Members with a code included, is sent to the awards page, as with the Ladies Breakfast page.
+ *   - Platinum first look: staff (Editors and Administrators) see the whole page with a staff bar; a visitor with a
+ *     live access code sees the whole page, greeted by company name; anyone else gets the code screen.
+ *   - Everyone: nobody needs a code.
  *
  * ACCESS CODES
  *   One per Platinum Member, made in wp-admin (Awards sponsorship > Access codes). Typing the code on the code screen,
@@ -56,7 +56,7 @@ function atfa_aws_price() {
 
 /**
  * Settings (Awards sponsorship > Settings).
- *   access       'codes' (staff and code holders) or 'public' (everyone).
+ *   access       'admin' (hidden: administrators only), 'codes' (staff and code holders) or 'public' (everyone).
  *   public_from  When the categories go on the ATFA website, in words (optional, shown on the page).
  *   limit        Categories each sponsor can request in this round (Phil's flyer: two).
  *   book_url     The EPOXY link. Empty: the request form (booked by hand). Set: the page sends people there.
@@ -66,7 +66,7 @@ function atfa_aws_settings() {
 	$saved = get_option( ATFA_AWS_SETTINGS, array() );
 	$s     = array_merge(
 		array(
-			'access'      => 'codes',
+			'access'      => 'admin',
 			'public_from' => '',
 			'limit'       => 2,
 			'book_url'    => '',
@@ -75,7 +75,7 @@ function atfa_aws_settings() {
 		),
 		is_array( $saved ) ? $saved : array()
 	);
-	$s['access'] = 'public' === $s['access'] ? 'public' : 'codes';
+	$s['access'] = in_array( $s['access'], array( 'admin', 'codes', 'public' ), true ) ? $s['access'] : 'admin';
 	$s['limit']  = max( 1, min( 30, (int) $s['limit'] ) );
 	return $s;
 }
@@ -205,6 +205,24 @@ function atfa_aws_is_staff() {
 	return is_user_logged_in() && current_user_can( 'edit_pages' );
 }
 
+function atfa_aws_is_admin() {
+	return is_user_logged_in() && current_user_can( 'manage_options' );
+}
+
+/**
+ * Hidden for now (Settings): only administrators can open the page or send the form.
+ */
+function atfa_aws_hidden() {
+	return 'admin' === atfa_aws_settings()['access'];
+}
+
+/**
+ * Who gets the staff view: administrators while the page is hidden, Editors and Administrators otherwise.
+ */
+function atfa_aws_can_preview() {
+	return atfa_aws_hidden() ? atfa_aws_is_admin() : atfa_aws_is_staff();
+}
+
 /**
  * All codes: id => array( company, contact, email, code, active, created, by, visits, last ).
  */
@@ -318,8 +336,8 @@ function atfa_aws_note_visit( $id, $force = false ) {
  * Who is looking at the page.
  */
 function atfa_aws_viewer() {
-	$staff  = atfa_aws_is_staff();
-	$member = atfa_aws_member();
+	$staff  = atfa_aws_can_preview();
+	$member = atfa_aws_hidden() ? null : atfa_aws_member();
 	$public = 'public' === atfa_aws_settings()['access'];
 	$gate   = ! $staff && ! $member && ! $public;
 	// Staff can look at the code screen as visitors see it: ?aws_preview=gate.
@@ -350,6 +368,15 @@ function atfa_aws_template_redirect() {
 	nocache_headers();
 	header( 'X-Robots-Tag: noindex, nofollow', true );
 	header( 'Vary: Cookie', false );
+
+	// Hidden for now: everyone but administrators (staff and code holders included) goes to the awards page, like
+	// the Ladies Breakfast page while it is private. Temporary (302), and no code is checked or remembered.
+	if ( atfa_aws_hidden() && ! atfa_aws_is_admin() ) {
+		$pages = get_option( 'atfa_awards_pages' );
+		$to    = ( is_array( $pages ) && ! empty( $pages['splash'] ) && 'publish' === get_post_status( (int) $pages['splash'] ) ) ? get_permalink( (int) $pages['splash'] ) : home_url( '/' );
+		wp_safe_redirect( $to, 302 );
+		exit;
+	}
 
 	$raw = null;
 	if ( isset( $_POST['aws_code'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -522,6 +549,9 @@ function atfa_aws_rest_request( WP_REST_Request $request ) {
 		return new WP_REST_Response( array_merge( array( 'ok' => false, 'message' => $message ), $extra ), $status );
 	};
 
+	if ( atfa_aws_hidden() && ! atfa_aws_is_admin() ) {
+		return $fail( 'This page isn\'t open yet.', 403 );
+	}
 	if ( ! $staff && ! $member && 'public' !== $settings['access'] ) {
 		return $fail( 'This page needs your access code again. Reload the page and enter the code from your invitation.', 403 );
 	}
@@ -717,13 +747,14 @@ function atfa_aws_send_request_emails( $post_id, $test = false ) {
 
 /**
  * "Sponsor a category" beside the category sponsors on the awards pages: for everyone once the page is open to
- * all, for staff before that (the awards pages are cached for visitors, so code holders don't get it there).
+ * all, for staff during the Platinum first look and administrators while it is hidden (the awards pages are cached
+ * for visitors, so code holders don't get it there).
  */
 function atfa_aws_awards_link() {
 	if ( ! atfa_aws_page_id() ) {
 		return '';
 	}
-	if ( 'public' !== atfa_aws_settings()['access'] && ! atfa_aws_is_staff() ) {
+	if ( 'public' !== atfa_aws_settings()['access'] && ! atfa_aws_can_preview() ) {
 		return '';
 	}
 	return ' · <a href="' . esc_url( atfa_aws_page_url() ) . '" style="color:#F8931F;letter-spacing:.1em">Sponsor a category</a>';

@@ -511,7 +511,7 @@ $config = array(
 
 <?php if ( $viewer['staff'] ) : ?>
 <div class="staff"><div class="wrap">
-	<span><b>Staff</b><?php echo 'public' === $settings['access'] ? 'Open to everyone.' : 'Platinum first look: members need their access code, everyone else gets the code screen.'; ?> Requests you send from this login are tests: only you get the emails and nothing is held.</span>
+	<span><b><?php echo 'admin' === $settings['access'] ? 'Admins only' : 'Staff'; ?></b><?php echo 'public' === $settings['access'] ? 'Open to everyone.' : ( 'admin' === $settings['access'] ? 'Hidden for now: everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Awards sponsorship > Settings.' : 'Platinum first look: members need their access code, everyone else gets the code screen.' ); ?> Requests you send from this login are tests: only you get the emails and nothing is held.</span>
 	<span><a href="<?php echo esc_url( add_query_arg( 'aws_preview', 'gate', atfa_aws_page_url() ) ); ?>">See the code screen</a> · <a href="<?php echo esc_url( admin_url( 'admin.php?page=atfa-aws' ) ); ?>">Codes, categories and requests</a></span>
 </div></div>
 <?php endif; ?>

@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.11.5",
+  "version": "1.11.6",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.5",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.6",
   "last_updated": "2026-11-02",
-  "changelog": "<p><strong>1.11.5</strong> (2026-11-02): Ladies Breakfast page: hidden from everyone but administrators while it is private</p>"
+  "changelog": "<p><strong>1.11.6</strong> (2026-11-02): The category sponsorship page is hidden for now: administrators only. Staff, Platinum Members with a code and visitors are sent to the awards page, as with the Ladies Breakfast page, and the Awards sponsorship screen is for administrators while it is hidden. Open it again under Awards sponsorship > Settings.</p>"
 }

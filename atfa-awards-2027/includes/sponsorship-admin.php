@@ -7,8 +7,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Who can use this screen: administrators while the page is hidden, Editors and Administrators otherwise.
+ */
+function atfa_aws_admin_cap() {
+	return atfa_aws_hidden() ? 'manage_options' : 'edit_pages';
+}
+
 add_action( 'admin_menu', function () {
-	add_menu_page( 'Awards sponsorship', 'Awards sponsorship', 'edit_pages', 'atfa-aws', 'atfa_aws_admin_page', 'dashicons-awards', 27 );
+	add_menu_page( 'Awards sponsorship', 'Awards sponsorship', atfa_aws_admin_cap(), 'atfa-aws', 'atfa_aws_admin_page', 'dashicons-awards', 27 );
 } );
 
 function atfa_aws_admin_url( $tab = 'categories', $args = array() ) {
@@ -16,7 +23,7 @@ function atfa_aws_admin_url( $tab = 'categories', $args = array() ) {
 }
 
 function atfa_aws_admin_check( $action ) {
-	if ( ! current_user_can( 'edit_pages' ) ) {
+	if ( ! current_user_can( atfa_aws_admin_cap() ) ) {
 		wp_die( 'Not allowed.' );
 	}
 	check_admin_referer( $action );
@@ -36,7 +43,7 @@ function atfa_aws_when( $ts ) {
  * ------------------------------------------------------------------------ */
 
 function atfa_aws_admin_page() {
-	if ( ! current_user_can( 'edit_pages' ) ) {
+	if ( ! current_user_can( atfa_aws_admin_cap() ) ) {
 		return;
 	}
 	$tab  = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'categories'; // phpcs:ignore WordPress.Security.NonceVerification
@@ -60,6 +67,8 @@ function atfa_aws_admin_page() {
 			The page is at <a href="<?php echo esc_url( $page_url ); ?>" target="_blank" rel="noopener"><?php echo esc_html( preg_replace( '#^https?://#', '', $page_url ) ); ?></a>.
 			<?php if ( 'public' === $settings['access'] ) : ?>
 				<strong>Open to everyone.</strong>
+			<?php elseif ( 'admin' === $settings['access'] ) : ?>
+				<strong>Hidden for now:</strong> only administrators can see it, and this screen. Everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Settings when you're ready.
 			<?php else : ?>
 				<strong>Platinum first look:</strong> only staff and people with an access code can see it. Everyone else gets the code screen.
 			<?php endif; ?>
@@ -405,7 +414,7 @@ add_action( 'admin_post_atfa_aws_code_action', function () {
 } );
 
 add_action( 'admin_post_atfa_aws_export_codes', function () {
-	if ( ! current_user_can( 'edit_pages' ) ) {
+	if ( ! current_user_can( atfa_aws_admin_cap() ) ) {
 		wp_die( 'Not allowed.' );
 	}
 	check_admin_referer( 'atfa_aws_export_codes' );
@@ -564,6 +573,7 @@ function atfa_aws_admin_settings( $s ) {
 			<tr>
 				<th scope="row">Who can see the page</th>
 				<td>
+					<label><input type="radio" name="access" value="admin" <?php checked( $s['access'], 'admin' ); ?>> Hidden for now: administrators only. Staff, members with a code and visitors are sent to the awards page.</label><br>
 					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: staff, and members with an access code</label><br>
 					<label><input type="radio" name="access" value="public" <?php checked( $s['access'], 'public' ); ?>> Everyone (no code needed). Also puts a "Sponsor a category" link on the awards pages.</label>
 				</td>
@@ -611,7 +621,7 @@ add_action( 'admin_post_atfa_aws_save_settings', function () {
 		}
 	}
 	$new = array(
-		'access'      => ( isset( $_POST['access'] ) && 'public' === $_POST['access'] ) ? 'public' : 'codes',
+		'access'      => ( isset( $_POST['access'] ) && in_array( $_POST['access'], array( 'admin', 'codes', 'public' ), true ) ) ? sanitize_key( $_POST['access'] ) : 'admin',
 		'public_from' => isset( $_POST['public_from'] ) ? atfa_aws_text( wp_unslash( $_POST['public_from'] ), 60 ) : '',
 		'limit'       => isset( $_POST['limit'] ) ? max( 1, min( 30, (int) $_POST['limit'] ) ) : 2,
 		'book_url'    => isset( $_POST['book_url'] ) ? esc_url_raw( trim( (string) wp_unslash( $_POST['book_url'] ) ) ) : '',
@@ -625,5 +635,14 @@ add_action( 'admin_post_atfa_aws_save_settings', function () {
 	if ( $new['access'] !== $old['access'] && function_exists( 'rocket_clean_domain' ) ) {
 		rocket_clean_domain();
 	}
-	atfa_aws_admin_done( 'settings', 'Saved.' . ( $new['access'] !== $old['access'] ? ( 'public' === $new['access'] ? ' The page is now open to everyone.' : ' The page is back to staff and code holders only.' ) : '' ) );
+	$said = array(
+		'admin'  => ' The page is hidden: administrators only.',
+		'codes'  => ' The page is open for the Platinum first look: staff, and members with their code.',
+		'public' => ' The page is now open to everyone.',
+	);
+	if ( 'admin' === $new['access'] && ! current_user_can( 'manage_options' ) ) {
+		wp_safe_redirect( admin_url() );
+		exit;
+	}
+	atfa_aws_admin_done( 'settings', 'Saved.' . ( $new['access'] !== $old['access'] ? $said[ $new['access'] ] : '' ) );
 } );
