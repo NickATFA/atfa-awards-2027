@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: ATFA Flooring Awards 2027
- * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, and the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship).
- * Version: 1.10.1
+ * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship), and the Ladies Breakfast 2027 page at /ladies-breakfast-2027/ with its seat reservations under Breakfast RSVPs.
+ * Version: 1.11.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.10.1' );
+define( 'ATFA_AWARDS_VERSION', '1.11.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -45,6 +45,10 @@ require_once ATFA_AWARDS_DIR . 'includes/sponsorship.php';
 if ( is_admin() ) {
 	require_once ATFA_AWARDS_DIR . 'includes/sponsorship-admin.php';
 }
+
+// Ladies Breakfast 2027: the page at /ladies-breakfast-2027/ (staff only until it is published) and the seat
+// reservations it takes, listed under Breakfast RSVPs in wp-admin. Details in data/breakfast.php.
+require_once ATFA_AWARDS_DIR . 'includes/breakfast.php';
 
 /* ---------------------------------------------------------------------------
  * Data shared by the views
@@ -236,8 +240,8 @@ function atfa_awards_title_html( $full ) {
 
 /**
  * The rest of the ATFA weekend in Sydney, shown under the dinner on the entries page and linked in its footer.
- * Dates from ATFA Program Dates 2027 (v8). Leave a url empty until the event's page is up: the card then shows
- * its "soon" line and no link.
+ * Dates from ATFA Program Dates 2027 (v8). A card without a url shows its "soon" line and no link: the breakfast
+ * links to its page once that is published (and for staff before then, so they can check it).
  */
 function atfa_awards_weekend() {
 	return array(
@@ -254,13 +258,24 @@ function atfa_awards_weekend() {
 			'day'    => 'Sat 22',
 			'when'   => 'Saturday 22 May · morning',
 			'title'  => 'Ladies Breakfast',
-			'text'   => 'A morning for the ladies of ATFA to get together and network over breakfast.',
-			'soon'   => 'Venue and tickets coming soon',
-			'cta'    => 'Details and tickets',
-			'footer' => 'Ladies Breakfast',
-			'url'    => '',
+			'text'   => 'Breakfast and bubbles for the ladies of ATFA, the morning of the awards dinner. Complimentary, places limited.',
+			'soon'   => 'Details and reservations coming soon',
+			'cta'    => 'Details and reservations',
+			'footer' => 'Ladies Breakfast 2027',
+			'url'    => atfa_awards_breakfast_url(),
 		),
 	);
+}
+
+/**
+ * The breakfast page's address for the other pages: '' until it is published, except for staff, who get it as
+ * soon as it exists. The awards pages are cached for visitors, so a visitor never sees a staff-only link.
+ */
+function atfa_awards_breakfast_url() {
+	if ( ! function_exists( 'atfa_bk_visible' ) || ! atfa_bk_visible() ) {
+		return '';
+	}
+	return atfa_bk_page_url();
 }
 
 /**
@@ -594,7 +609,24 @@ function atfa_awards_share_texts() {
 			'title'       => 'ATFA Flooring Awards 2027: category sponsorship',
 			'description' => 'Put your brand behind the best in the industry. Sponsor a 2027 ATFA Flooring Awards category, with two tickets to the Awards Dinner on Saturday 22 May 2027 in Sydney.',
 		),
+		'breakfast' => array(
+			'title'       => 'ATFA Ladies Breakfast 2027',
+			'description' => 'Breakfast and bubbles for the ladies of ATFA on Saturday 22 May 2027 at Sydney Olympic Park, the morning of the awards dinner. Complimentary, places limited. Reserve your seat.',
+			'card'        => 'share-card-breakfast.jpg',
+		),
 	);
+}
+
+/**
+ * The share card bundled for a page: its own (share_texts 'card') when that file ships with the plugin, otherwise
+ * the awards card.
+ */
+function atfa_awards_share_card_file( $key ) {
+	$texts = atfa_awards_share_texts();
+	if ( ! empty( $texts[ $key ]['card'] ) && file_exists( ATFA_AWARDS_DIR . 'assets/img/' . $texts[ $key ]['card'] ) ) {
+		return $texts[ $key ]['card'];
+	}
+	return 'share-card.jpg';
 }
 
 function atfa_awards_seo_plugin_active() {
@@ -602,8 +634,9 @@ function atfa_awards_seo_plugin_active() {
 }
 
 /**
- * Puts the bundled share card in the Media Library (once per card version) and sets it as the featured image
- * of both awards pages, with the description as the excerpt. Runs after activation and after each update.
+ * Puts the bundled share cards in the Media Library (once per card version) and sets each as the featured image
+ * of its page, with the description as the excerpt. Runs after activation and after each update. The awards
+ * pages share one card; the breakfast page has its own (atfa_awards_share_card_file()).
  */
 function atfa_awards_sync_share_card() {
 	if ( get_option( 'atfa_awards_share_synced' ) === ATFA_AWARDS_VERSION ) {
@@ -617,32 +650,45 @@ function atfa_awards_sync_share_card() {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
 	require_once ABSPATH . 'wp-admin/includes/media.php';
 
-	$src      = ATFA_AWARDS_DIR . 'assets/img/share-card.jpg';
-	$hash     = file_exists( $src ) ? md5_file( $src ) : '';
-	$existing = get_option( 'atfa_awards_share_attachment' );
-	if ( $hash && ( empty( $existing['hash'] ) || $existing['hash'] !== $hash || ! get_post( $existing['id'] ) ) ) {
-		$bits = wp_upload_bits( 'atfa-awards-2027-share-card.jpg', null, file_get_contents( $src ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		if ( empty( $bits['error'] ) ) {
-			$id = wp_insert_attachment( array(
-				'post_mime_type' => 'image/jpeg',
-				'post_title'     => 'ATFA Flooring Awards 2027 share card',
-				'post_status'    => 'inherit',
-			), $bits['file'] );
-			if ( $id && ! is_wp_error( $id ) ) {
-				wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $bits['file'] ) );
-				$existing = array( 'id' => (int) $id, 'hash' => $hash );
-				update_option( 'atfa_awards_share_attachment', $existing );
-			}
-		}
+	// One Media Library copy per card file, replaced when the bundled file changes. The awards card keeps the
+	// option it always had; the others sit in atfa_awards_share_attachments, keyed by file name.
+	$cards = get_option( 'atfa_awards_share_attachments' );
+	$cards = is_array( $cards ) ? $cards : array();
+	$first = get_option( 'atfa_awards_share_attachment' );
+	if ( is_array( $first ) && ! empty( $first['id'] ) && empty( $cards['share-card.jpg'] ) ) {
+		$cards['share-card.jpg'] = $first;
 	}
-
-	$texts = atfa_awards_share_texts();
+	$titles = array( 'share-card.jpg' => 'ATFA Flooring Awards 2027 share card', 'share-card-breakfast.jpg' => 'ATFA Ladies Breakfast 2027 share card' );
+	$texts  = atfa_awards_share_texts();
 	foreach ( $pages as $key => $page_id ) {
 		if ( ! $page_id || ! get_post( $page_id ) ) {
 			continue;
 		}
-		if ( ! empty( $existing['id'] ) ) {
-			set_post_thumbnail( $page_id, $existing['id'] );
+		$file = atfa_awards_share_card_file( $key );
+		$src  = ATFA_AWARDS_DIR . 'assets/img/' . $file;
+		$hash = file_exists( $src ) ? md5_file( $src ) : '';
+		$have = isset( $cards[ $file ] ) ? $cards[ $file ] : array();
+		if ( $hash && ( empty( $have['hash'] ) || $have['hash'] !== $hash || ! get_post( $have['id'] ) ) ) {
+			$bits = wp_upload_bits( 'atfa-awards-2027-' . $file, null, file_get_contents( $src ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			if ( empty( $bits['error'] ) ) {
+				$id = wp_insert_attachment( array(
+					'post_mime_type' => 'image/jpeg',
+					'post_title'     => isset( $titles[ $file ] ) ? $titles[ $file ] : 'ATFA share card',
+					'post_status'    => 'inherit',
+				), $bits['file'] );
+				if ( $id && ! is_wp_error( $id ) ) {
+					wp_update_attachment_metadata( $id, wp_generate_attachment_metadata( $id, $bits['file'] ) );
+					$have           = array( 'id' => (int) $id, 'hash' => $hash );
+					$cards[ $file ] = $have;
+					update_option( 'atfa_awards_share_attachments', $cards );
+					if ( 'share-card.jpg' === $file ) {
+						update_option( 'atfa_awards_share_attachment', $have );
+					}
+				}
+			}
+		}
+		if ( ! empty( $have['id'] ) ) {
+			set_post_thumbnail( $page_id, $have['id'] );
 		}
 		if ( isset( $texts[ $key ] ) ) {
 			wp_update_post( array( 'ID' => $page_id, 'post_excerpt' => $texts[ $key ]['description'] ) );
@@ -665,7 +711,7 @@ function atfa_awards_print_share_meta() {
 	$text  = isset( $texts[ $key ] ) ? $texts[ $key ] : array( 'title' => get_the_title( $id ), 'description' => get_the_excerpt( $id ) );
 	$image = get_the_post_thumbnail_url( $id, 'full' );
 	if ( ! $image ) {
-		$image = ATFA_AWARDS_URL . 'assets/img/share-card.jpg';
+		$image = ATFA_AWARDS_URL . 'assets/img/' . atfa_awards_share_card_file( $key );
 	}
 	$tags = array(
 		array( 'name', 'description', $text['description'] ),

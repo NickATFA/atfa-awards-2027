@@ -984,6 +984,11 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 
 		$awards  = home_url( '/awards/' );
 		$partner = atfa_expo27_partner_html();
+		// The Ladies Breakfast page, once it is published (staff see the link as soon as the page exists).
+		$bk_url  = function_exists( 'atfa_awards_breakfast_url' ) ? atfa_awards_breakfast_url() : '';
+		$bk_card = $bk_url
+			? '<a class="xp-wkc-a" href="' . esc_url( $bk_url ) . '">Details and reservations<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>'
+			: '<span class="xp-wkc-soon">Details and reservations coming soon</span>';
 		$html    = strtr( atfa_expo27_page_markup(), array(
 			'{{VERSION}}'      => esc_attr( $version ),
 			'{{LOGO}}'         => $logo,
@@ -1002,6 +1007,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{PARTNER_HERO}}'    => $partner['hero'],
 			'{{PARTNER_FEATURE}}' => $partner['feature'],
 			'{{PARTNER_DINNER}}'  => $partner['dinner'],
+			'{{BREAKFAST_URL}}'   => $bk_url ? esc_url( $bk_url ) : '#weekend',
+			'{{BREAKFAST_CARD}}'  => $bk_card,
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'

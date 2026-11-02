@@ -70,3 +70,23 @@ awards dinner bands. Crosbe also sponsors Floor of the Year (`'partner' => true`
 `data/categories.php`): its logo is on the award's panel and card. Set `'public' => false` to show the partner (and
 its Floor of the Year sponsorship) to logged-in staff only, with ATFA on Floor of the Year for visitors; return `null`
 to take it off every page.
+
+## Ladies Breakfast page (since 1.11.0)
+
+The Ladies Breakfast 2027 page at /ladies-breakfast-2027/: the same blackout family as the awards and Expo pages, in
+the pink of the Women's Lunch, with the photos from Rippon Lea (2026) and Melbourne (2025) and a seat reservation
+form. The page is created private (staff only) the first time the version runs; publish it in wp-admin when it is
+ready, and the awards and Expo pages link to it from then on (staff see the links straight away).
+
+- `atfa-awards-2027/data/breakfast.php` holds everything the page says: date, times, venue (and whether it is
+  confirmed), cost, places, host, who gets reservations, the sponsor, and the Media Library IDs of the photos.
+- `atfa-awards-2027/includes/breakfast.php` makes the page, keeps it staff-only until published, takes reservations
+  (REST: `atfa-awards/v1/breakfast/rsvp`), lists them under **Breakfast RSVPs** in wp-admin with a CSV export, and
+  emails Cherie (copy to Nick) and the guest. While the page is private a reservation from a staff login is a test
+  (saved as [Test], emailed to that person only).
+- `atfa-awards-2027/views/breakfast.php` is the page.
+- `atfa-awards-2027/assets/img/share-card-breakfast.jpg` is its link preview card.
+
+The photos live in the Media Library (titles "Women in Flooring Lunch 2026, Rippon Lea (…)" and "Women in Flooring
+Luncheon 2025 (…)"); add or reorder IDs in the data file to change the gallery, and `hero` picks the four behind the
+headline.

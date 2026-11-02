@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ATFA Expo & Conference 2027: Hall 5 interactive floor plan
  * ---------------------------------------------------------------------------
- * Version 3.4.1 · 28 October 2026 · Prepared for ATFA (Nick Warren)
+ * Version 3.4.1 · 2 November 2026 · Prepared for ATFA (Nick Warren)
  *
  * WHAT THIS ADDS
  *   [atfa_expo27_page]               The ATFA Expo 2027 page at /expo-2027/: the dark awards-style
@@ -989,6 +989,11 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 
 		$awards  = home_url( '/awards/' );
 		$partner = atfa_expo27_partner_html();
+		// The Ladies Breakfast page, once it is published (staff see the link as soon as the page exists).
+		$bk_url  = function_exists( 'atfa_awards_breakfast_url' ) ? atfa_awards_breakfast_url() : '';
+		$bk_card = $bk_url
+			? '<a class="xp-wkc-a" href="' . esc_url( $bk_url ) . '">Details and reservations<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg></a>'
+			: '<span class="xp-wkc-soon">Details and reservations coming soon</span>';
 		$html    = strtr( atfa_expo27_page_markup(), array(
 			'{{VERSION}}'      => esc_attr( $version ),
 			'{{LOGO}}'         => $logo,
@@ -1007,6 +1012,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 			'{{PARTNER_HERO}}'    => $partner['hero'],
 			'{{PARTNER_FEATURE}}' => $partner['feature'],
 			'{{PARTNER_DINNER}}'  => $partner['dinner'],
+			'{{BREAKFAST_URL}}'   => $bk_url ? esc_url( $bk_url ) : '#weekend',
+			'{{BREAKFAST_CARD}}'  => $bk_card,
 		) );
 
 		return '<style id="atfa-expo27-page-css">' . atfa_expo27_page_css() . '</style>'
@@ -1044,7 +1051,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <span class="xp-wk-l">The ATFA weekend · Sydney Olympic Park · 21 and 22 May 2027</span>
       <div class="xp-wk-links">
         <a class="xp-wk-a on" href="#floor-plan" aria-current="page" data-plan="open"><span class="d">Fri 21 May</span>Expo &amp; Conference</a>
-        <a class="xp-wk-a" href="#weekend"><span class="d">Sat 22 May</span>Ladies Breakfast</a>
+        <a class="xp-wk-a" href="{{BREAKFAST_URL}}"><span class="d">Sat 22 May</span>Ladies Breakfast</a>
         <a class="xp-wk-a" href="{{AWARDS_URL}}"><span class="d">Sat 22 May</span>Awards Dinner</a>
       </div>
     </nav>
@@ -1168,8 +1175,8 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
       <div class="xp-wkc-b">
         <span class="eyebrow">Saturday 22 May · morning</span>
         <span class="disp t">Ladies Breakfast</span>
-        <span class="x">A morning for the ladies of ATFA to get together and network over breakfast.</span>
-        <span class="xp-wkc-soon">Venue and tickets coming soon</span>
+        <span class="x">Breakfast and bubbles for the ladies of ATFA, the morning of the awards dinner. Complimentary, places limited.</span>
+        {{BREAKFAST_CARD}}
       </div>
     </div>
     <div class="xp-wkc">

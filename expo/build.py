@@ -163,7 +163,7 @@ def main():
             fail("page content contains the heredoc marker " + marker)
     for token in ("{{VERSION}}", "{{LOGO}}", "{{WORDMARK}}", "{{HERO_IMGS}}", "{{HERO_CAPS}}", "{{GALLERY}}", "{{DINNER_IMG}}",
                   "{{DINNER_CAP}}", "{{AWARDS_URL}}", "{{PDF_URL}}", "{{EMAIL}}", "{{MAILTO}}", "{{ENQUIRY_NAME}}", "{{STAFF}}",
-                  "{{PARTNER_HERO}}", "{{PARTNER_FEATURE}}", "{{PARTNER_DINNER}}"):
+                  "{{PARTNER_HERO}}", "{{PARTNER_FEATURE}}", "{{PARTNER_DINNER}}", "{{BREAKFAST_URL}}", "{{BREAKFAST_CARD}}"):
         if token not in page_markup:
             fail("page markup is missing " + token)
     # Copy rules: no em dashes in anything a visitor reads.

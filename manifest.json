@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.10.1",
+  "version": "1.11.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.10.1",
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.11.0",
   "last_updated": "2026-11-02",
-  "changelog": "<p><strong>1.10.1</strong> (2026-11-02): Crosbe is now the Floor of the Year sponsor: Proudly sponsored by Crosbe on the Floor of the Year card and panel of the awards page, and on the sponsorship page. Follows the Principal Partner's public setting, so staff see it now and visitors once Crosbe is made public (visitors see ATFA until then).</p>"
+  "changelog": "<p><strong>1.11.0</strong> (2026-11-02): New: the Ladies Breakfast 2027 page at /ladies-breakfast-2027/, staff only until it is published, with the photos from Rippon Lea and Melbourne, the event details and a seat reservation form (reservations under Breakfast RSVPs, emailed to Cherie and Nick). The awards and Expo pages link to it once it is live.</p>"
 }
