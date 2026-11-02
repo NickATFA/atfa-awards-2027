@@ -16,7 +16,13 @@ $awards  = home_url( '/awards/' );
 $expo    = home_url( '/expo-2027/' );
 $sets    = atfa_bk_photos();
 $tbc     = empty( $venue['confirmed'] );
-$sponsor = $info['sponsor'];
+$sponsors = $info['sponsors'];
+$sp       = $info['sponsorship'];
+$tiers    = $sp['tiers'];
+$sp_open  = ! empty( $sp['open'] );
+$sp_mail  = 'mailto:' . $sp['to'] . '?subject=' . rawurlencode( $info['title'] . ' sponsorship' );
+$thanks   = $sponsors['gold'] || $sponsors['silver'];
+$comp     = false !== stripos( $info['price']['text'], 'complimentary' );
 
 // Every photo in page order, with the set it came from, for the gallery and the lightbox.
 $all = array();
@@ -197,7 +203,7 @@ html.bk-lock{overflow:hidden}
 .bk-rsvp-t p{color:var(--mut);font-size:15px;line-height:1.55;max-width:46ch}
 .bk-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:28px;border:1px solid var(--bline);border-radius:8px;background:rgba(12,11,10,.4);position:relative}
 .bk-form label{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
-.bk-form label.full{grid-column:1 / -1}
+.bk-form .full{grid-column:1 / -1}
 .bk-form label .lt{display:block}.bk-form label .opt{font-weight:500;letter-spacing:0;text-transform:none;color:var(--dim)}
 .bk .bk-form input,.bk .bk-form textarea{min-height:50px;padding:12px 14px;border:1px solid #3F3238;border-radius:4px;background:#0C0B0A;color:#F7F1F4;font-family:inherit;font-size:16px;font-weight:500;letter-spacing:0;text-transform:none;width:100%}
 .bk .bk-form textarea{min-height:88px;resize:vertical}
@@ -229,15 +235,51 @@ html.bk-lock{overflow:hidden}
 .bk a.bk-wkc-a{display:inline-flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;min-height:40px;font-size:14px;font-weight:600}
 .bk-wkc-here{margin-top:auto;padding-top:8px;font-size:14px;font-weight:600;color:var(--dim)}
 
-/* Sponsor and venue */
-.bk-two{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
-.bk-sp{grid-column:span 5;display:flex;flex-direction:column;gap:14px;padding:28px;min-width:0}
-.bk-sp .t{font-size:36px}
-.bk-sp p{color:var(--mut);font-size:14px;line-height:1.55}
-.bk .sponsor{display:flex;align-items:center;justify-content:center;height:96px;border:1px dashed #4A3A42;border-radius:4px;color:var(--dim);font-size:12px;letter-spacing:.1em;text-transform:uppercase;text-decoration:none}
-.bk .sponsor.has-logo{border:1px solid var(--line);background:#0C0B0A;padding:16px 22px}
+/* With thanks to the sponsors (only once there are some) */
+.bk-thanks{display:flex;align-items:center;gap:16px 36px;flex-wrap:wrap;margin-top:16px;padding:18px 28px}
+.bk-thanks .l{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.bk-thanks .g{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bk-thanks .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:700;white-space:nowrap}
+.bk .sponsor{display:inline-flex;align-items:center;justify-content:center;height:64px;min-width:120px;max-width:220px;padding:10px 18px;border:1px solid var(--line);border-radius:4px;background:#0C0B0A;color:#F7F1F4;font-size:14px;font-weight:600;text-decoration:none;text-align:center;line-height:1.3}
 .bk .sponsor img{max-height:100%;max-width:100%;width:auto;height:auto;object-fit:contain;margin:0;border:0}
-.bk-venue{grid-column:span 7;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:28px;min-width:0}
+.bk a.sponsor:hover{border-color:#F7F1F4;color:#FFFFFF}
+.bk-thanks .sponsor.gold{border-color:#E4B65A}
+
+/* Sponsorship: Gold and Silver packages and the enquiry form */
+.bk-spon-w{background:radial-gradient(70% 60% at 100% 0%,rgba(228,182,90,.14),rgba(228,182,90,0) 60%),linear-gradient(180deg,#1A1316 0%,#15110F 100%)}
+.bk-tiers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.bk-tier{display:flex;flex-direction:column;gap:14px;padding:28px;border-top:3px solid var(--tier);min-width:0}
+.bk-tier.gold{--tier:#E4B65A;--tier-ink:#1A1208}.bk-tier.silver{--tier:#C9CCD3;--tier-ink:#15120F}
+.bk-tier .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.bk-tier .tag{background:var(--tier);color:var(--tier-ink)}
+.bk-tier .avail{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.bk-tier .avail.is-gone{color:#FFB3C9}
+.bk-tier .t{font-size:44px}
+.bk-tier .price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:-4px}
+.bk-tier .price .n{font-size:56px;color:#F7F1F4;font-variant-numeric:tabular-nums}
+.bk-tier .price .n.poa{font-size:32px}
+.bk-tier .price .u{font-size:13px;color:var(--mut)}
+.bk-tier .lead{color:var(--mut);font-size:15px;line-height:1.5}
+.bk-tier ul{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.bk-tier li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;color:#E8DEE3}
+.bk-tier li svg{flex-shrink:0;margin-top:4px;color:var(--tier)}
+.bk-tier .btn{align-self:flex-start;margin-top:auto}
+.bk-tier .btn-tier{background:transparent;color:#F7F1F4;border-color:var(--tier)}
+.bk-tier .btn-tier:hover{background:var(--tier);color:var(--tier-ink)}
+.bk-sp-form-w{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:start;margin-top:56px;padding-top:56px;border-top:1px solid rgba(255,238,246,.08)}
+.bk-sp-form-t{display:flex;flex-direction:column;gap:16px;min-width:0}
+.bk-sp-form-t .disp{font-size:56px}
+.bk-sp-form-t p{color:var(--mut);font-size:15px;line-height:1.55;max-width:46ch}
+.bk-radios{display:flex;gap:8px;flex-wrap:wrap}
+.bk .bk-radios label{position:relative;flex-direction:row;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid #3F3238;border-radius:999px;cursor:pointer;font-size:14px;letter-spacing:0;text-transform:none;color:#F7F1F4;font-weight:600;background:#0C0B0A}
+.bk .bk-radios label:hover{border-color:#F7F1F4}
+.bk .bk-radios input{position:absolute;opacity:0;width:1px;height:1px;min-height:0;padding:0;margin:0}
+.bk .bk-radios label.is-on{background:var(--pk);border-color:var(--pk);color:var(--pki)}
+.bk .bk-radios label.is-focus{outline:2px solid var(--pk);outline-offset:2px}
+
+/* Venue */
+.bk-two{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.bk-venue{grid-column:span 12;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px 48px;padding:28px;min-width:0}
 .bk-venue .t{font-size:36px}
 .bk-venue p{color:var(--mut);font-size:14px;line-height:1.55}
 .bk-venue .adr{font-size:15px;color:#F7F1F4;font-weight:500;line-height:1.5}
@@ -274,6 +316,8 @@ html.bk-lock{overflow:hidden}
 .bk-weekend{grid-template-columns:repeat(1,minmax(0,1fr))}
 .bk-two > *{grid-column:span 12 !important}
 .bk-venue{grid-template-columns:1fr}
+.bk-tiers{grid-template-columns:1fr}
+.bk-sp-form-w{grid-template-columns:1fr;gap:28px;margin-top:48px;padding-top:48px}
 .bk .band{margin-top:80px;padding:64px 0}.bk .band-tight{padding:52px 0}
 }
 /* Phones */
@@ -344,10 +388,19 @@ html.bk-lock{overflow:hidden}
 .bk-wkc-b{gap:8px}
 .bk-wkc .t{font-size:30px}
 .bk-wkc .x{font-size:14.5px;font-weight:500;color:#C9BCC3}
+.bk-thanks{padding:16px 18px;gap:12px 20px;border-radius:12px}
+.bk-tiers{gap:12px;margin-top:24px}
+.bk-tier{padding:20px;border-radius:12px;border-top-width:3px}
+.bk-tier .t{font-size:34px}
+.bk-tier .price .n{font-size:44px}
+.bk-tier li{font-size:14px;font-weight:500;color:#C9BCC3}
+.bk-tier .btn{align-self:stretch;min-height:52px}
+.bk-sp-form-t .disp{font-size:44px}
+.bk-sp-form-t p{font-size:15px;font-weight:500;color:#D9CDD3}
 .bk-two{gap:12px;margin-top:24px}
-.bk-sp,.bk-venue{padding:20px;border-radius:12px}
-.bk-sp .t,.bk-venue .t{font-size:30px}
-.bk-sp p,.bk-venue p{font-size:14px;font-weight:500;color:#C9BCC3}
+.bk-venue{padding:20px;border-radius:12px}
+.bk-venue .t{font-size:30px}
+.bk-venue p{font-size:14px;font-weight:500;color:#C9BCC3}
 .bk-lb-img{padding:64px 10px 72px}
 .bk-foot{flex-direction:column;gap:14px;border-top:1px solid rgba(255,238,246,.08);margin-top:8px}
 .bk-foot nav{flex-direction:column;gap:0}
@@ -439,6 +492,21 @@ foreach ( $hero as $p ) {
     </div>
   </div>
   <?php echo atfa_bk_staff_bar(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+<?php if ( $thanks ) : ?>
+  <div class="card bk-thanks">
+    <span class="l">With thanks to</span>
+<?php if ( $sponsors['gold'] ) : ?>
+    <div class="g"><?php echo atfa_bk_sponsor_tile( $sponsors['gold'], 'gold' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><span class="k">Gold sponsor</span></div>
+<?php endif; ?>
+<?php if ( $sponsors['silver'] ) : ?>
+    <div class="g"><?php
+	foreach ( $sponsors['silver'] as $s ) {
+		echo atfa_bk_sponsor_tile( $s ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+	?><span class="k">Silver <?php echo 1 === count( $sponsors['silver'] ) ? 'sponsor' : 'sponsors'; ?></span></div>
+<?php endif; ?>
+  </div>
+<?php endif; ?>
 </div>
 
 <section class="wrap sec" id="the-morning" style="margin-top:96px" aria-labelledby="bk-morning-h">
@@ -592,21 +660,100 @@ foreach ( $all as $p ) {
   </div>
 </section>
 
-<section class="band band-tight" aria-label="Sponsor and venue">
+<section class="band bk-spon-w sec" id="sponsor" aria-labelledby="bk-sp-h">
 <div class="wrap sr">
-  <div class="bk-two">
-    <div class="card bk-sp">
-      <span class="eyebrow pk">Breakfast sponsor</span>
-<?php if ( '' !== $sponsor['img'] ) : ?>
-      <span class="disp t">With thanks to <?php echo esc_html( $sponsor['name'] ); ?></span>
-      <?php echo atfa_awards_sponsor_tile( $sponsor ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-      <p>The breakfast sponsor makes the morning complimentary for the ladies of ATFA.</p>
-<?php else : ?>
-      <span class="disp t">Proudly sponsored by</span>
-      <div class="sponsor">Sponsor logo</div>
-      <p>The breakfast sponsor puts their name on the morning and makes it complimentary for the ladies of ATFA. One sponsor, on every mention of the breakfast. Interested? Email <a href="mailto:<?php echo esc_attr( $info['sponsor_contact']['email'] ); ?>?subject=<?php echo rawurlencode( 'Ladies Breakfast 2027 sponsorship' ); ?>"><?php echo esc_html( $info['sponsor_contact']['name'] ); ?> at ATFA</a>.</p>
-<?php endif; ?>
+  <div class="sec-head">
+    <div>
+      <span class="eyebrow pk">Sponsorship</span>
+      <h2 class="disp" id="bk-sp-h" style="font-size:64px;max-width:14ch;margin-top:10px">Put your name on the morning</h2>
     </div>
+    <p><?php echo $comp ? 'Sponsors are why the breakfast is complimentary for the ladies of ATFA. ' : 'Sponsors make the morning happen. '; ?>Two packages, the same as the Women in Flooring Lunch at Rippon Lea: one Gold sponsor with naming rights and up to <?php echo (int) $tiers['silver']['limit']; ?> Silver sponsors. Your business in front of a room of the industry's women, behind an initiative that connects and supports them.</p>
+  </div>
+<?php if ( $thanks ) : ?>
+  <div class="bk-thanks" style="margin:0 0 24px;padding:0 0 24px;border-bottom:1px solid rgba(255,238,246,.08)">
+    <span class="l">Confirmed so far</span>
+<?php if ( $sponsors['gold'] ) : ?>
+    <div class="g"><?php echo atfa_bk_sponsor_tile( $sponsors['gold'], 'gold' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><span class="k">Gold</span></div>
+<?php endif; ?>
+<?php if ( $sponsors['silver'] ) : ?>
+    <div class="g"><?php
+	foreach ( $sponsors['silver'] as $s ) {
+		echo atfa_bk_sponsor_tile( $s ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+	?><span class="k">Silver</span></div>
+<?php endif; ?>
+  </div>
+<?php endif; ?>
+<?php if ( $sp_open ) : ?>
+  <div class="bk-tiers">
+<?php
+foreach ( $tiers as $key => $t ) {
+	$gone  = $t['limit'] > 0 && 0 === $t['left'];
+	$avail = 1 === $t['limit']
+		? ( $gone ? 'Taken' : 'One only' )
+		: ( $gone ? 'All ' . $t['limit'] . ' taken' : ( $t['taken'] > 0 ? $t['left'] . ' of ' . $t['limit'] . ' positions open' : 'Up to ' . $t['limit'] . ' sponsors' ) );
+	echo '<div class="card bk-tier ' . esc_attr( $key ) . '">';
+	echo '<div class="top"><span class="tag">' . esc_html( ucfirst( $key ) ) . '</span><span class="avail' . ( $gone ? ' is-gone' : '' ) . '">' . esc_html( $avail ) . '</span></div>';
+	echo '<span class="disp t">' . esc_html( $t['name'] ) . '</span>';
+	echo '<div class="price">' . ( '' !== $t['price'] ? '<span class="disp n">' . esc_html( $t['price'] ) . '</span><span class="u">for the breakfast</span>' : '<span class="disp n poa">Price on enquiry</span>' ) . '</div>';
+	if ( '' !== $t['lead'] ) {
+		echo '<p class="lead">' . esc_html( $t['lead'] ) . '</p>';
+	}
+	if ( $t['includes'] ) {
+		echo '<ul>';
+		foreach ( $t['includes'] as $inc ) {
+			echo '<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg><span>' . esc_html( $inc ) . '</span></li>';
+		}
+		echo '</ul>';
+	}
+	echo '<a class="btn btn-tier" href="#sponsor-form" data-tier="' . esc_attr( $key ) . '">' . ( $gone ? 'Ask about ' . esc_html( $t['name'] ) . 'ship' : 'Enquire about ' . esc_html( ucfirst( $key ) ) ) . '</a>';
+	echo '</div>' . "\n";
+}
+?>
+  </div>
+  <div class="bk-sp-form-w" id="sponsor-form">
+    <div class="bk-sp-form-t">
+      <span class="eyebrow pk">Enquire</span>
+      <h3 class="disp">Talk to <?php echo esc_html( $sp['contact'] ); ?></h3>
+      <p>Tell us which package you have in mind and <?php echo esc_html( $sp['contact'] ); ?> from ATFA will get back to you with the details. Nothing is booked until you say so.</p>
+      <p>Prefer email? <a href="<?php echo esc_url( $sp_mail ); ?>"><?php echo esc_html( $sp['to'] ); ?></a></p>
+    </div>
+    <form class="bk-form" id="bk-sp-form" novalidate data-endpoint="<?php echo esc_url( rest_url( 'atfa-awards/v1/breakfast/sponsor' ) ); ?>" data-nonce="<?php echo esc_attr( is_user_logged_in() ? wp_create_nonce( 'wp_rest' ) : '' ); ?>">
+      <label><span class="lt">Business</span><input type="text" name="business" autocomplete="organization" required maxlength="120" placeholder="Your business"></label>
+      <label><span class="lt">Your name</span><input type="text" name="name" autocomplete="name" required maxlength="100" placeholder="First and last name"></label>
+      <label><span class="lt">Email</span><input type="email" name="email" autocomplete="email" required maxlength="120" placeholder="you@business.com.au"></label>
+      <label><span class="lt">Mobile <span class="opt">(optional)</span></span><input type="tel" name="phone" autocomplete="tel" maxlength="40" placeholder="04..."></label>
+      <fieldset class="full" style="border:0;padding:0;margin:0;min-width:0">
+        <legend class="lt" style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:0;margin-bottom:8px">Package</legend>
+        <div class="bk-radios">
+<?php
+foreach ( $tiers as $key => $t ) {
+	echo '<label><input type="radio" name="tier" value="' . esc_attr( $key ) . '">' . esc_html( $t['name'] ) . ( '' !== $t['price'] ? ' · ' . esc_html( $t['price'] ) : '' ) . '</label>';
+}
+?>
+          <label class="is-on"><input type="radio" name="tier" value="unsure" checked>Not sure yet</label>
+        </div>
+      </fieldset>
+      <label class="full"><span class="lt">Anything else? <span class="opt">(optional)</span></span><textarea name="message" maxlength="1000" placeholder="Questions, or what you have in mind"></textarea></label>
+      <label class="hp" aria-hidden="true">Website<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="act">
+        <button type="submit" class="btn btn-primary" id="bk-sp-btn">Send my enquiry</button>
+        <span class="small">We only use these details to reply to you. You will get a copy of the package details by email.</span>
+      </div>
+      <p class="bk-msg" id="bk-sp-msg" aria-live="polite"></p>
+    </form>
+  </div>
+<?php else : ?>
+  <div class="bk-closed">
+    <span class="disp">Sponsorship for 2027 is closed</span>
+    <p>Email <a href="<?php echo esc_url( $sp_mail ); ?>"><?php echo esc_html( $sp['to'] ); ?></a> and <?php echo esc_html( $sp['contact'] ); ?> will let you know about the next one.</p>
+  </div>
+<?php endif; ?>
+</div>
+</section>
+
+<section class="wrap sr sec" id="venue" aria-label="The venue" style="margin-top:64px">
+  <div class="bk-two">
     <div class="card bk-venue">
       <div class="col">
         <span class="eyebrow pk">The venue<?php echo $tbc ? ' · to be confirmed' : ''; ?></span>
@@ -626,12 +773,12 @@ foreach ( $all as $p ) {
       </div>
     </div>
   </div>
-</div>
 </section>
 
 <footer class="wrap bk-foot">
   <nav aria-label="More from ATFA">
     <a href="https://www.atfa.com.au/">atfa.com.au</a>
+    <a href="#sponsor">Sponsor the breakfast</a>
     <a href="<?php echo esc_url( $expo ); ?>">Expo &amp; Conference 2027</a>
     <a href="<?php echo esc_url( $awards ); ?>">Flooring Awards 2027</a>
     <a href="https://www.atfa.com.au/contact/">Contact ATFA</a>
@@ -686,29 +833,53 @@ foreach ( $all as $p ) {
     lb.addEventListener('close',function(){ document.documentElement.classList.remove('bk-lock'); img.src=''; });
   }
 
-  // Reserve a seat: posts to the plugin's REST endpoint, which saves the reservation and sends the emails.
-  var f=document.getElementById('bk-rsvp-form'); if(!f) return;
-  var btn=document.getElementById('bk-rsvp-btn'), msg=document.getElementById('bk-rsvp-msg'), label=btn.textContent;
-  function say(t,cls){ msg.textContent=t; msg.className='bk-msg'+(cls?' '+cls:''); }
-  f.addEventListener('submit',function(e){
-    e.preventDefault();
-    var d={name:f.name.value.trim(),business:f.business.value.trim(),email:f.email.value.trim(),phone:f.phone.value.trim(),guest:f.guest.value.trim(),dietary:f.dietary.value.trim(),website:f.website.value,page:location.href};
-    if(!d.name){ say('Please add your name.','is-err'); f.name.focus(); return; }
-    if(!d.business){ say('Please add your business.','is-err'); f.business.focus(); return; }
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){ say('Please add a valid email address.','is-err'); f.email.focus(); return; }
-    btn.disabled=true; btn.textContent='Reserving...'; say('');
-    var hdr={'Content-Type':'application/json'}, nonce=f.getAttribute('data-nonce'); if(nonce) hdr['X-WP-Nonce']=nonce;
-    fetch(f.getAttribute('data-endpoint'),{method:'POST',headers:hdr,credentials:'same-origin',body:JSON.stringify(d)})
-      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
-      .then(function(x){
-        if(x.ok&&x.j&&x.j.ok){
-          var done=document.createElement('div'); done.className='bk-done';
-          done.innerHTML='<span class="eyebrow pk">'+(x.j.test?'Test reservation':'Seat reserved')+'</span><span class="disp">'+(x.j.duplicate?'You are already on the list':(x.j.test?'Saved as a test':'See you there'))+'</span><p></p>';
-          done.querySelector('p').textContent=x.j.message||'Thanks, your seat is reserved.';
-          f.parentNode.replaceChild(done,f); done.scrollIntoView({block:'nearest'});
-        } else { say((x.j&&x.j.message)||'Something went wrong. Please try again or email <?php echo esc_js( $rsvp['email'] ); ?>.','is-err'); btn.disabled=false; btn.textContent=label; }
-      })
-      .catch(function(){ say('Could not reach the website just now. Please try again or email <?php echo esc_js( $rsvp['email'] ); ?>.','is-err'); btn.disabled=false; btn.textContent=label; });
+  // The two forms post to the plugin's REST endpoints, which save the entry and send the emails.
+  function wire(f,btn,msg,o){
+    if(!f||!btn||!msg) return;
+    var label=btn.textContent;
+    function say(t,cls){ msg.textContent=t; msg.className='bk-msg'+(cls?' '+cls:''); }
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var d=o.data(f), bad=o.check(d,f); if(bad){ say(bad[0],'is-err'); bad[1].focus(); return; }
+      d.website=f.website.value; d.page=location.href;
+      btn.disabled=true; btn.textContent=o.busy; say('');
+      var hdr={'Content-Type':'application/json'}, nonce=f.getAttribute('data-nonce'); if(nonce) hdr['X-WP-Nonce']=nonce;
+      fetch(f.getAttribute('data-endpoint'),{method:'POST',headers:hdr,credentials:'same-origin',body:JSON.stringify(d)})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+        .then(function(x){
+          if(x.ok&&x.j&&x.j.ok){
+            var done=document.createElement('div'); done.className='bk-done';
+            done.innerHTML='<span class="eyebrow pk">'+o.done(x.j)[0]+'</span><span class="disp">'+o.done(x.j)[1]+'</span><p></p>';
+            done.querySelector('p').textContent=x.j.message||o.done(x.j)[2];
+            f.parentNode.replaceChild(done,f); done.scrollIntoView({block:'nearest'});
+          } else { say((x.j&&x.j.message)||'Something went wrong. Please try again or email '+o.email+'.','is-err'); btn.disabled=false; btn.textContent=label; }
+        })
+        .catch(function(){ say('Could not reach the website just now. Please try again or email '+o.email+'.','is-err'); btn.disabled=false; btn.textContent=label; });
+    });
+  }
+  var mail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Reserve a seat.
+  wire(document.getElementById('bk-rsvp-form'),document.getElementById('bk-rsvp-btn'),document.getElementById('bk-rsvp-msg'),{
+    email:'<?php echo esc_js( $rsvp['email'] ); ?>', busy:'Reserving...',
+    data:function(f){ return {name:f.name.value.trim(),business:f.business.value.trim(),email:f.email.value.trim(),phone:f.phone.value.trim(),guest:f.guest.value.trim(),dietary:f.dietary.value.trim()}; },
+    check:function(d,f){ if(!d.name) return ['Please add your name.',f.name]; if(!d.business) return ['Please add your business.',f.business]; if(!mail.test(d.email)) return ['Please add a valid email address.',f.email]; return null; },
+    done:function(j){ return [j.test?'Test reservation':'Seat reserved', j.duplicate?'You are already on the list':(j.test?'Saved as a test':'See you there'), 'Thanks, your seat is reserved.']; }
   });
+
+  // Sponsorship: the package buttons pick the radio, the pills follow the radios, and the enquiry form posts.
+  var sf=document.getElementById('bk-sp-form');
+  if(sf){
+    var pills=qa('.bk-radios label',sf);
+    function pick(v){ pills.forEach(function(l){ var r=l.querySelector('input'); if(v!==undefined) r.checked=(r.value===v); l.classList.toggle('is-on',r.checked); }); }
+    pills.forEach(function(l){ var r=l.querySelector('input'); r.addEventListener('change',function(){ pick(); }); r.addEventListener('focus',function(){ l.classList.add('is-focus'); }); r.addEventListener('blur',function(){ l.classList.remove('is-focus'); }); });
+    qa('[data-tier]').forEach(function(b){ b.addEventListener('click',function(){ pick(b.getAttribute('data-tier')); setTimeout(function(){ if(sf.business) sf.business.focus({preventScroll:true}); },400); }); });
+    wire(sf,document.getElementById('bk-sp-btn'),document.getElementById('bk-sp-msg'),{
+      email:'<?php echo esc_js( $sp['to'] ); ?>', busy:'Sending...',
+      data:function(f){ var t=f.querySelector('input[name="tier"]:checked'); return {business:f.business.value.trim(),name:f.name.value.trim(),email:f.email.value.trim(),phone:f.phone.value.trim(),tier:t?t.value:'unsure',message:f.message.value.trim()}; },
+      check:function(d,f){ if(!d.business) return ['Please add your business.',f.business]; if(!d.name) return ['Please add your name.',f.name]; if(!mail.test(d.email)) return ['Please add a valid email address.',f.email]; return null; },
+      done:function(j){ return [j.test?'Test enquiry':'Enquiry sent', j.test?'Saved as a test':'Thanks, we will be in touch', 'Thanks, <?php echo esc_js( $sp['contact'] ); ?> will be in touch.']; }
+    });
+  }
 })();
 </script>

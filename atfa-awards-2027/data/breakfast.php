@@ -15,8 +15,13 @@
  *   Price     Every past breakfast was complimentary for the ladies of ATFA, paid for by the breakfast sponsor
  *             (2023 Bulcs, Star Casino Gold Coast; 2025 Fiddes, Pullman Melbourne, "Free (AUD 0)" in the board
  *             papers). 2027 isn't decided: change 'price' if it is ticketed.
- *   Sponsor   None yet. The sponsor calendar lists "Breakfast sponsorship: price on enquiry". Fill in 'sponsor'
- *             when one is confirmed and the placeholder tile becomes their logo.
+ *   Sponsors  None confirmed yet. Two packages, the way the Women in Flooring Lunch at Rippon Lea (18 September 2026)
+ *             was sponsored: one naming sponsor (Premium Flooring, "Gold") and Silver sponsors (Australian Floorstyle
+ *             and Fiddes, up to six). The packages and prices are the lunch ones from Phil's 2027 sponsorship document
+ *             (1 Oct 2026, "Sponsorship packages will remain the same as 2026": Naming $1,900, Silver $990 per event),
+ *             and the Silver inclusions are from Drue's invitation to sponsor the lunch (24 June 2026). Phil's
+ *             sponsor calendar still says "Breakfast sponsorship: price on enquiry", so change 'price' below once
+ *             the breakfast prices are settled, or set it to '' to show "Price on enquiry".
  *   Photos    Media Library IDs. 2026: the Women in Flooring Lunch at Rippon Lea, 18 September 2026 (the
  *             professional shoot in ATFA Files > 2026 > 2026 Events_MASTER). 2025: the Women in Flooring
  *             Luncheon, Melbourne, 28 February 2025 (ATFA's Facebook album). 'hero' picks the ones that rotate
@@ -44,7 +49,7 @@ return array(
 	),
 	'price'     => array(
 		'text'   => 'Complimentary',
-		'detail' => 'For the ladies of ATFA, with thanks to the breakfast sponsor. Places are limited.',
+		'detail' => 'For the ladies of ATFA, with thanks to our sponsors. Places are limited.',
 	),
 	'places'    => 30,
 	'host'      => 'Hosted by ATFA',
@@ -56,9 +61,50 @@ return array(
 		'contact' => 'Cherie',
 		'email'   => 'cherie@atfa.com.au',
 	),
-	// The breakfast sponsor. Leave 'img' empty for the placeholder tile. Logos go in assets/img/sponsors/.
-	'sponsor'   => array( 'name' => '', 'img' => '', 'url' => '' ),
-	'sponsor_contact' => array( 'name' => 'Phil', 'email' => 'phil@atfa.com.au' ),
+	// Confirmed sponsors. One Gold (the naming sponsor) and up to six Silver. Each is
+	// array( 'name' => 'Business', 'img' => 'business.png', 'url' => 'https://...' ) with the logo in
+	// assets/img/sponsors/ ('img' can stay empty: the name shows instead). Listed sponsors appear under the status
+	// card and in the sponsorship section, and count against the positions below.
+	'sponsors'  => array(
+		'gold'   => array(),
+		'silver' => array(),
+	),
+	// The packages on offer. 'open' false takes the packages and the enquiry form off the page (confirmed sponsors
+	// still show). Enquiries go to 'to' (copy to 'cc'); 'contact' is the first name the page uses.
+	'sponsorship' => array(
+		'open'    => true,
+		'to'      => 'phil@atfa.com.au',
+		'cc'      => 'nick@atfa.com.au',
+		'contact' => 'Phil',
+		'tiers'   => array(
+			'gold'   => array(
+				'name'     => 'Gold Sponsor',
+				'limit'    => 1,
+				'price'    => '$1,900',
+				'lead'     => 'The naming sponsor. One business, on every mention of the breakfast.',
+				'includes' => array(
+					'Naming rights: the breakfast is presented by you on this page and everywhere ATFA promotes it',
+					'Your logo across all promotional platforms: ATFA email campaigns, social media, the event listing and the ATFA Timber Floors Magazine event advertising',
+					'Your banners in the room on the morning',
+					'A few minutes to welcome the room',
+					'Two reserved seats at the breakfast',
+				),
+			),
+			'silver' => array(
+				'name'     => 'Silver Sponsor',
+				'limit'    => 6,
+				'price'    => '$990',
+				'lead'     => 'Your name beside the breakfast, in the lead-up and on the day.',
+				'includes' => array(
+					'Your logo on all promotional material: this page, ATFA email campaigns, social media and event communications',
+					'Listed on the banners in the room on the morning',
+					'Inclusion in the ATFA Timber Floors Magazine event advertising',
+					'Thanked by the host on the morning',
+					'One reserved seat at the breakfast',
+				),
+			),
+		),
+	),
 	'photos'    => array(
 		'2026' => array(
 			'label' => 'Women in Flooring Lunch, Rippon Lea, September 2026',

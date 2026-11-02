@@ -16,6 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'ATFA_BK_RSVP', 'atfa_bk_rsvp' );
+define( 'ATFA_BK_SPONSOR', 'atfa_bk_sponsor' );
 define( 'ATFA_BK_SLUG', 'ladies-breakfast-2027' );
 
 /**
@@ -40,16 +41,42 @@ function atfa_bk_info() {
 		'places'          => 0,
 		'host'            => 'Hosted by ATFA',
 		'rsvp'            => array(),
-		'sponsor'         => array(),
-		'sponsor_contact' => array(),
+		'sponsors'        => array(),
+		'sponsorship'     => array(),
 		'photos'          => array(),
 		'hero'            => array(),
 	), $info );
 	$info['venue']   = array_merge( array( 'name' => '', 'room' => '', 'area' => '', 'address' => '', 'map' => '', 'note' => '', 'confirmed' => false ), (array) $info['venue'] );
 	$info['price']   = array_merge( array( 'text' => 'Complimentary', 'detail' => '' ), (array) $info['price'] );
 	$info['rsvp']    = array_merge( array( 'open' => true, 'to' => 'cherie@atfa.com.au', 'cc' => '', 'contact' => 'Cherie', 'email' => 'cherie@atfa.com.au' ), (array) $info['rsvp'] );
-	$info['sponsor'] = array_merge( array( 'name' => '', 'img' => '', 'url' => '' ), (array) $info['sponsor'] );
-	$info['sponsor_contact'] = array_merge( array( 'name' => 'Phil', 'email' => 'phil@atfa.com.au' ), (array) $info['sponsor_contact'] );
+	// Sponsors: one Gold (an array, or empty) and a list of Silver, each with name, img and url.
+	$sponsors = array_merge( array( 'gold' => array(), 'silver' => array() ), (array) $info['sponsors'] );
+	$clean    = function ( $sp ) {
+		$sp = array_merge( array( 'name' => '', 'img' => '', 'url' => '' ), (array) $sp );
+		return '' !== trim( (string) $sp['name'] ) ? $sp : null;
+	};
+	$gold   = $clean( $sponsors['gold'] );
+	$silver = array();
+	foreach ( (array) $sponsors['silver'] as $sp ) {
+		$sp = $clean( $sp );
+		if ( $sp ) {
+			$silver[] = $sp;
+		}
+	}
+	$info['sponsors'] = array( 'gold' => $gold, 'silver' => $silver );
+	// The packages, every key present.
+	$info['sponsorship'] = array_merge( array( 'open' => true, 'to' => 'phil@atfa.com.au', 'cc' => '', 'contact' => 'Phil', 'tiers' => array() ), (array) $info['sponsorship'] );
+	$tiers = array();
+	foreach ( array( 'gold', 'silver' ) as $key ) {
+		$tier = isset( $info['sponsorship']['tiers'][ $key ] ) ? (array) $info['sponsorship']['tiers'][ $key ] : array();
+		$tier = array_merge( array( 'name' => ucfirst( $key ) . ' Sponsor', 'limit' => 'gold' === $key ? 1 : 6, 'price' => '', 'lead' => '', 'includes' => array() ), $tier );
+		$tier['limit']    = max( 0, (int) $tier['limit'] );
+		$tier['includes'] = array_values( array_filter( array_map( 'strval', (array) $tier['includes'] ) ) );
+		$tier['taken']    = 'gold' === $key ? ( $gold ? 1 : 0 ) : count( $silver );
+		$tier['left']     = max( 0, $tier['limit'] - $tier['taken'] );
+		$tiers[ $key ]    = $tier;
+	}
+	$info['sponsorship']['tiers'] = $tiers;
 	foreach ( $info['photos'] as $k => $set ) {
 		$info['photos'][ $k ] = array_merge( array( 'label' => '', 'short' => '', 'ids' => array() ), (array) $set );
 		$info['photos'][ $k ]['ids'] = array_values( array_filter( array_map( 'intval', (array) $info['photos'][ $k ]['ids'] ) ) );
@@ -277,6 +304,21 @@ function atfa_bk_photos() {
 		}
 	}
 	return $out;
+}
+
+/**
+ * A sponsor's tile: the logo from assets/img/sponsors/ when there is one, otherwise the name, linked when there is a URL.
+ */
+function atfa_bk_sponsor_tile( $sp, $class = '' ) {
+	$sp    = array_merge( array( 'name' => '', 'img' => '', 'url' => '' ), (array) $sp );
+	$inner = '' !== $sp['img']
+		? '<img src="' . esc_url( atfa_awards_img( $sp['img'] ) ) . '" alt="' . esc_attr( $sp['name'] ) . '" loading="lazy">'
+		: esc_html( $sp['name'] );
+	$cls   = 'sponsor' . ( '' !== $class ? ' ' . $class : '' );
+	if ( '' !== $sp['url'] ) {
+		return '<a class="' . esc_attr( $cls ) . '" href="' . esc_url( $sp['url'] ) . '" target="_blank" rel="noopener" title="' . esc_attr( $sp['name'] ) . '">' . $inner . '</a>';
+	}
+	return '<span class="' . esc_attr( $cls ) . '" title="' . esc_attr( $sp['name'] ) . '">' . $inner . '</span>';
 }
 
 /* ---------------------------------------------------------------------------
@@ -558,6 +600,233 @@ add_action( 'admin_post_atfa_bk_export', function () {
 } );
 
 /* ---------------------------------------------------------------------------
+ * Sponsorship enquiries: post type, REST endpoint, emails
+ * ------------------------------------------------------------------------ */
+
+add_action( 'init', function () {
+	register_post_type( ATFA_BK_SPONSOR, array(
+		'labels' => array(
+			'name'               => 'Breakfast sponsor enquiries',
+			'singular_name'      => 'Sponsor enquiry',
+			'menu_name'          => 'Sponsor enquiries',
+			'all_items'          => 'Sponsor enquiries',
+			'edit_item'          => 'Sponsor enquiry',
+			'search_items'       => 'Search enquiries',
+			'not_found'          => 'No sponsorship enquiries yet.',
+			'not_found_in_trash' => 'No enquiries in the bin.',
+		),
+		'description'         => 'Gold and Silver sponsorship enquiries from the Ladies Breakfast 2027 page.',
+		'public'              => false,
+		'show_ui'             => true,
+		'show_in_menu'        => 'edit.php?post_type=' . ATFA_BK_RSVP,
+		'show_in_rest'        => false,
+		'exclude_from_search' => true,
+		'supports'            => array( 'title' ),
+		'capability_type'     => 'post',
+		'map_meta_cap'        => true,
+	) );
+} );
+
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'atfa-awards/v1', '/breakfast/sponsor', array(
+		'methods'             => 'POST',
+		'callback'            => 'atfa_bk_rest_sponsor',
+		'permission_callback' => '__return_true',
+	) );
+} );
+
+/**
+ * The tier a visitor asked about, as its key ('gold', 'silver') or 'unsure'.
+ */
+function atfa_bk_tier_key( $value ) {
+	$value = strtolower( trim( (string) $value ) );
+	return in_array( $value, array( 'gold', 'silver' ), true ) ? $value : 'unsure';
+}
+
+function atfa_bk_tier_label( $key ) {
+	$tiers = atfa_bk_info()['sponsorship']['tiers'];
+	return isset( $tiers[ $key ] ) ? $tiers[ $key ]['name'] : 'Not sure yet';
+}
+
+function atfa_bk_sponsor_count() {
+	return count( get_posts( array(
+		'post_type'   => ATFA_BK_SPONSOR,
+		'post_status' => 'private',
+		'numberposts' => -1,
+		'fields'      => 'ids',
+		'meta_query'  => array( array( 'key' => 'test', 'value' => '1', 'compare' => '!=' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+	) ) );
+}
+
+function atfa_bk_rest_sponsor( WP_REST_Request $request ) {
+	$info = atfa_bk_info();
+	$sp   = $info['sponsorship'];
+	$fail = function ( $message, $status = 400 ) {
+		return new WP_REST_Response( array( 'ok' => false, 'message' => $message ), $status );
+	};
+	$email_help = 'Email ' . $sp['to'] . ' and ' . $sp['contact'] . ' will get back to you.';
+
+	if ( empty( $sp['open'] ) ) {
+		return $fail( 'Sponsorship enquiries for the breakfast have closed. ' . $email_help );
+	}
+	if ( '' !== trim( (string) $request->get_param( 'website' ) ) ) {
+		return new WP_REST_Response( array( 'ok' => true, 'message' => 'Thanks, we have your enquiry.' ), 200 );
+	}
+	$key   = 'atfa_bk_sp_try_' . md5( atfa_awards_client_ip() );
+	$count = (int) get_transient( $key );
+	if ( $count >= 10 ) {
+		return $fail( 'Too many attempts from here in the last hour. ' . $email_help, 429 );
+	}
+	set_transient( $key, $count + 1, HOUR_IN_SECONDS );
+
+	$business = atfa_bk_text( $request->get_param( 'business' ), 120 );
+	$name     = atfa_bk_text( $request->get_param( 'name' ), 100 );
+	$email    = sanitize_email( (string) $request->get_param( 'email' ) );
+	$phone    = atfa_bk_text( $request->get_param( 'phone' ), 40 );
+	$tier     = atfa_bk_tier_key( $request->get_param( 'tier' ) );
+	$message  = sanitize_textarea_field( (string) $request->get_param( 'message' ) );
+	$message  = function_exists( 'mb_substr' ) ? mb_substr( $message, 0, 1000 ) : substr( $message, 0, 1000 );
+	$page     = esc_url_raw( (string) $request->get_param( 'page' ) );
+	if ( '' === $business ) {
+		return $fail( 'Please add your business.' );
+	}
+	if ( '' === $name ) {
+		return $fail( 'Please add your name.' );
+	}
+	if ( ! $email || ! is_email( $email ) ) {
+		return $fail( 'Please add a valid email address.' );
+	}
+
+	// A staff member trying the form while the page is still private: saved as a test, emailed to them only.
+	$test = atfa_bk_is_staff() && ! atfa_bk_is_public();
+
+	$id = wp_insert_post( array(
+		'post_type'   => ATFA_BK_SPONSOR,
+		'post_status' => 'private',
+		'post_title'  => ( $test ? '[Test] ' : '' ) . $business . ' (' . atfa_bk_tier_label( $tier ) . ')',
+		'meta_input'  => array(
+			'business' => $business,
+			'name'     => $name,
+			'email'    => $email,
+			'phone'    => $phone,
+			'tier'     => $tier,
+			'message'  => $message,
+			'test'     => $test ? 1 : 0,
+			'page'     => $page,
+			'ip'       => atfa_awards_client_ip(),
+			'ua'       => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 200 ) : '',
+		),
+	), true );
+	if ( is_wp_error( $id ) || ! $id ) {
+		return $fail( 'Something went wrong saving your enquiry. ' . $email_help, 500 );
+	}
+
+	atfa_bk_send_sponsor_emails( (int) $id, $test );
+
+	$first = trim( strtok( $name, ' ' ) );
+	return new WP_REST_Response( array(
+		'ok'      => true,
+		'test'    => $test,
+		'message' => $test
+			? 'Test enquiry saved and emailed to you only. ' . $sp['contact'] . ' wasn\'t emailed. It shows as [Test] under Breakfast RSVPs > Sponsor enquiries.'
+			: 'Thanks ' . $first . ', ' . $sp['contact'] . ' from ATFA will be in touch about ' . ( 'unsure' === $tier ? 'the packages' : atfa_bk_tier_label( $tier ) . 'ship' ) . '. A copy of the package details is on its way to ' . $email . '.',
+	), 200 );
+}
+
+/**
+ * A package as plain text, for the emails.
+ */
+function atfa_bk_tier_text( $key ) {
+	$tiers = atfa_bk_info()['sponsorship']['tiers'];
+	if ( ! isset( $tiers[ $key ] ) ) {
+		return '';
+	}
+	$t     = $tiers[ $key ];
+	$lines = array( strtoupper( $t['name'] ) . ( '' !== $t['price'] ? ': ' . $t['price'] : ': price on enquiry' ) . ( 1 === $t['limit'] ? ' (one only)' : ' (up to ' . $t['limit'] . ')' ) );
+	if ( '' !== $t['lead'] ) {
+		$lines[] = $t['lead'];
+	}
+	foreach ( $t['includes'] as $inc ) {
+		$lines[] = '- ' . $inc;
+	}
+	return implode( "\n", $lines );
+}
+
+function atfa_bk_send_sponsor_emails( $post_id, $test = false ) {
+	$info = atfa_bk_info();
+	$sp   = $info['sponsorship'];
+	$m    = function ( $k ) use ( $post_id ) {
+		return (string) get_post_meta( $post_id, $k, true );
+	};
+	$tier  = atfa_bk_tier_key( $m( 'tier' ) );
+	$label = atfa_bk_tier_label( $tier );
+	$when  = wp_date( 'l j F Y, g:i a' );
+	$list  = admin_url( 'edit.php?post_type=' . ATFA_BK_SPONSOR );
+	$lines = array( 'Business: ' . $m( 'business' ), 'Contact: ' . $m( 'name' ), 'Email: ' . $m( 'email' ) );
+	if ( '' !== $m( 'phone' ) ) {
+		$lines[] = 'Mobile: ' . $m( 'phone' );
+	}
+	$lines[] = 'Package: ' . $label;
+	if ( '' !== $m( 'message' ) ) {
+		$lines[] = "Message:\n" . $m( 'message' );
+	}
+
+	// To Phil (copy to Nick), or to the staff member trying it out.
+	$to      = $test ? wp_get_current_user()->user_email : $sp['to'];
+	$headers = array( 'Reply-To: ' . $m( 'name' ) . ' <' . $m( 'email' ) . '>' );
+	if ( ! $test && '' !== trim( (string) $sp['cc'] ) ) {
+		$headers[] = 'Cc: ' . $sp['cc'];
+	}
+	$body = $m( 'name' ) . ' from ' . $m( 'business' ) . ' asked about ' . ( 'unsure' === $tier ? 'sponsoring' : $label . 'ship of' ) . ' the ' . $info['title'] . ".\n\n"
+		. implode( "\n", $lines ) . "\n\n"
+		. ( $test
+			? "This was a test from a staff login while the page is still private, so nobody else was emailed.\n"
+			: 'Enquiries so far: ' . atfa_bk_sponsor_count() . "\n" )
+		. 'All enquiries: ' . $list . "\n\n"
+		. 'Sent from ' . ( '' !== $m( 'page' ) ? $m( 'page' ) : atfa_bk_page_url() ) . ' on ' . $when . "\n"
+		. 'Reply to this email to reach ' . $m( 'name' ) . '.';
+	wp_mail( $to, ( $test ? '[Test] ' : '' ) . 'Ladies Breakfast 2027 sponsorship enquiry: ' . $m( 'business' ) . ' (' . $label . ')', $body, $headers );
+
+	// To the enquirer, with the package details.
+	$first    = trim( strtok( $m( 'name' ), ' ' ) );
+	$packages = 'unsure' === $tier ? trim( atfa_bk_tier_text( 'gold' ) . "\n\n" . atfa_bk_tier_text( 'silver' ) ) : atfa_bk_tier_text( $tier );
+	$confirm  = 'Hi ' . $first . ",\n\n"
+		. 'Thanks for your interest in sponsoring the ' . $info['title'] . ' (' . $info['date_text'] . ( '' !== $info['venue']['name'] ? ', ' . $info['venue']['name'] : '' ) . '). ' . $sp['contact'] . ' from ATFA will be in touch shortly. Nothing is booked until you confirm with ' . $sp['contact'] . ".\n\n"
+		. ( '' !== $packages ? $packages . "\n\n" : '' )
+		. 'Questions in the meantime? Reply to this email or contact ' . $sp['contact'] . ' at ' . $sp['to'] . ".\n"
+		. 'The breakfast page: ' . atfa_bk_page_url() . "\n\n"
+		. "Regards,\nThe ATFA team\nAU 1300 361 693 · NZ 0800 453 715\nhttps://www.atfa.com.au/";
+	wp_mail( $test ? wp_get_current_user()->user_email : $m( 'email' ), ( $test ? '[Test] ' : '' ) . 'Sponsoring the ' . $info['title'], $confirm, array( 'Reply-To: ' . $sp['to'] ) );
+}
+
+// Admin list: business, contact, email, mobile, package, message, date.
+add_filter( 'manage_' . ATFA_BK_SPONSOR . '_posts_columns', function ( $columns ) {
+	return array(
+		'cb'      => isset( $columns['cb'] ) ? $columns['cb'] : '',
+		'title'   => 'Business',
+		'name'    => 'Contact',
+		'email'   => 'Email',
+		'phone'   => 'Mobile',
+		'tier'    => 'Package',
+		'message' => 'Message',
+		'date'    => 'Received',
+	);
+} );
+
+add_action( 'manage_' . ATFA_BK_SPONSOR . '_posts_custom_column', function ( $column, $post_id ) {
+	if ( 'tier' === $column ) {
+		echo esc_html( atfa_bk_tier_label( atfa_bk_tier_key( get_post_meta( $post_id, 'tier', true ) ) ) );
+	} elseif ( in_array( $column, array( 'name', 'email', 'phone', 'message' ), true ) ) {
+		echo esc_html( (string) get_post_meta( $post_id, $column, true ) );
+	}
+}, 10, 2 );
+
+add_filter( 'views_edit-' . ATFA_BK_SPONSOR, function ( $views ) {
+	$views['atfa_page'] = '<a href="' . esc_url( atfa_bk_page_url() . '#sponsor' ) . '">Open the sponsorship section</a>';
+	return $views;
+} );
+
+/* ---------------------------------------------------------------------------
  * The staff bar on the page
  * ------------------------------------------------------------------------ */
 
@@ -579,16 +848,28 @@ function atfa_bk_staff_bar() {
 	if ( empty( $info['venue']['confirmed'] ) ) {
 		$notes[] = 'venue and times show as "to be confirmed"';
 	}
-	if ( '' === $info['sponsor']['img'] ) {
-		$notes[] = 'no breakfast sponsor yet';
+	$tiers = $info['sponsorship']['tiers'];
+	$gold  = $info['sponsors']['gold'];
+	$nsilv = count( $info['sponsors']['silver'] );
+	if ( ! $gold && 0 === $nsilv ) {
+		$notes[] = 'no sponsors confirmed yet';
+	} else {
+		$notes[] = 'sponsors: ' . ( $gold ? $gold['name'] . ' (Gold)' : 'no Gold' ) . ', ' . $nsilv . ' Silver';
 	}
-	$notes[] = 'cost shows as "' . $info['price']['text'] . '"';
+	if ( ! empty( $info['sponsorship']['open'] ) ) {
+		$notes[] = 'packages on offer at ' . ( '' !== $tiers['gold']['price'] ? $tiers['gold']['price'] : 'price on enquiry' ) . ' Gold and ' . ( '' !== $tiers['silver']['price'] ? $tiers['silver']['price'] : 'price on enquiry' ) . ' Silver';
+	} else {
+		$notes[] = 'sponsorship closed';
+	}
+	$notes[]   = 'cost shows as "' . $info['price']['text'] . '"';
+	$enquiries = atfa_bk_sponsor_count();
 	return '<div class="bk-staff" role="region" aria-label="Staff tools">'
 		. '<span class="bk-staff-tag">Staff only</span>'
 		. '<div class="bk-staff-text"><span class="bk-staff-status' . ( $public ? '' : ' is-warn' ) . '">' . esc_html( $status ) . '</span> '
-		. '<span class="bk-staff-note">' . esc_html( $seats . ' ' . ( 1 === $seats ? 'seat' : 'seats' ) . ' reserved' . ( $info['places'] ? ' of ' . (int) $info['places'] : '' ) . '. ' . ucfirst( implode( ', ', $notes ) ) . ' (data/breakfast.php).' ) . '</span></div>'
+		. '<span class="bk-staff-note">' . esc_html( $seats . ' ' . ( 1 === $seats ? 'seat' : 'seats' ) . ' reserved' . ( $info['places'] ? ' of ' . (int) $info['places'] : '' ) . ', ' . $enquiries . ' sponsorship ' . ( 1 === $enquiries ? 'enquiry' : 'enquiries' ) . '. ' . ucfirst( implode( ', ', $notes ) ) . ' (data/breakfast.php).' ) . '</span></div>'
 		. '<div class="bk-staff-btns">'
 		. '<a class="bk-sbtn" href="' . esc_url( admin_url( 'edit.php?post_type=' . ATFA_BK_RSVP ) ) . '">Reservations</a>'
+		. '<a class="bk-sbtn is-ghost" href="' . esc_url( admin_url( 'edit.php?post_type=' . ATFA_BK_SPONSOR ) ) . '">Sponsor enquiries</a>'
 		. ( $id ? '<a class="bk-sbtn is-ghost" href="' . esc_url( get_edit_post_link( $id ) ) . '">' . ( $public ? 'Edit page' : 'Publish page' ) . '</a>' : '' )
 		. '</div></div>';
 }

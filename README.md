@@ -79,11 +79,15 @@ seat reservation form. The page is created private (staff only) the first time t
 ready, and the awards and Expo pages link to it from then on (staff see the links straight away).
 
 - `atfa-awards-2027/data/breakfast.php` holds everything the page says: date, times, venue (and whether it is
-  confirmed), cost, places, host, who gets reservations, the sponsor, and the Media Library IDs of the photos.
+  confirmed), cost, places, host, who gets reservations, the confirmed sponsors, the Gold and Silver sponsorship
+  packages (prices and inclusions, modelled on the Women in Flooring Lunch at Rippon Lea), and the Media Library IDs
+  of the photos.
 - `atfa-awards-2027/includes/breakfast.php` makes the page, keeps it staff-only until published, takes reservations
   (REST: `atfa-awards/v1/breakfast/rsvp`), lists them under **Breakfast RSVPs** in wp-admin with a CSV export, and
-  emails Cherie (copy to Nick) and the guest. While the page is private a reservation from a staff login is a test
-  (saved as [Test], emailed to that person only).
+  emails Cherie (copy to Nick) and the guest. Sponsorship enquiries (REST: `atfa-awards/v1/breakfast/sponsor`) are
+  listed under **Breakfast RSVPs > Sponsor enquiries** and emailed to Phil (copy to Nick), with the package details
+  to the enquirer. While the page is private, a reservation or enquiry from a staff login is a test (saved as [Test],
+  emailed to that person only).
 - `atfa-awards-2027/views/breakfast.php` is the page.
 - `atfa-awards-2027/assets/img/share-card-breakfast.jpg` is its link preview card.
 
