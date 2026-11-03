@@ -6,14 +6,16 @@
  * WHO SEES WHAT (Awards sponsorship > Settings)
  *   The page is a private WordPress page, so it stays out of menus, site search, feeds and sitemaps.
  *   - Hidden (the default, and the setting from 2 November 2026): administrators only. Everyone else, staff and
- *     Platinum Members with a code included, is sent to the awards page, as with the Ladies Breakfast page.
- *   - Platinum first look (from 3 November 2026): Platinum Members with a live access code see the whole page,
- *     greeted by company name; administrators see it with a staff bar; anyone else, Editors included, gets the code
- *     screen (an Editor with a code sees what members see).
+ *     code holders included, is sent to the awards page, as with the Ladies Breakfast page.
+ *   - First look (from 3 November 2026; "Platinum first look" until 1.12.2): anyone with a live access code sees the
+ *     whole page, greeted by company name and their round; administrators see it with a staff bar; anyone else,
+ *     Editors included, gets the code screen (an Editor with a code sees what members see).
  *   - Everyone: nobody needs a code, and Editors get the staff bar too.
  *
  * ACCESS CODES
- *   One per Platinum Member, made in wp-admin (Awards sponsorship > Access codes). Typing the code on the code screen,
+ *   One per business, made in wp-admin (Awards sponsorship > Access codes), each in a round: Platinum Members first,
+ *   then the Board a few days later, then past sponsors (Phil, 3 November 2026). The round only changes the wording
+ *   ("Board first look · Abbey Timber"); every live code opens the same page. Typing the code on the code screen,
  *   or opening the personal link /awards/sponsorship/?code=ABCD-EFGH, remembers that device for 90 days (a cookie
  *   tied to the code, so stopping or renewing a code shuts it out straight away). Ten wrong tries an hour per
  *   address, then the code screen asks people to wait.
@@ -218,7 +220,7 @@ function atfa_aws_hidden() {
 }
 
 /**
- * Who gets the staff view: administrators while the page is hidden or Platinum Members only, Editors and
+ * Who gets the staff view: administrators while the page is hidden or in the first look, Editors and
  * Administrators once it is open to everyone.
  */
 function atfa_aws_can_preview() {
@@ -226,7 +228,41 @@ function atfa_aws_can_preview() {
 }
 
 /**
- * All codes: id => array( company, contact, email, code, active, created, by, visits, last ).
+ * The rounds a code can be in, in the order they go out.
+ *   name    in wp-admin
+ *   look    on the page, before the company name ("Board first look · Abbey Timber")
+ *   lead    the invitation text's first sentence (%s is the company)
+ */
+function atfa_aws_rounds() {
+	return array(
+		'platinum' => array(
+			'name' => 'Platinum Members',
+			'look' => 'Platinum Members first look',
+			'lead' => 'As an ATFA Platinum Member, %s gets first pick of the 2027 ATFA Flooring Awards category sponsorships, before they are listed on the ATFA website',
+		),
+		'board'    => array(
+			'name' => 'Board',
+			'look' => 'Board first look',
+			'lead' => 'As a thank you for the time you give the ATFA Board, %s gets an early look at the 2027 ATFA Flooring Awards category sponsorships, before they are listed on the ATFA website',
+		),
+		'sponsor'  => array(
+			'name' => 'Past sponsors',
+			'look' => 'Sponsors first look',
+			'lead' => 'As one of ATFA\'s recent sponsors, %s gets an early look at the 2027 ATFA Flooring Awards category sponsorships, before they are listed on the ATFA website',
+		),
+	);
+}
+
+/**
+ * A code's round (codes made before 1.12.2 have none and are Platinum).
+ */
+function atfa_aws_round( $c ) {
+	$round = is_array( $c ) && isset( $c['round'] ) ? (string) $c['round'] : '';
+	return isset( atfa_aws_rounds()[ $round ] ) ? $round : 'platinum';
+}
+
+/**
+ * All codes: id => array( company, contact, email, code, round, active, created, by, visits, last ).
  */
 function atfa_aws_codes() {
 	$codes = get_option( ATFA_AWS_CODES, array() );
@@ -649,6 +685,7 @@ function atfa_aws_rest_request( WP_REST_Request $request ) {
 			'notes'      => $notes,
 			'member'     => $member ? $member['id'] : '',
 			'code'       => $member ? $member['code'] : '',
+			'round'      => $member ? atfa_aws_round( $member ) : '',
 			'test'       => $test ? 1 : 0,
 			'state'      => 'new',
 			'ip'         => atfa_awards_client_ip(),
@@ -721,7 +758,7 @@ function atfa_aws_send_request_emails( $post_id, $test = false ) {
 		. 'Contact: ' . $m( 'name' ) . "\n"
 		. 'Email: ' . $m( 'email' ) . "\n"
 		. ( '' !== $m( 'phone' ) ? 'Phone: ' . $m( 'phone' ) . "\n" : '' )
-		. ( '' !== $m( 'code' ) ? 'Access code: ' . $m( 'code' ) . " (Platinum first look)\n" : '' )
+		. ( '' !== $m( 'code' ) ? 'Access code: ' . $m( 'code' ) . ' (' . ( '' !== $m( 'round' ) && isset( atfa_aws_rounds()[ $m( 'round' ) ] ) ? atfa_aws_rounds()[ $m( 'round' ) ]['look'] : 'first look' ) . ")\n" : '' )
 		. ( '' !== $m( 'notes' ) ? "\nNotes:\n" . $m( 'notes' ) . "\n" : '' )
 		. "\n" . ( $test
 			? "This was a test from a staff login, so nothing was put on hold.\n"

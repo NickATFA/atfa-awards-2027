@@ -41,17 +41,19 @@ npm folder with @fontsource/barlow-condensed and @fontsource/montserrat for true
 
 ## Category sponsorship page (since 1.10.0)
 
-The online version of Phil's "2027 Awards Category Sponsorship" flyer, at /awards/sponsorship/. Platinum Members
-see it first, each with their own access code; staff manage it under **Awards sponsorship** in wp-admin.
+The online version of Phil's "2027 Awards Category Sponsorship" flyer, at /awards/sponsorship/. It goes out in rounds,
+each business with its own access code: Platinum Members first, the Board a few days later, then past sponsors (Phil,
+3 November 2026). Staff manage it under **Awards sponsorship** in wp-admin.
 
 - `atfa-awards-2027/data/sponsorship.php` holds the offer (price, what's included, the dinner, Phil's contact, the
   season timeline, the sponsorship guide link). The categories come from `data/categories.php`, so the page always
   matches the awards pages.
 - `atfa-awards-2027/includes/sponsorship.php` makes the page (a private page, child of /awards/, created the first
-  time the plugin runs), decides who sees it (hidden: administrators only, the default; Platinum first look: code holders and administrators; or everyone), tracks which
+  time the plugin runs), decides who sees it (hidden: administrators only, the default; first look: code holders and administrators; or everyone), tracks which
   categories are available, on hold or secured, and takes requests (REST: `atfa-awards/v1/sponsorship/request`).
 - `atfa-awards-2027/includes/sponsorship-admin.php` is the wp-admin screen: Categories (status and sponsor),
-  Access codes (add members one per line, copy link or invitation, stop, new code), Requests (confirm or release)
+  Access codes (add businesses one per line in a round: Platinum Members, Board or Past sponsors; copy link or invitation,
+  stop, new code), Requests (confirm or release)
   and Settings (who can see it, the date the categories go public, categories per sponsor, the EPOXY link, who gets
   requests).
 - `atfa-awards-2027/views/sponsorship.php` is the page and the code screen.
