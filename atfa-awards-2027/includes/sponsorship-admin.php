@@ -1,6 +1,6 @@
 <?php
 /**
- * wp-admin > Awards sponsorship: category availability, access codes (by round), requests and settings for the
+ * wp-admin > Awards sponsorship: category availability, Platinum access codes, requests and settings for the
  * /awards/sponsorship/ page (includes/sponsorship.php). Editors and Administrators can use it.
  */
 if ( ! defined( 'ABSPATH' ) ) {
@@ -69,9 +69,9 @@ function atfa_aws_admin_page() {
 			<?php if ( 'public' === $settings['access'] ) : ?>
 				<strong>Open to everyone.</strong>
 			<?php elseif ( 'admin' === $settings['access'] ) : ?>
-				<strong>Hidden for now:</strong> only administrators can see it, and this screen. Everyone else, staff and code holders included, is sent to the awards page. Open it under Settings when you're ready.
+				<strong>Hidden for now:</strong> only administrators can see it, and this screen. Everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Settings when you're ready.
 			<?php else : ?>
-				<strong>First look:</strong> only people with an access code (Platinum Members, the Board and past sponsors, as each round goes out), and administrators, can see it. Everyone else, staff included, gets the code screen.
+				<strong>Platinum first look:</strong> only Platinum Members with their access code, and administrators, can see it. Everyone else, staff included, gets the code screen.
 			<?php endif; ?>
 			<?php echo '' !== $settings['book_url'] ? 'Bookings go to EPOXY.' : 'Requests come to ' . esc_html( $settings['to'] ) . ' and are booked by hand.'; ?>
 		</p>
@@ -247,7 +247,7 @@ function atfa_aws_invite_text( $c ) {
 	$first = '' !== trim( (string) $c['contact'] ) ? trim( strtok( $c['contact'], ' ' ) ) : 'there';
 	$from  = atfa_aws_settings()['public_from'];
 	return 'Hi ' . $first . ",\n\n"
-		. sprintf( atfa_aws_rounds()[ atfa_aws_round( $c ) ]['lead'], $c['company'] ) . ( '' !== $from ? ' on ' . $from : '' ) . ".\n\n"
+		. 'As an ATFA Platinum Member, ' . $c['company'] . ' gets first pick of the 2027 ATFA Flooring Awards category sponsorships, before they are listed on the ATFA website' . ( '' !== $from ? ' on ' . $from : '' ) . ".\n\n"
 		. 'Each category is ' . atfa_aws_price() . ' and includes two tickets to the Awards Dinner on ' . $offer['dinner']['date'] . ' at ' . $offer['dinner']['venue'] . '. Initial allocations are limited to ' . atfa_aws_words( atfa_aws_settings()['limit'] ) . ' ' . _n( 'category', 'categories', atfa_aws_settings()['limit'] ) . " per sponsor, on a first-confirmed basis.\n\n"
 		. "See the categories that are still available and send your request here:\n"
 		. atfa_aws_personal_link( $c['code'] ) . "\n\n"
@@ -264,29 +264,19 @@ function atfa_aws_admin_codes() {
 			$requests[ $mid ] = isset( $requests[ $mid ] ) ? $requests[ $mid ] + 1 : 1;
 		}
 	}
-	$order = array_flip( array_keys( atfa_aws_rounds() ) );
-	uasort( $codes, function ( $a, $b ) use ( $order ) {
-		$by = $order[ atfa_aws_round( $a ) ] - $order[ atfa_aws_round( $b ) ];
-		return 0 !== $by ? $by : strcasecmp( $a['company'], $b['company'] );
+	uasort( $codes, function ( $a, $b ) {
+		return strcasecmp( $a['company'], $b['company'] );
 	} );
 	?>
 	<div class="aws-two aws-sec">
 		<div>
-			<h2>Add businesses</h2>
-			<p>One company per line: <code>Company, contact name, email</code>. The contact and email are optional and only used for the invitation text. Each new company gets its own code, in the round you pick (it sets the wording on the page and in the invitation). A company that is already here gets its contact and email updated instead, and keeps its round.</p>
+			<h2>Add Platinum Members</h2>
+			<p>One company per line: <code>Company, contact name, email</code>. The contact and email are optional and only used for the invitation text. Each new company gets its own code. A company that is already here gets its contact and email updated instead.</p>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="atfa_aws_add_codes">
 				<?php wp_nonce_field( 'atfa_aws_add_codes' ); ?>
 				<textarea name="lines" class="aws-bulk" placeholder="Hurford's, Jane Citizen, jane@example.com&#10;Bostik"></textarea>
-				<p>
-					<label for="aws-round">Round</label>
-					<select name="round" id="aws-round">
-						<?php foreach ( atfa_aws_rounds() as $key => $r ) : ?>
-							<option value="<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $r['name'] ); ?></option>
-						<?php endforeach; ?>
-					</select>
-					<button type="submit" class="button button-primary">Add and make codes</button>
-				</p>
+				<p><button type="submit" class="button button-primary">Add and make codes</button></p>
 			</form>
 		</div>
 		<div>
@@ -298,16 +288,15 @@ function atfa_aws_admin_codes() {
 	</div>
 	<h2 class="aws-sec">Codes (<?php echo count( $codes ); ?>)</h2>
 	<?php if ( ! $codes ) : ?>
-		<p>No codes yet. Add businesses above.</p>
+		<p>No codes yet. Add the Platinum Members above.</p>
 	<?php else : ?>
 	<table class="widefat striped" style="max-width:1400px">
-		<thead><tr><th>Company</th><th>Round</th><th>Contact</th><th>Code</th><th>Send them</th><th>Visits</th><th>Requests</th><th>Actions</th></tr></thead>
+		<thead><tr><th>Company</th><th>Contact</th><th>Code</th><th>Send them</th><th>Visits</th><th>Requests</th><th>Actions</th></tr></thead>
 		<tbody>
 		<?php foreach ( $codes as $id => $c ) : ?>
 			<?php $link = atfa_aws_personal_link( $c['code'] ); ?>
 			<tr class="<?php echo empty( $c['active'] ) ? 'aws-off' : ''; ?>">
 				<td><strong><?php echo esc_html( $c['company'] ); ?></strong><?php echo empty( $c['active'] ) ? '<br><span class="aws-pill aws-taken">Stopped</span>' : ''; ?></td>
-				<td><?php echo esc_html( atfa_aws_rounds()[ atfa_aws_round( $c ) ]['name'] ); ?></td>
 				<td><?php echo esc_html( $c['contact'] ); ?><?php echo '' !== $c['email'] ? '<br><a href="mailto:' . esc_attr( $c['email'] ) . '">' . esc_html( $c['email'] ) . '</a>' : ''; ?></td>
 				<td><code class="aws-code"><?php echo esc_html( $c['code'] ); ?></code></td>
 				<td class="aws-actions">
@@ -343,8 +332,6 @@ add_action( 'admin_post_atfa_aws_add_codes', function () {
 	atfa_aws_admin_check( 'atfa_aws_add_codes' );
 	$lines = isset( $_POST['lines'] ) ? explode( "\n", (string) wp_unslash( $_POST['lines'] ) ) : array(); // phpcs:ignore WordPress.Security.NonceVerification
 	$codes = atfa_aws_codes();
-	$round = isset( $_POST['round'] ) ? sanitize_key( wp_unslash( $_POST['round'] ) ) : 'platinum'; // phpcs:ignore WordPress.Security.NonceVerification
-	$round = isset( atfa_aws_rounds()[ $round ] ) ? $round : 'platinum';
 	$added = 0;
 	$moved = 0;
 	foreach ( $lines as $line ) {
@@ -378,7 +365,6 @@ add_action( 'admin_post_atfa_aws_add_codes', function () {
 			'contact' => $contact,
 			'email'   => $email,
 			'code'    => atfa_aws_make_code( $codes ),
-			'round'   => $round,
 			'active'  => true,
 			'created' => time(),
 			'by'      => get_current_user_id(),
@@ -390,7 +376,7 @@ add_action( 'admin_post_atfa_aws_add_codes', function () {
 	atfa_aws_save_codes( $codes );
 	$msg = array();
 	if ( $added ) {
-		$msg[] = 'Made ' . $added . ' ' . _n( 'code', 'codes', $added ) . ' (' . atfa_aws_rounds()[ $round ]['name'] . ').';
+		$msg[] = 'Made ' . $added . ' ' . _n( 'code', 'codes', $added ) . '.';
 	}
 	if ( $moved ) {
 		$msg[] = 'Updated ' . $moved . ' ' . _n( 'company', 'companies', $moved ) . ' that already had a code.';
@@ -437,9 +423,9 @@ add_action( 'admin_post_atfa_aws_export_codes', function () {
 	header( 'Content-Type: text/csv; charset=utf-8' );
 	header( 'Content-Disposition: attachment; filename="awards-2027-sponsorship-codes-' . wp_date( 'Y-m-d' ) . '.csv"' );
 	$out = fopen( 'php://output', 'w' );
-	fputcsv( $out, array( 'Company', 'Round', 'Contact', 'Email', 'Code', 'Personal link', 'Active', 'Visits', 'Last visit' ) );
+	fputcsv( $out, array( 'Company', 'Contact', 'Email', 'Code', 'Personal link', 'Active', 'Visits', 'Last visit' ) );
 	foreach ( atfa_aws_codes() as $c ) {
-		fputcsv( $out, array( $c['company'], atfa_aws_rounds()[ atfa_aws_round( $c ) ]['name'], $c['contact'], $c['email'], $c['code'], atfa_aws_personal_link( $c['code'] ), empty( $c['active'] ) ? 'No' : 'Yes', (int) ( $c['visits'] ?? 0 ), ! empty( $c['last'] ) ? wp_date( 'Y-m-d H:i', (int) $c['last'] ) : '' ) );
+		fputcsv( $out, array( $c['company'], $c['contact'], $c['email'], $c['code'], atfa_aws_personal_link( $c['code'] ), empty( $c['active'] ) ? 'No' : 'Yes', (int) ( $c['visits'] ?? 0 ), ! empty( $c['last'] ) ? wp_date( 'Y-m-d H:i', (int) $c['last'] ) : '' ) );
 	}
 	fclose( $out );
 	exit;
@@ -589,7 +575,7 @@ function atfa_aws_admin_settings( $s ) {
 				<th scope="row">Who can see the page</th>
 				<td>
 					<label><input type="radio" name="access" value="admin" <?php checked( $s['access'], 'admin' ); ?>> Hidden for now: administrators only. Staff, members with a code and visitors are sent to the awards page.</label><br>
-					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> First look: people with an access code (Platinum Members, then the Board, then past sponsors), and administrators. Staff and visitors get the code screen.</label><br>
+					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: Platinum Members with their access code, and administrators. Staff and visitors get the code screen.</label><br>
 					<label><input type="radio" name="access" value="public" <?php checked( $s['access'], 'public' ); ?>> Everyone (no code needed). Also puts a "Sponsor a category" link on the awards pages.</label>
 				</td>
 			</tr>
@@ -652,7 +638,7 @@ add_action( 'admin_post_atfa_aws_save_settings', function () {
 	}
 	$said = array(
 		'admin'  => ' The page is hidden: administrators only.',
-		'codes'  => ' The page is live for the first look: people with an access code, and administrators.',
+		'codes'  => ' The page is live for the Platinum first look: Platinum Members with their code, and administrators.',
 		'public' => ' The page is now open to everyone.',
 	);
 	if ( 'public' !== $new['access'] && ! current_user_can( 'manage_options' ) ) {
