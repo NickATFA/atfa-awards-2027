@@ -383,9 +383,9 @@ html.aw-lock{overflow:hidden}
 		<div class="gate-main">
 			<div class="wrap" style="width:100%">
 				<div class="gate-box">
-					<span class="eyebrow o ld d2" style="display:inline-flex;align-items:center;gap:10px"><?php echo $icon( 'lock', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>Platinum Members first look</span>
+					<span class="eyebrow o ld d2" style="display:inline-flex;align-items:center;gap:10px"><?php echo $icon( 'lock', 16 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>First look</span>
 					<h1 class="disp gate-h ld d3">Awards <span class="o">2027</span><span class="h1-sub">Category sponsorship</span></h1>
-					<p class="ld d4" style="font-size:19px;line-height:1.5;color:#B4A99A;margin-top:24px;max-width:42ch">ATFA Platinum Members get first pick of the 2027 award categories before they are listed on the ATFA website. Enter the access code from your invitation.</p>
+					<p class="ld d4" style="font-size:19px;line-height:1.5;color:#B4A99A;margin-top:24px;max-width:42ch">Invited members and sponsors get first pick of the 2027 award categories before they are listed on the ATFA website. Enter the access code from your invitation.</p>
 					<form class="gate-form ld d5" method="post" action="<?php echo esc_url( atfa_aws_page_url() ); ?>">
 						<label for="aws-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Access code</label>
 						<input class="in" id="aws-code" name="aws_code" type="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH" value="<?php echo esc_attr( $viewer['typed'] ); ?>" maxlength="20" required<?php echo $viewer['error'] ? ' aria-invalid="true" aria-describedby="aws-gate-msg"' : ''; ?>>
@@ -511,7 +511,7 @@ $config = array(
 
 <?php if ( $viewer['staff'] ) : ?>
 <div class="staff"><div class="wrap">
-	<span><b><?php echo 'public' === $settings['access'] ? 'Staff' : 'Admins only'; ?></b><?php echo 'public' === $settings['access'] ? 'Open to everyone.' : ( 'admin' === $settings['access'] ? 'Hidden for now: everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Awards sponsorship > Settings.' : 'Platinum first look: only Platinum Members with their access code, and administrators, can see this page. Everyone else, staff included, gets the code screen.' ); ?> Requests you send from this login are tests: only you get the emails and nothing is held.</span>
+	<span><b><?php echo 'public' === $settings['access'] ? 'Staff' : 'Admins only'; ?></b><?php echo 'public' === $settings['access'] ? 'Open to everyone.' : ( 'admin' === $settings['access'] ? 'Hidden for now: everyone else, staff and code holders included, is sent to the awards page. Open it under Awards sponsorship > Settings.' : 'First look: only people with an access code (Platinum Members, the Board and past sponsors, as each round goes out), and administrators, can see this page. Everyone else, staff included, gets the code screen.' ); ?> Requests you send from this login are tests: only you get the emails and nothing is held.</span>
 	<span><a href="<?php echo esc_url( add_query_arg( 'aws_preview', 'gate', atfa_aws_page_url() ) ); ?>">See the code screen</a> · <a href="<?php echo esc_url( admin_url( 'admin.php?page=atfa-aws' ) ); ?>">Codes, categories and requests</a></span>
 </div></div>
 <?php endif; ?>
@@ -533,7 +533,7 @@ $config = array(
 <div class="wrap" style="position:relative">
 <div class="hero" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:end;padding:80px 0 60px">
 	<div style="grid-column:span 7;min-width:0;display:flex;flex-direction:column">
-		<div class="eyebrow ld d2" style="color:#F8931F"><?php echo $member ? 'Platinum Members first look · ' . esc_html( $member['company'] ) : ( 'public' === $settings['access'] ? 'ATFA Flooring Awards · Sydney · ' . esc_html( $offer['dinner']['date'] ) : 'Platinum Members first look' ); ?></div>
+		<div class="eyebrow ld d2" style="color:#F8931F"><?php echo $member ? esc_html( atfa_aws_rounds()[ atfa_aws_round( $member ) ]['look'] . ' · ' . $member['company'] ) : ( 'public' === $settings['access'] ? 'ATFA Flooring Awards · Sydney · ' . esc_html( $offer['dinner']['date'] ) : 'First look' ); ?></div>
 		<h1 class="disp hero-h1 ld d3">Awards <span class="o">2027</span><span class="h1-sub">Category sponsorship</span></h1>
 <?php if ( $partner ) : ?>
 		<?php echo atfa_awards_partner_lockup( $partner, 'ld d4' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -561,7 +561,7 @@ $config = array(
 <div class="card status">
 	<div style="display:flex;align-items:center;gap:14px;min-width:0;flex-wrap:wrap">
 		<span class="dot"></span>
-		<span class="disp" style="font-size:28px;font-weight:700;color:#F4EFE7"><?php echo 'public' === $settings['access'] ? 'Category sponsorship open' : 'Platinum first look'; ?></span>
+		<span class="disp" style="font-size:28px;font-weight:700;color:#F4EFE7"><?php echo 'public' === $settings['access'] ? 'Category sponsorship open' : esc_html( $member && 'platinum' !== atfa_aws_round( $member ) ? atfa_aws_rounds()[ atfa_aws_round( $member ) ]['look'] : ( $member ? 'Platinum first look' : 'First look' ) ); ?></span>
 		<span style="color:#B4A99A;font-size:15px"><?php echo 'public' === $settings['access'] ? 'Allocated on a first-confirmed basis' : 'Before the categories are listed on the ATFA website' . esc_html( $public_from ); ?></span>
 	</div>
 	<div style="display:flex;align-items:baseline;gap:10px">
