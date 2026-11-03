@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 return array(
-	// Per category. 'price_note' prints straight after the price, e.g. '+ GST'. Phil's flyer doesn't say either way.
+	// Per category. 'price_note' prints straight after the price. Phil, 3 November 2026: $2,950 inc GST.
 	'price'      => 2950,
-	'price_note' => '',
+	'price_note' => 'inc GST',
 
 	// Awards that can't be sponsored on their own. Floor of the Year went with the major awards sponsorship.
 	'exclude'    => array( 'foty' ),
