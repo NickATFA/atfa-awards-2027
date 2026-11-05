@@ -71,7 +71,7 @@ function atfa_aws_admin_page() {
 			<?php elseif ( 'admin' === $settings['access'] ) : ?>
 				<strong>Hidden for now:</strong> only administrators can see it, and this screen. Everyone else, staff and Platinum Members with a code included, is sent to the awards page. Open it under Settings when you're ready.
 			<?php else : ?>
-				<strong>Platinum first look:</strong> only Platinum Members with their access code, and administrators, can see it. Everyone else, staff included, gets the code screen.
+				<strong>Platinum first look:</strong> only Platinum Members with their access code, and staff, can see it. Everyone else gets the code screen.
 			<?php endif; ?>
 			<?php echo '' !== $settings['book_url'] ? 'Bookings go to EPOXY.' : 'Requests come to ' . esc_html( $settings['to'] ) . ' and are booked by hand.'; ?>
 		</p>
@@ -575,7 +575,7 @@ function atfa_aws_admin_settings( $s ) {
 				<th scope="row">Who can see the page</th>
 				<td>
 					<label><input type="radio" name="access" value="admin" <?php checked( $s['access'], 'admin' ); ?>> Hidden for now: administrators only. Staff, members with a code and visitors are sent to the awards page.</label><br>
-					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: Platinum Members with their access code, and administrators. Staff and visitors get the code screen.</label><br>
+					<label><input type="radio" name="access" value="codes" <?php checked( $s['access'], 'codes' ); ?>> Platinum first look: Platinum Members with their access code, and staff. Visitors get the code screen.</label><br>
 					<label><input type="radio" name="access" value="public" <?php checked( $s['access'], 'public' ); ?>> Everyone (no code needed). Also puts a "Sponsor a category" link on the awards pages.</label>
 				</td>
 			</tr>
@@ -638,7 +638,7 @@ add_action( 'admin_post_atfa_aws_save_settings', function () {
 	}
 	$said = array(
 		'admin'  => ' The page is hidden: administrators only.',
-		'codes'  => ' The page is live for the Platinum first look: Platinum Members with their code, and administrators.',
+		'codes'  => ' The page is live for the Platinum first look: Platinum Members with their code, and staff.',
 		'public' => ' The page is now open to everyone.',
 	);
 	if ( 'public' !== $new['access'] && ! current_user_can( 'manage_options' ) ) {

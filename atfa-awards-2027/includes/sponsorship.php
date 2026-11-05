@@ -218,11 +218,11 @@ function atfa_aws_hidden() {
 }
 
 /**
- * Who gets the staff view: administrators while the page is hidden or Platinum Members only, Editors and
- * Administrators once it is open to everyone.
+ * Who gets the staff view: administrators only while the page is hidden; Editors and Administrators while it is
+ * open to code holders (Nick, 5 Nov 2026) and once it is open to everyone. A staff member's requests are tests.
  */
 function atfa_aws_can_preview() {
-	return 'public' === atfa_aws_settings()['access'] ? atfa_aws_is_staff() : atfa_aws_is_admin();
+	return atfa_aws_hidden() ? atfa_aws_is_admin() : atfa_aws_is_staff();
 }
 
 /**
