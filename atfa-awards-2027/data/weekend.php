@@ -23,7 +23,8 @@ return array(
 	'title'   => 'ATFA Flooring Industry Weekend 2027',
 	// Who can open the page while it is private (everyone else is sent to the awards page): 'manage_options' is
 	// administrators only, 'edit_pages' lets staff (editors) in too.
-	'preview' => 'manage_options',
+	// Nick, 5 Nov 2026: staff and admins can open it; visitors still go to /awards until it is published.
+	'preview' => 'edit_pages',
 	'place'   => 'Sydney Olympic Park',
 
 	// Once this page is published, atfa.com.au/awards (the "awards coming soon" page) forwards here, for as long as

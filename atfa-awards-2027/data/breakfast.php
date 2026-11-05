@@ -34,7 +34,8 @@ return array(
 	'title'     => 'Ladies Breakfast 2027',
 	// Who can open the page while it is private (everyone else is sent to the awards page): 'manage_options' is
 	// administrators only (Nick, 2 Nov 2026: hidden even from staff for now), 'edit_pages' lets editors in too.
-	'preview'   => 'manage_options',
+	// Nick, 5 Nov 2026: staff and admins can open it; visitors still go to /awards until it is published.
+	'preview'   => 'edit_pages',
 	'date'      => '2027-05-22',
 	'date_text' => 'Saturday 22 May 2027',
 	'day_text'  => 'Saturday morning, 22 May 2027',
