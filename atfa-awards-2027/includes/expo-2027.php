@@ -185,10 +185,10 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 	}
 
 	/**
-	 * Staff = logged-in users who can edit pages (Editors and Administrators).
+	 * Staff = Editors, Administrators and the ATFA Staff role (atfa_awards_is_staff).
 	 */
 	function atfa_expo27_is_staff() {
-		return is_user_logged_in() && current_user_can( 'edit_pages' );
+		return atfa_awards_is_staff();
 	}
 
 	/**
@@ -848,7 +848,7 @@ if ( ! function_exists( 'atfa_expo27_settings' ) ) {
 		if ( ! is_array( $p ) || empty( $p['name'] ) || empty( $p['logo'] ) || empty( $p['url'] ) ) {
 			return null;
 		}
-		if ( empty( $p['public'] ) && ! current_user_can( 'edit_pages' ) ) {
+		if ( empty( $p['public'] ) && ! atfa_awards_is_staff() ) {
 			return null;
 		}
 		$p['src'] = atfa_expo27_awards_img( $p['logo'] );

@@ -203,7 +203,7 @@ add_shortcode( 'atfa_awards_sponsorship', function () {
  * ------------------------------------------------------------------------ */
 
 function atfa_aws_is_staff() {
-	return is_user_logged_in() && current_user_can( 'edit_pages' );
+	return atfa_awards_is_staff();
 }
 
 function atfa_aws_is_admin() {

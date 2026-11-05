@@ -117,6 +117,9 @@ function atfa_bk_page_url() {
  */
 function atfa_bk_is_staff() {
 	$cap = (string) atfa_bk_info()['preview'];
+	if ( 'edit_pages' === $cap ) {
+		return atfa_awards_is_staff();
+	}
 	return is_user_logged_in() && current_user_can( '' !== $cap ? $cap : 'manage_options' );
 }
 

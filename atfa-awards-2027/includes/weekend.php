@@ -75,6 +75,9 @@ function atfa_wk_page_url() {
  */
 function atfa_wk_is_staff() {
 	$cap = (string) atfa_wk_info()['preview'];
+	if ( 'edit_pages' === $cap ) {
+		return atfa_awards_is_staff();
+	}
 	return is_user_logged_in() && current_user_can( '' !== $cap ? $cap : 'manage_options' );
 }
 
@@ -210,7 +213,7 @@ function atfa_wk_forward_awards() {
 	if ( ! is_page( $splash ) ) {
 		return;
 	}
-	if ( isset( $_GET['splash'] ) && is_user_logged_in() && current_user_can( 'edit_pages' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( isset( $_GET['splash'] ) && atfa_awards_is_staff() ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		return;
 	}
 	$to   = atfa_wk_page_url();
@@ -357,7 +360,7 @@ function atfa_wk_events() {
 	$info    = atfa_wk_info();
 	$links   = atfa_wk_page_links();
 	$partner = function_exists( 'atfa_awards_partner' ) ? atfa_awards_partner() : null;
-	$staff   = is_user_logged_in() && current_user_can( 'edit_pages' );
+	$staff   = atfa_awards_is_staff();
 	$expo    = atfa_wk_expo_summary();
 	$out     = array();
 	foreach ( (array) $info['events'] as $key => $ev ) {
