@@ -64,7 +64,7 @@ return array(
 			'venue'     => 'Sydney Showground, Hall 5',
 			'address'   => '1 Showground Road, Sydney Olympic Park NSW 2127',
 			'map'       => 'https://www.google.com/maps/search/?api=1&query=Sydney+Showground+Hall+5+Sydney+Olympic+Park',
-			'text'      => 'The timber flooring industry in one hall for a day. Exhibitor stands, live demonstrations on the stage, and breakout and seminar space.',
+			'text'      => 'The timber flooring industry in one hall for a day. Exhibitor stands, live demonstrations on the stage, and conference presentations.',
 			'page'      => 'expo',
 			'partner'   => false,
 			'confirmed' => true,

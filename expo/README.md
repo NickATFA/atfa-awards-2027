@@ -2,7 +2,7 @@
 
 Source for the floor plan at https://www.atfa.com.au/expo-2027-hall-5-interactive-floor-plan/
 
-Version 3.4.1, October 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
+Version 3.6.0, November 2026. Since awards plugin 1.8.0 (19 October 2026) this code ships inside the
 ATFA Flooring Awards 2027 plugin; the repo's README.md says how to release a change.
 
 ## What's where on the website
@@ -38,6 +38,21 @@ Phil's drawing is a concept for review with the venue and exhibition contractor.
 the rules the earlier Revised Concept 5 kept: the corner of O12 is 1.7 m from the tip of the demo
 zone (Concept 5 kept 3.5 m) and S01 is 4 m inside the main entrance (Concept 5 kept an 8 m arrival
 area). Concept 5 is still in `tools/layout_concept5.py` with its own rules, if it's ever needed.
+
+## The venue round the hall (v3.6.0, 24 November 2026)
+
+The plan now shows the rooms round Hall 5 as drawn for Timber Floors 63 ("ATFA_TF63_Expo_FloorPlan_Fix_v2"):
+the forecourt, foyer, café / bar & catering along the front of the hall, Hall 5A closed (no access),
+the conference presentation area (Function Room 3), green room (Function Room 4), exhibitors lounge
+(Function Room 5), ATFA offices, first aid, meeting rooms, toilets, kitchens and store. The magazine plan
+is drawn on this plan's own geometry (3.628 pt to the metre), so its shapes come across in metres unchanged:
+
+    python3 tools/venue_from_tf63.py <magazine plan.pdf> src/venue/tf63-venue.json
+    python3 tools/apply_venue.py     # writes "venue", "displays", the labels and the view into geometry.json
+
+A 3 x 6 m Display block sits between O16 and O17, shown as Reserved. It isn't a stand: it isn't for sale,
+isn't in the stand list or the sheet, and can't be selected. Change or remove it in "displays" in
+tools/apply_venue.py. It leaves 1.5 m either side to O16 and O17.
 
 ## Where the stand data comes from
 

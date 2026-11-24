@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ATFA Flooring Awards 2027
  * Description: The 2027 awards season page at /awards/ (blackout splash with a notify-me form), a staff-only preview of the entries-open page at /awards-preview/, the list of notify-me signups under Awards signups, the ATFA Expo & Conference 2027 page at /expo-2027/ with the live Hall 5 floor plan, the category sponsorship page at /awards/sponsorship/ (Platinum Members first, with access codes, under Awards sponsorship), the Ladies Breakfast 2027 page at /ladies-breakfast-2027/ with its seat reservations under Breakfast RSVPs, and the ATFA Flooring Industry Weekend 2027 landing page at /weekend-2027/ that brings the Expo, the breakfast and the awards dinner together.
- * Version: 1.12.5
+ * Version: 1.13.0
  * Author: ATFA
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ATFA_AWARDS_VERSION', '1.12.5' );
+define( 'ATFA_AWARDS_VERSION', '1.13.0' );
 define( 'ATFA_AWARDS_FILE', __FILE__ );
 define( 'ATFA_AWARDS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ATFA_AWARDS_URL', plugin_dir_url( __FILE__ ) );
@@ -274,7 +274,7 @@ function atfa_awards_weekend() {
 			'day'    => 'Fri 21',
 			'when'   => 'Friday 21 May',
 			'title'  => 'Expo & Conference',
-			'text'   => 'Sydney Showground, Hall 5. Fifty-eight exhibitor stands, demonstrations on the stage and breakout space.',
+			'text'   => 'Sydney Showground, Hall 5. Fifty-eight exhibitor stands, demonstrations on the stage and conference presentations.',
 			'cta'    => 'See the Expo and floor plan',
 			'footer' => 'Expo & Conference 2027',
 			'url'    => 'https://www.atfa.com.au/expo-2027/',

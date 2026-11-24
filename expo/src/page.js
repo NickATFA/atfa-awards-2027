@@ -382,7 +382,7 @@
   /* ------------------------------------------------------------------ */
 
   var W = GEO.hall.w, D = GEO.hall.d, P = GEO.paths;
-  var LABEL_DARK = { '#9A8455': '#A89A82', '#4F6F8F': '#8FB0CF', '#A8600C': '#F8931F', '#7D8A84': '#8F857A' };
+  var LABEL_DARK = { '#7A6A4C': '#B8AA90', '#8C8578': '#8A8276', '#9A8455': '#A89A82', '#4F6F8F': '#8FB0CF', '#A8600C': '#F8931F', '#7D8A84': '#8F857A' };
 
   function drawPlan(uid, vb, opts) {
     var svg = sv('svg', {
@@ -404,7 +404,27 @@
     sv('rect', { width: 1.8, height: 1.8, fill: '#2A1C1A' }, hatch);
     sv('line', { x1: 0, y1: 0, x2: 0, y2: 1.8, stroke: '#4A2C28', 'stroke-width': 0.6 }, hatch);
 
-    sv('path', { d: P.outer, fill: '#1F1B17' }, deco);
+    var V = GEO.venue;
+    if (V) {
+      var vHatch = sv('pattern', {
+        id: uid + 'Closed', width: 1.4, height: 1.4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'
+      }, defs);
+      sv('rect', { width: 1.4, height: 1.4, fill: '#171513' }, vHatch);
+      sv('line', { x1: 0, y1: 0, x2: 0, y2: 1.4, stroke: '#2E2A26', 'stroke-width': 0.22 }, vHatch);
+      var ROOM_FILL = { room: '#2A241D', service: '#211E1B', back: '#191715', foyer: '#1D1A17' };
+      V.rooms.forEach(function (r) {
+        sv('path', { d: r.d, fill: ROOM_FILL[r.kind] || '#1D1A17', stroke: '#0C0B0A', 'stroke-width': 0.27, 'stroke-linejoin': 'round' }, deco);
+      });
+      sv('path', { d: V.cafe, fill: '#2E2720', stroke: '#0C0B0A', 'stroke-width': 0.27 }, deco);
+      sv('path', { d: V.closed, fill: 'url(#' + uid + 'Closed)', stroke: '#0C0B0A', 'stroke-width': 0.27 }, deco);
+      var fc = V.forecourt;
+      if (fc) {
+        sv('line', { x1: fc.line[0], y1: fc.line[1], x2: fc.line[2], y2: fc.line[3], stroke: '#F8931F', 'stroke-width': 0.43 }, deco);
+        sv('path', { d: fc.head, fill: '#F8931F' }, deco);
+      }
+    } else {
+      sv('path', { d: P.outer, fill: '#1F1B17' }, deco);
+    }
     sv('path', { d: GEO.radial, fill: 'none', stroke: '#4A4038', 'stroke-width': 0.22, 'stroke-dasharray': '1.6 1.1' }, deco);
     sv('path', { d: P.hall, fill: 'url(#' + uid + 'Hatch)' }, deco);
     sv('path', { d: P.lane, fill: '#151210' }, deco);
@@ -473,6 +493,17 @@
         var span = sv('tspan', { x: L.x, dy: i ? round3(L.size * 1.18) : 0 }, t);
         span.textContent = line;
       });
+    });
+
+    (GEO.displays || []).forEach(function (d) {
+      sv('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 0.18, fill: '#55514C', stroke: '#77716A', 'stroke-width': 0.16 }, deco);
+      var dcx = d.x + d.w / 2, dcy = d.y + d.h / 2, vert = d.h > d.w;
+      var rot = vert ? 'rotate(-90 ' + dcx + ' ' + dcy + ')' : null;
+      var a1 = { 'text-anchor': 'middle', 'font-size': 0.95, 'font-weight': 700, fill: '#F1ECE4', 'letter-spacing': 0.06 };
+      var a2 = { 'text-anchor': 'middle', 'font-size': 0.6, 'font-weight': 700, fill: '#C9C1B6', 'letter-spacing': 0.06 };
+      if (rot) { a1.transform = rot; a2.transform = rot; }
+      svText(deco, dcx, dcy - 0.05, String(d.label).toUpperCase(), a1);
+      if (d.status) { svText(deco, dcx, dcy + 0.85, String(d.status).toUpperCase(), a2); }
     });
 
     var standLayer = sv('g', { 'class': 'xp-stands' }, svg);

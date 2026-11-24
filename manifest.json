@@ -1,12 +1,12 @@
 {
   "name": "ATFA Flooring Awards 2027",
   "slug": "atfa-awards-2027",
-  "version": "1.12.5",
+  "version": "1.13.0",
   "requires": "6.0",
   "tested": "6.9",
   "requires_php": "7.4",
   "url": "https://github.com/NickATFA/atfa-awards-2027",
-  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.12.5",
-  "last_updated": "2026-11-05",
-  "changelog": "<p><strong>1.12.5</strong> (2026-11-05): The ATFA Staff role (Phil, Peter, Toby) counts as staff on every 2027 page and can open them while they are private.</p>"
+  "package": "https://raw.githubusercontent.com/NickATFA/atfa-awards-2027/main/dist/atfa-awards-2027.zip?v=1.13.0",
+  "last_updated": "2026-11-24",
+  "changelog": "<p><strong>1.13.0</strong> (2026-11-24): Expo floor plan: the venue round Hall 5 from the Timber Floors 63 plan (foyer, café, bar and catering, Hall 5A closed, function rooms, exhibitors lounge), a reserved Display block between O16 and O17, updated hall copy and stand PDF.</p>"
 }

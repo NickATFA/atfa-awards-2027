@@ -89,7 +89,7 @@ def plan_svg():
             page.click(".afpx-zbtn[data-zoom='in']")
         svg = page.evaluate("""() => {
             const s = document.querySelector('.afpx-svg').cloneNode(true);
-            s.setAttribute('viewBox', '-18.5 -18 82.5 78.5');
+            s.setAttribute('viewBox', '-25 -25 88 84');
             s.removeAttribute('role'); s.removeAttribute('aria-label'); s.removeAttribute('focusable');
             s.querySelectorAll('[tabindex]').forEach(n => n.removeAttribute('tabindex'));
             s.querySelectorAll('[aria-label]').forEach(n => n.removeAttribute('aria-label'));
@@ -214,7 +214,7 @@ td i, .legend i { display: inline-block; width: 3mm; height: 3mm; border: 0.3mm 
       </div>
       <div class="card"><h2>Demonstration and stage zone</h2>
         <p>South-east corner of the hall: a 5 × 5 m quadrant stage with 30 seats around the curved edge, main and delay speakers, and an AV / mix position.</p>
-        <p>Breakout / seminar and catering &amp; networking spaces (680 m² each) sit behind the operable wall.</p>
+        <p>Café, bar and catering along the front of the hall. Conference presentations in Function Room 3; exhibitors lounge in Function Room 5. Hall 5A is closed.</p>
       </div>
       <div class="card book"><h2>Book a stand</h2>
         <p>Contact Cherie at ATFA</p>

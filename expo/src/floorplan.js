@@ -365,7 +365,28 @@
   sv('rect', { width: 1.8, height: 1.8, fill: '#FBEDED' }, hatch);
   sv('line', { x1: 0, y1: 0, x2: 0, y2: 1.8, stroke: '#F1CCCC', 'stroke-width': 0.6 }, hatch);
 
-  sv('path', { d: P.outer, fill: '#F5F1E8' }, deco);
+  // The venue round the hall (rooms, foyer, café band, closed Hall 5A), from the TF63 magazine plan.
+  var V = GEO.venue;
+  if (V) {
+    var vHatch = sv('pattern', {
+      id: 'afpxClosed', width: 1.4, height: 1.4, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)'
+    }, defs);
+    sv('rect', { width: 1.4, height: 1.4, fill: '#EDEDED' }, vHatch);
+    sv('line', { x1: 0, y1: 0, x2: 0, y2: 1.4, stroke: '#C9CBCC', 'stroke-width': 0.22 }, vHatch);
+    var ROOM_FILL = { room: '#F5EBD9', service: '#E3E3E3', back: '#D0D1D2', foyer: '#F2F2F2' };
+    V.rooms.forEach(function (r) {
+      sv('path', { d: r.d, fill: ROOM_FILL[r.kind] || '#EEE', stroke: '#fff', 'stroke-width': 0.27, 'stroke-linejoin': 'round' }, deco);
+    });
+    sv('path', { d: V.cafe, fill: '#F5EBD9', stroke: '#fff', 'stroke-width': 0.27 }, deco);
+    sv('path', { d: V.closed, fill: 'url(#afpxClosed)', stroke: '#fff', 'stroke-width': 0.27 }, deco);
+    var fc = V.forecourt;
+    if (fc) {
+      sv('line', { x1: fc.line[0], y1: fc.line[1], x2: fc.line[2], y2: fc.line[3], stroke: '#F8931F', 'stroke-width': 0.43 }, deco);
+      sv('path', { d: fc.head, fill: '#F8931F' }, deco);
+    }
+  } else {
+    sv('path', { d: P.outer, fill: '#F5F1E8' }, deco);
+  }
   sv('path', { d: GEO.radial, fill: 'none', stroke: '#D9CDB4', 'stroke-width': 0.22, 'stroke-dasharray': '1.6 1.1' }, deco);
   sv('path', { d: P.hall, fill: 'url(#afpxHatch)' }, deco);
   sv('path', { d: P.lane, fill: '#F3F5F4' }, deco);
@@ -436,6 +457,18 @@
       var span = sv('tspan', { x: L.x, dy: i ? round3(L.size * 1.18) : 0 }, t);
       span.textContent = line;
     });
+  });
+
+  // Fixed displays (not for sale): drawn as reserved, never part of the stand list or the sheet.
+  (GEO.displays || []).forEach(function (d) {
+    sv('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 0.18, fill: '#A9ABAD', stroke: '#7E8183', 'stroke-width': 0.16 }, deco);
+    var dcx = d.x + d.w / 2, dcy = d.y + d.h / 2, vert = d.h > d.w;
+    var rot = vert ? 'rotate(-90 ' + dcx + ' ' + dcy + ')' : null;
+    var a1 = { 'text-anchor': 'middle', 'font-size': 0.95, 'font-weight': 700, fill: '#fff', 'letter-spacing': 0.06 };
+    var a2 = { 'text-anchor': 'middle', 'font-size': 0.6, 'font-weight': 700, fill: '#F1F2F2', 'letter-spacing': 0.06 };
+    if (rot) { a1.transform = rot; a2.transform = rot; }
+    svText(deco, dcx, dcy - 0.05, String(d.label).toUpperCase(), a1);
+    if (d.status) { svText(deco, dcx, dcy + 0.85, String(d.status).toUpperCase(), a2); }
   });
 
   // Stands.
